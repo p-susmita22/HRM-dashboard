@@ -1,48 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard } from 'lucide-react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X } from 'lucide-react';
 import axios from 'axios';
 
-const AdminSidebar = ({ onLogout }) => {
+const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
+  const location = useLocation();
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+    }
+  }, [location, setIsOpen]);
+
   return (
-    <div className="w-64 bg-white shadow-sm flex flex-col z-50 h-full border-r border-gray-100">
-      <div className="p-5 flex items-center gap-3 border-b border-gray-100">
-        <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">M</div>
-        <h2 className="text-base font-semibold text-primary-dark">Multimaart Admin</h2>
-      </div>
-      <nav className="flex flex-col py-4 gap-1">
-        <NavLink to="/admin" end className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <LayoutDashboard size={20} /> Dashboard
-        </NavLink>
-        <NavLink to="/admin/employees" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <Users size={20} /> Employees
-        </NavLink>
-        <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <Calendar size={20} /> Attendance
-        </NavLink>
-        <NavLink to="/admin/requests" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <FileText size={20} /> Requests
-        </NavLink>
-        <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <Bell size={20} /> Notifications
-        </NavLink>
-        <NavLink to="/admin/settings" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-          <Settings size={20} /> Settings
-        </NavLink>
-      </nav>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
       
-      <div className="mt-auto p-5 border-t border-gray-100">
-        <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-status-absent font-medium hover:bg-status-absent/10 py-2.5 rounded-lg transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          Log Out
-        </button>
+      <div className={`fixed md:relative w-64 bg-white shadow-sm flex flex-col z-50 h-full border-r border-gray-100 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="p-5 flex items-center justify-between border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">M</div>
+            <h2 className="text-base font-semibold text-primary-dark">Multimaart Admin</h2>
+          </div>
+          <button className="md:hidden text-gray-500" onClick={() => setIsOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+        <nav className="flex flex-col py-4 gap-1 flex-1 overflow-y-auto">
+          <NavLink to="/admin" end className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <LayoutDashboard size={20} /> Dashboard
+          </NavLink>
+          <NavLink to="/admin/employees" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <Users size={20} /> Employees
+          </NavLink>
+          <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <Calendar size={20} /> Attendance
+          </NavLink>
+          <NavLink to="/admin/requests" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <FileText size={20} /> Requests
+          </NavLink>
+          <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <Bell size={20} /> Notifications
+          </NavLink>
+          <NavLink to="/admin/settings" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <Settings size={20} /> Settings
+          </NavLink>
+        </nav>
+        
+        <div className="p-5 border-t border-gray-100">
+          <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-status-absent font-medium hover:bg-status-absent/10 py-2.5 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Log Out
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
 const AdminLayout = () => {
   const [adminName, setAdminName] = useState('Super Admin');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -77,16 +102,21 @@ const AdminLayout = () => {
 
   return (
     <div className="flex h-screen bg-bg-gray overflow-hidden">
-      <AdminSidebar onLogout={handleLogout} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="h-[70px] bg-white shadow-sm flex justify-between items-center px-8 z-40 border-b border-gray-100">
-          <div className="text-xl font-semibold text-text-dark">Admin Portal</div>
-          <div className="flex items-center font-medium gap-3">
-            <span>{adminName}</span>
-            <div className="w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">{initial}</div>
+      <AdminSidebar onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
+        <div className="h-[70px] bg-white shadow-sm flex justify-between items-center px-4 md:px-8 z-30 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <button className="md:hidden text-text-dark" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <div className="text-lg md:text-xl font-semibold text-text-dark">Admin Portal</div>
+          </div>
+          <div className="flex items-center font-medium gap-2 md:gap-3">
+            <span className="hidden sm:inline">{adminName}</span>
+            <div className="w-8 h-8 md:w-9 md:h-9 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">{initial}</div>
           </div>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </div>
       </div>
