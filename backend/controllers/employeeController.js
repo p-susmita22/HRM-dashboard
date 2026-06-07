@@ -1,0 +1,141 @@
+import Employee from '../models/Employee.js';
+import Attendance from '../models/Attendance.js';
+
+export const getProfile = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.user._id).select('-password');
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const uploadDocument = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    
+    const { docType } = req.body;
+    const url = `/uploads/${req.file.filename}`;
+    const fileName = req.file.originalname;
+
+    const employee = await Employee.findById(req.user._id);
+    
+    // Check if docType already exists and replace it, else push new
+    const existingDocIndex = employee.documents.findIndex(d => d.docType === docType);
+    if (existingDocIndex >= 0) {
+      employee.documents[existingDocIndex] = { docType, url, fileName };
+    } else {
+      employee.documents.push({ docType, url, fileName });
+    }
+
+    await employee.save();
+    
+    res.json({ message: 'Document uploaded successfully', document: { docType, url, fileName } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error uploading document' });
+  }
+};
+
+export const getTodayAttendance = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const attendance = await Attendance.findOne({
+      employee: req.user._id,
+      date: { $gte: today }
+    });
+    
+    res.json(attendance || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const punchIn = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let attendance = await Attendance.findOne({
+      employee: req.user._id,
+      date: { $gte: today }
+    });
+    
+    if (attendance) {
+      return res.status(400).json({ message: 'Already punched in today' });
+    }
+    
+    attendance = new Attendance({
+      employee: req.user._id,
+      date: new Date(),
+      punchIn: new Date(),
+      status: 'Present'
+    });
+    
+    await attendance.save();
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const punchOut = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const attendance = await Attendance.findOne({
+      employee: req.user._id,
+      date: { $gte: today }
+    });
+    
+    if (!attendance || !attendance.punchIn) {
+      return res.status(400).json({ message: 'Not punched in yet' });
+    }
+    
+    if (attendance.punchOut) {
+      return res.status(400).json({ message: 'Already punched out today' });
+    }
+    
+    attendance.punchOut = new Date();
+    
+    // Calculate total hours
+    const diff = attendance.punchOut - attendance.punchIn;
+    attendance.totalHours = diff / (1000 * 60 * 60);
+    
+    // Check half day logic
+    const punchInHour = attendance.punchIn.getHours();
+    const punchOutHour = attendance.punchOut.getHours();
+    const punchOutMinute = attendance.punchOut.getMinutes();
+    
+    let isHalfDay = false;
+    
+    // 1. Total working hours < 8
+    if (attendance.totalHours < 8) {
+      isHalfDay = true;
+    }
+    
+    // 2. Punch in time 12:00 PM or after (>= 12)
+    if (punchInHour >= 12) {
+      isHalfDay = true;
+    }
+    
+    // 3. Punch out time 1:30 PM (13:30) to 2:00 PM (14:00)
+    if ((punchOutHour === 13 && punchOutMinute >= 30) || punchOutHour === 14) {
+      isHalfDay = true;
+    }
+    
+    if (isHalfDay) {
+      attendance.status = 'Half Day';
+    } else {
+      attendance.status = 'Present';
+    }
+    
+    await attendance.save();
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

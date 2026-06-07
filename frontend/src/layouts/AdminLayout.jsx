@@ -1,0 +1,97 @@
+import React, { useState, useEffect } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard } from 'lucide-react';
+import axios from 'axios';
+
+const AdminSidebar = ({ onLogout }) => {
+  return (
+    <div className="w-64 bg-white shadow-sm flex flex-col z-50 h-full border-r border-gray-100">
+      <div className="p-5 flex items-center gap-3 border-b border-gray-100">
+        <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">M</div>
+        <h2 className="text-base font-semibold text-primary-dark">Multimaart Admin</h2>
+      </div>
+      <nav className="flex flex-col py-4 gap-1">
+        <NavLink to="/admin" end className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <LayoutDashboard size={20} /> Dashboard
+        </NavLink>
+        <NavLink to="/admin/employees" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <Users size={20} /> Employees
+        </NavLink>
+        <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <Calendar size={20} /> Attendance
+        </NavLink>
+        <NavLink to="/admin/requests" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <FileText size={20} /> Requests
+        </NavLink>
+        <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <Bell size={20} /> Notifications
+        </NavLink>
+        <NavLink to="/admin/settings" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+          <Settings size={20} /> Settings
+        </NavLink>
+      </nav>
+      
+      <div className="mt-auto p-5 border-t border-gray-100">
+        <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-status-absent font-medium hover:bg-status-absent/10 py-2.5 rounded-lg transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Log Out
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const AdminLayout = () => {
+  const [adminName, setAdminName] = useState('Super Admin');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get('/api/admin/profile');
+        if (res.data && res.data.fullName) {
+          setAdminName(res.data.fullName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin name');
+      }
+    };
+    fetchProfile();
+
+    const handleProfileUpdate = (e) => {
+      if (e.detail && e.detail.fullName) {
+        setAdminName(e.detail.fullName);
+      }
+    };
+
+    window.addEventListener('adminProfileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.href = '/admin/login';
+  };
+
+  const initial = adminName ? adminName.charAt(0).toUpperCase() : 'A';
+
+  return (
+    <div className="flex h-screen bg-bg-gray overflow-hidden">
+      <AdminSidebar onLogout={handleLogout} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="h-[70px] bg-white shadow-sm flex justify-between items-center px-8 z-40 border-b border-gray-100">
+          <div className="text-xl font-semibold text-text-dark">Admin Portal</div>
+          <div className="flex items-center font-medium gap-3">
+            <span>{adminName}</span>
+            <div className="w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">{initial}</div>
+          </div>
+        </div>
+        <div className="flex-1 p-8 overflow-y-auto">
+          <Outlet />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

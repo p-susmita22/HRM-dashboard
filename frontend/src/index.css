@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0A84FF;
+  --color-primary-dark: #006CE6;
+  --color-secondary: #FFFFFF;
+  --color-accent: #E6F2FF;
+  --color-text-dark: #333333;
+  --color-text-light: #777777;
+  --color-bg-gray: #F5F7FA;
+  
+  --color-status-present: #34C759;
+  --color-status-absent: #FF3B30;
+  --color-status-holiday: #5AC8FA;
+  --color-status-leave: #FFCC00;
+}
+
+body {
+  @apply bg-bg-gray text-text-dark font-sans;
+}
+
+@layer components {
+  .btn {
+    @apply px-6 py-3 rounded-xl font-semibold border-none cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-base;
+  }
+  .btn-primary {
+    @apply bg-primary text-white shadow-sm hover:bg-primary-dark hover:shadow-md;
+  }
+  .btn-danger {
+    @apply bg-status-absent text-white;
+  }
+  .form-control {
+    @apply w-full p-3 border border-gray-200 rounded-lg text-[15px] transition-colors focus:outline-none focus:border-primary focus:ring-4 focus:ring-accent;
+  }
+  .card {
+    @apply bg-white rounded-xl p-5 shadow-sm mb-5 transition-transform hover:shadow-md;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
