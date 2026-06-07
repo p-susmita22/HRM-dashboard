@@ -17,7 +17,7 @@ import './index.css';
 import axios from 'axios';
 
 // Set global base URL for all API requests
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006';
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com';
 
 // Configure Axios to automatically attach JWT token
 axios.interceptors.request.use((config) => {
