@@ -218,15 +218,6 @@ const HelpPage = () => {
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block mb-1.5 font-medium text-sm">Attendance Type</label>
-                <select className="form-control" required>
-                  <option value="">Select Type</option>
-                  <option value="Absent to Present">Absent to Present</option>
-                  <option value="Half Day to Present">Half Day to Present</option>
-                </select>
-              </div>
-              
               <div className="mb-4 flex-1">
                 <label className="block mb-1.5 font-medium text-sm">Reason</label>
                 <textarea className="form-control h-32" placeholder="Explain why these dates should be regularized..." required></textarea>
