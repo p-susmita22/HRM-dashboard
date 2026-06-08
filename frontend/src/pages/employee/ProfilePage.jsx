@@ -8,7 +8,14 @@ const ProfilePage = () => {
   const [qualifications, setQualifications] = useState([]);
   const [employeeData, setEmployeeData] = useState(null);
   const [uploadingDocType, setUploadingDocType] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [toastMessage, setToastMessage] = useState({ text: '', type: '' });
   const fileInputRef = useRef(null);
+
+  const showToast = (text, type = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage({ text: '', type: '' }), 3000);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -39,12 +46,14 @@ const ProfilePage = () => {
     formData.append('docType', uploadingDocType);
     
     try {
+      setIsUploading(true);
       await axios.post('/api/employee/upload-doc', formData);
-      alert('Document uploaded successfully!');
+      showToast('Document uploaded successfully!', 'success');
       fetchProfile();
     } catch (err) {
-      alert('Failed to upload document');
+      showToast('Failed to upload document', 'error');
     } finally {
+      setIsUploading(false);
       e.target.value = '';
       setUploadingDocType('');
     }
@@ -61,7 +70,24 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="animate-fade-in p-5 max-w-5xl mx-auto">
+    <div className="animate-fade-in p-5 max-w-5xl mx-auto relative">
+      {/* Toast Notification */}
+      {toastMessage.text && (
+        <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 animate-slide-down ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}>
+          {toastMessage.type === 'success' ? <CheckCircle size={18} /> : null}
+          {toastMessage.text}
+        </div>
+      )}
+
+      {/* Uploading Overlay */}
+      {isUploading && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-text-dark font-medium">Uploading Document...</p>
+          </div>
+        </div>
+      )}
       <div className="text-center my-5">
         <div className="w-24 h-24 rounded-full bg-accent mx-auto mb-2.5 flex items-center justify-center text-3xl color-primary font-bold text-primary">
           {employeeData?.fullName?.charAt(0) || 'E'}
