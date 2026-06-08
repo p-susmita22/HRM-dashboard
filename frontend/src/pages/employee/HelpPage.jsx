@@ -69,7 +69,7 @@ const HelpPage = () => {
 
       <div className="card">
         {activeTab === 'leave' && (
-          <form onSubmit={(e) => { e.preventDefault(); alert('Leave Request Submitted'); }}>
+          <form onSubmit={(e) => { e.preventDefault(); alert('Leave Request Submitted'); e.target.reset(); }}>
             <h3 className="mb-4 text-lg font-semibold">Apply for Leave</h3>
             <div className="mb-4">
               <label className="block mb-1.5 font-medium text-sm">Leave Type</label>
@@ -101,7 +101,7 @@ const HelpPage = () => {
 
         {activeTab === 'regularize' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <form onSubmit={(e) => { e.preventDefault(); alert('Regularization Request Submitted for selected dates'); setRegDates([]); }} className="flex flex-col">
+            <form onSubmit={(e) => { e.preventDefault(); alert('Regularization Request Submitted for selected dates'); setRegDates([]); e.target.reset(); }} className="flex flex-col">
               <h3 className="mb-4 text-lg font-semibold">Attendance Regularization</h3>
               
               <div className="mb-4">
@@ -207,7 +207,7 @@ const HelpPage = () => {
         )}
 
         {activeTab === 'resign' && (
-          <form onSubmit={(e) => { e.preventDefault(); alert('Resignation Request Submitted'); }}>
+          <form onSubmit={(e) => { e.preventDefault(); alert('Resignation Request Submitted'); e.target.reset(); }}>
             <h3 className="mb-4 text-lg font-semibold text-status-absent">Resignation Request</h3>
             <div className="bg-status-absent/10 p-4 rounded-lg mb-4 text-sm text-status-absent">
               <strong>IMPORTANT:</strong> You must serve a mandatory 45 Days Notice Period before final resignation approval.
