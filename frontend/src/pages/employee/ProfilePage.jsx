@@ -70,7 +70,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="animate-fade-in p-5 max-w-5xl mx-auto relative">
+    <>
       {/* Toast Notification */}
       {toastMessage.text && (
         <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 animate-slide-down ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}>
@@ -81,17 +81,19 @@ const ProfilePage = () => {
 
       {/* Uploading Overlay */}
       {isUploading && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in">
           <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <p className="text-text-dark font-medium">Uploading Document...</p>
           </div>
         </div>
       )}
-      <div className="text-center my-5">
-        <div className="w-24 h-24 rounded-full bg-accent mx-auto mb-2.5 flex items-center justify-center text-3xl color-primary font-bold text-primary">
-          {employeeData?.fullName?.charAt(0) || 'E'}
-        </div>
+
+      <div className="animate-fade-in p-5 max-w-5xl mx-auto relative">
+        <div className="text-center my-5">
+          <div className="w-24 h-24 rounded-full bg-accent mx-auto mb-2.5 flex items-center justify-center text-3xl color-primary font-bold text-primary">
+            {employeeData?.fullName?.charAt(0) || 'E'}
+          </div>
         <h2 className="text-2xl font-bold">{employeeData?.fullName || 'Employee Name'}</h2>
         <p className="text-text-light font-medium mt-0.5 tracking-wider">{employeeData?.employeeId || 'EMP ID-XXXX'}</p>
       </div>
@@ -310,7 +312,8 @@ const ProfilePage = () => {
         className="hidden" 
         onChange={handleFileChange} 
       />
-    </div>
+      </div>
+    </>
   );
 };
 
