@@ -182,3 +182,50 @@ export const deleteLeave = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+import Regularization from '../models/Regularization.js';
+
+export const applyRegularization = async (req, res) => {
+  try {
+    const { dates, reason } = req.body;
+    // dates is a comma separated string
+    const dateArray = dates.split(',');
+    
+    // Create a request for each date
+    const requests = dateArray.map(date => ({
+      employee: req.user._id,
+      fromDate: date,
+      toDate: date,
+      reason,
+      status: 'Pending'
+    }));
+    
+    await Regularization.insertMany(requests);
+    res.status(201).json({ message: 'Regularization requested' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getMyRegularizations = async (req, res) => {
+  try {
+    const regularizations = await Regularization.find({ employee: req.user._id }).sort({ createdAt: -1 });
+    res.json(regularizations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteRegularization = async (req, res) => {
+  try {
+    const reg = await Regularization.findById(req.params.id);
+    if (!reg) return res.status(404).json({ message: 'Not found' });
+    if (reg.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
+    if (reg.status !== 'Pending') return res.status(400).json({ message: 'Cannot delete processed request' });
+    
+    await reg.deleteOne();
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

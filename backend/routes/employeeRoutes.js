@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { getProfile, uploadDocument, getTodayAttendance, punchIn, punchOut, applyLeave, getMyLeaves, deleteLeave } from '../controllers/employeeController.js';
+import { getProfile, uploadDocument, getTodayAttendance, punchIn, punchOut, applyLeave, getMyLeaves, deleteLeave, applyRegularization, getMyRegularizations, deleteRegularization } from '../controllers/employeeController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -29,5 +29,9 @@ router.post('/punch-out', punchOut);
 router.get('/leaves', getMyLeaves);
 router.post('/leaves', applyLeave);
 router.delete('/leaves/:id', deleteLeave);
+
+router.get('/regularizations', getMyRegularizations);
+router.post('/regularizations', applyRegularization);
+router.delete('/regularizations/:id', deleteRegularization);
 
 export default router;

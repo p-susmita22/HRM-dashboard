@@ -113,7 +113,6 @@ const AdminRequests = () => {
                   {activeTab === 'regularization' && (
                     <>
                       <th className="p-4 text-xs font-semibold text-text-light uppercase">Date Range</th>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Expected Type</th>
                       <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
                     </>
                   )}
@@ -165,8 +164,7 @@ const AdminRequests = () => {
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
                     </td>
-                    <td className="p-4 text-sm text-text-dark">{formatDate(req.fromDate)} - {formatDate(req.toDate)}</td>
-                    <td className="p-4 text-sm text-text-dark font-medium">{req.attendanceType}</td>
+                    <td className="p-4 text-sm text-text-dark">{formatDate(req.fromDate)}</td>
                     <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="p-4">
                       {req.status === 'Pending' ? (

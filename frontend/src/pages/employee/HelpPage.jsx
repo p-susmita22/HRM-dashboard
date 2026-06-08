@@ -5,9 +5,11 @@ import axios from 'axios';
 const HelpPage = () => {
   const [activeTab, setActiveTab] = useState('leave');
   const [myLeaves, setMyLeaves] = useState([]);
+  const [myRegularizations, setMyRegularizations] = useState([]);
 
   useEffect(() => {
     fetchMyLeaves();
+    fetchMyRegularizations();
   }, []);
 
   const fetchMyLeaves = async () => {
@@ -45,6 +47,43 @@ const HelpPage = () => {
       fetchMyLeaves();
     } catch (err) {
       alert('Failed to delete leave');
+    }
+  };
+
+  const fetchMyRegularizations = async () => {
+    try {
+      const res = await axios.get('/api/employee/regularizations');
+      setMyRegularizations(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleApplyRegularization = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      dates: regDates.join(','),
+      reason: formData.get('reason')
+    };
+    
+    try {
+      await axios.post('/api/employee/regularizations', data);
+      e.target.reset();
+      setRegDates([]);
+      fetchMyRegularizations();
+    } catch (err) {
+      alert('Failed to submit regularization');
+    }
+  };
+
+  const handleDeleteRegularization = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this regularization request?')) return;
+    try {
+      await axios.delete(`/api/employee/regularizations/${id}`);
+      fetchMyRegularizations();
+    } catch (err) {
+      alert('Failed to delete regularization');
     }
   };
 
@@ -185,8 +224,9 @@ const HelpPage = () => {
         )}
 
         {activeTab === 'regularize' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <form onSubmit={(e) => { e.preventDefault(); alert('Regularization Request Submitted for selected dates'); setRegDates([]); e.target.reset(); }} className="flex flex-col">
+          <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <form onSubmit={handleApplyRegularization} className="flex flex-col">
               <h3 className="mb-4 text-lg font-semibold">Attendance Regularization</h3>
               
               <div className="mb-4">
@@ -220,7 +260,7 @@ const HelpPage = () => {
 
               <div className="mb-4 flex-1">
                 <label className="block mb-1.5 font-medium text-sm">Reason</label>
-                <textarea className="form-control h-32" placeholder="Explain why these dates should be regularized..." required></textarea>
+                <textarea name="reason" className="form-control h-32" placeholder="Explain why these dates should be regularized..." required></textarea>
               </div>
               
               <button 
@@ -275,9 +315,48 @@ const HelpPage = () => {
                    })}
                  </div>
                </div>
-               <p className="text-xs text-text-light mt-4 text-center leading-relaxed">
-                 You can click multiple dates if you need to regularize attendance for several days at once.
-               </p>
+                 <p className="text-xs text-text-light mt-4 text-center leading-relaxed">
+                   You can click multiple dates if you need to regularize attendance for several days at once.
+                 </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-5 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold border-b border-gray-200 pb-2">Recent Regularization Requests</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {myRegularizations.length === 0 ? (
+                  <p className="text-sm text-text-light py-2 col-span-full">No regularization requests found.</p>
+                ) : myRegularizations.map((reg) => (
+                  <div key={reg._id} className="bg-white p-3.5 rounded-lg border border-gray-100 flex flex-col gap-2 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold text-sm text-text-dark">Date: {format(new Date(reg.fromDate), 'dd MMM yyyy')}</h4>
+                        <p className="text-[11px] text-text-light font-medium mt-0.5 max-w-[150px] truncate" title={reg.reason}>
+                          {reg.reason}
+                        </p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-1 rounded font-bold tracking-wide ${
+                        reg.status === 'Approved' ? 'bg-status-present/10 text-status-present' :
+                        reg.status === 'Rejected' ? 'bg-status-absent/10 text-status-absent' :
+                        'bg-yellow-500/10 text-yellow-600'
+                      }`}>
+                        {reg.status}
+                      </span>
+                    </div>
+                    {reg.status === 'Pending' && (
+                      <div className="flex justify-end mt-2 pt-2 border-t border-gray-50">
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteRegularization(reg._id)} 
+                          className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors flex items-center gap-1"
+                        >
+                          Delete Request
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

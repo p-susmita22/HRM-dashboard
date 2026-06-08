@@ -4,11 +4,6 @@ const regularizationSchema = new mongoose.Schema({
   employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
   fromDate: { type: Date, required: true },
   toDate: { type: Date, required: true },
-  attendanceType: {
-    type: String,
-    enum: ['Absent', 'Half Day'],
-    required: true
-  },
   reason: { type: String, required: true },
   status: {
     type: String,
