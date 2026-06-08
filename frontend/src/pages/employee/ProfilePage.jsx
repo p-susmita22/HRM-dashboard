@@ -74,7 +74,16 @@ const ProfilePage = () => {
     <>
       {/* Toast Notification */}
       {toastMessage.text && createPortal(
-        <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 animate-slide-down ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}>
+        <div 
+          style={{ 
+            position: 'fixed', 
+            bottom: '80px', 
+            left: '50%', 
+            transform: 'translateX(-50%)', 
+            zIndex: 999999 
+          }}
+          className={`px-6 py-3 rounded-full shadow-2xl font-medium text-sm flex items-center gap-2 transition-all duration-300 ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}
+        >
           {toastMessage.type === 'success' ? <CheckCircle size={18} /> : null}
           {toastMessage.text}
         </div>,
