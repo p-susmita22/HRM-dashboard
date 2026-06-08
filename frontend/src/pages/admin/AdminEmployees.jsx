@@ -377,10 +377,10 @@ const AdminEmployees = () => {
                           </div>
                         </div>
                         <div className="flex gap-1.5">
-                          <a href={`http://localhost:5006${doc.url}`} target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="View">
+                          <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${doc.url}`} target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="View">
                             <Eye size={14} />
                           </a>
-                          <a href={`http://localhost:5006${doc.url}`} download target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Download">
+                          <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${doc.url}`} download target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Download">
                             <Download size={14} />
                           </a>
                         </div>
