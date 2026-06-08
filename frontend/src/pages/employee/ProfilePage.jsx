@@ -142,7 +142,7 @@ const ProfilePage = () => {
                       </div>
                       <div className="flex gap-2">
                         {existingDoc && (
-                          <a href={`http://localhost:5006${existingDoc.url}`} target="_blank" rel="noreferrer" className="btn px-2 py-1.5 text-xs bg-gray-100 text-text-dark hover:bg-gray-200 transition-colors">
+                          <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${existingDoc.url}`} target="_blank" rel="noreferrer" className="btn px-2 py-1.5 text-xs bg-gray-100 text-text-dark hover:bg-gray-200 transition-colors">
                             <Eye size={14} />
                           </a>
                         )}
@@ -235,7 +235,7 @@ const ProfilePage = () => {
                       </div>
                       <div className="flex gap-2">
                         {existingDoc && (
-                          <a href={`http://localhost:5006${existingDoc.url}`} target="_blank" rel="noreferrer" className="btn px-2 py-1.5 text-xs bg-gray-100 text-text-dark hover:bg-gray-200 transition-colors">
+                          <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${existingDoc.url}`} target="_blank" rel="noreferrer" className="btn px-2 py-1.5 text-xs bg-gray-100 text-text-dark hover:bg-gray-200 transition-colors">
                             <Eye size={14} />
                           </a>
                         )}
