@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Upload, FileText, Download, Eye, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
@@ -72,21 +73,23 @@ const ProfilePage = () => {
   return (
     <>
       {/* Toast Notification */}
-      {toastMessage.text && (
-        <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 animate-slide-down ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}>
+      {toastMessage.text && createPortal(
+        <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 animate-slide-down ${toastMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-status-present text-white'}`}>
           {toastMessage.type === 'success' ? <CheckCircle size={18} /> : null}
           {toastMessage.text}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Uploading Overlay */}
-      {isUploading && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in">
+      {isUploading && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in">
           <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <p className="text-text-dark font-medium">Uploading Document...</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="animate-fade-in p-5 max-w-5xl mx-auto relative">
