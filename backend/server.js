@@ -63,7 +63,6 @@ const startServer = () => {
     console.log(`Server is running on port ${PORT}`);
   }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${PORT} is busy, killing the ghost process...`);
       exec(`netstat -ano | findstr :${PORT}`, (err, stdout) => {
         if (stdout) {
           const lines = stdout.trim().split('\n');
@@ -72,7 +71,6 @@ const startServer = () => {
             const pid = listeningLine.trim().split(/\s+/).pop();
             if (pid) {
               exec(`taskkill /PID ${pid} /F`, () => {
-                console.log(`Ghost process ${pid} killed. Restarting server...`);
                 setTimeout(() => {
                   server.close();
                   startServer();
