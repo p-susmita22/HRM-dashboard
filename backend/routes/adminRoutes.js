@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter } from '../controllers/adminController.js';
-import { getAllAttendance, approveAttendance, correctAttendance, markHoliday } from '../controllers/adminController.js';
+import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday } from '../controllers/adminController.js';
 import { 
   getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
   getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest,
