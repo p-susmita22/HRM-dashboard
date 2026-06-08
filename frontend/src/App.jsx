@@ -137,16 +137,23 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
     
     try {
-      let response;
       if (isSignUp) {
-        response = await axios.post('/api/auth/register-admin', {
+        // Register the new admin
+        await axios.post('/api/auth/register-admin', {
           fullName, email, password
         });
-      } else {
-        response = await axios.post('/api/auth/login', {
-          email, password
-        });
+        
+        // Show success alert and switch back to Login page
+        alert('Admin account created successfully! Please log in with your new credentials.');
+        setIsSignUp(false);
+        setPassword(''); // Clear password for security
+        return; // Stop here, do not log in automatically
       }
+      
+      // Regular Login Flow
+      const response = await axios.post('/api/auth/login', {
+        email, password
+      });
       
       if (response.data.role !== 'admin') {
         setError('Access denied. You do not have admin privileges.');
