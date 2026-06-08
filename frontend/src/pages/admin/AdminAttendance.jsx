@@ -8,11 +8,9 @@ const AdminAttendance = () => {
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'all'
   const [filterEmployee, setFilterEmployee] = useState('');
 
-  const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   
-  const [correctionData, setCorrectionData] = useState({ punchIn: '', punchOut: '', status: '' });
   const [holidayData, setHolidayData] = useState({ date: '', reason: '' });
 
   const fetchAttendance = async () => {
@@ -40,15 +38,15 @@ const AdminAttendance = () => {
     }
   };
 
-  const handleCorrectSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`/api/admin/attendance/${selectedRecord._id}/correct`, correctionData);
-      setShowCorrectModal(false);
-      fetchAttendance();
-      alert('Attendance corrected successfully!');
-    } catch (error) {
-      alert('Failed to correct attendance');
+  const handleReject = async (id) => {
+    if (window.confirm('Are you sure you want to reject this attendance request?')) {
+      try {
+        await axios.put(`/api/admin/attendance/${id}/reject`);
+        fetchAttendance();
+        alert('Attendance request rejected!');
+      } catch (error) {
+        alert('Failed to reject attendance');
+      }
     }
   };
 
@@ -64,15 +62,7 @@ const AdminAttendance = () => {
     }
   };
 
-  const openCorrectModal = (record) => {
-    setSelectedRecord(record);
-    setCorrectionData({
-      punchIn: record.punchIn ? new Date(record.punchIn).toISOString().slice(0, 16) : '',
-      punchOut: record.punchOut ? new Date(record.punchOut).toISOString().slice(0, 16) : '',
-      status: record.status !== 'Pending' ? record.status : 'Present'
-    });
-    setShowCorrectModal(true);
-  };
+
 
   const formatTime = (dateString) => {
     if (!dateString) return '--:--';
@@ -166,8 +156,8 @@ const AdminAttendance = () => {
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => openCorrectModal(record)} className="btn py-1 px-3 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs flex items-center gap-1">
-                            <Edit size={12} /> Correct
+                          <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                            <XCircle size={12} /> Reject
                           </button>
                           <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
                             <CheckCircle size={12} /> Accept
@@ -228,9 +218,7 @@ const AdminAttendance = () => {
                       <td className="p-4 text-sm text-text-dark font-semibold">{record.totalHours > 0 ? `${record.totalHours} hrs` : '-'}</td>
                       <td className="p-4">{getStatusBadge(record.status)}</td>
                       <td className="p-4 text-right">
-                        <button onClick={() => openCorrectModal(record)} className="p-2 text-text-light hover:text-primary transition-colors rounded-lg hover:bg-primary/10" title="Correct Attendance">
-                          <Edit size={16} />
-                        </button>
+                        {/* No action needed for all records since it's already approved/rejected */}
                       </td>
                     </tr>
                   ))
@@ -241,48 +229,7 @@ const AdminAttendance = () => {
         </div>
       )}
 
-      {/* Correct Attendance Modal */}
-      {showCorrectModal && selectedRecord && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-text-dark">Correct Attendance</h2>
-              <button onClick={() => setShowCorrectModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
-                <XCircle size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleCorrectSubmit} className="p-6">
-              <div className="mb-4 text-sm text-text-light border-b border-gray-100 pb-4">
-                <p><strong>Employee:</strong> {selectedRecord.employee?.fullName}</p>
-                <p><strong>Date:</strong> {formatDate(selectedRecord.date)}</p>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Punch In Time</label>
-                  <input type="datetime-local" className="form-control w-full" value={correctionData.punchIn} onChange={e => setCorrectionData({...correctionData, punchIn: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Punch Out Time</label>
-                  <input type="datetime-local" className="form-control w-full" value={correctionData.punchOut} onChange={e => setCorrectionData({...correctionData, punchOut: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Status Override</label>
-                  <select className="form-control w-full" value={correctionData.status} onChange={e => setCorrectionData({...correctionData, status: e.target.value})}>
-                    <option value="Present">Present</option>
-                    <option value="Half Day">Half Day</option>
-                    <option value="Absent">Absent</option>
-                    <option value="Leave Approved">Leave</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-8 flex justify-end gap-3">
-                <button type="button" onClick={() => setShowCorrectModal(false)} className="btn bg-gray-100 text-text-dark hover:bg-gray-200">Cancel</button>
-                <button type="submit" className="btn btn-primary px-6">Save Correction</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
 
       {/* Mark Holiday Modal */}
       {showHolidayModal && (

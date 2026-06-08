@@ -150,7 +150,7 @@ export const approveAttendance = async (req, res) => {
       else if (hours >= 4) record.status = 'Half Day';
       else record.status = 'Absent';
     } else {
-      record.status = 'Absent'; // If no punch out, it's considered absent or manual correction needed
+      record.status = 'Absent'; // If no punch out, it's considered absent
     }
 
     record.adminStatus = 'Approved';
@@ -165,29 +165,19 @@ export const approveAttendance = async (req, res) => {
   }
 };
 
-export const correctAttendance = async (req, res) => {
+export const rejectAttendance = async (req, res) => {
   try {
-    const { punchIn, punchOut, status } = req.body;
     const record = await Attendance.findById(req.params.id);
     if (!record) return res.status(404).json({ message: 'Record not found' });
 
-    if (punchIn) record.punchIn = new Date(punchIn);
-    if (punchOut) record.punchOut = new Date(punchOut);
-    
-    if (record.punchIn && record.punchOut) {
-      const msDiff = new Date(record.punchOut).getTime() - new Date(record.punchIn).getTime();
-      const hours = msDiff / (1000 * 60 * 60);
-      record.totalHours = parseFloat(hours.toFixed(2));
-    }
-
-    if (status) record.status = status;
-    record.adminStatus = 'Approved'; // Implicit approval when admin corrects it
-
+    record.status = 'Absent';
+    record.adminStatus = 'Rejected';
     await record.save();
+    
     const updatedRecord = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
     res.json(updatedRecord);
   } catch (error) {
-    console.error('Error correcting attendance:', error);
+    console.error('Error rejecting attendance:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -249,6 +239,39 @@ export const getLeaveRequests = async (req, res) => {
 export const updateLeaveStatus = async (req, res) => {
   try {
     const leave = await Leave.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('employee', 'fullName employeeId');
+    
+    if (req.body.status === 'Approved') {
+      const start = new Date(leave.fromDate);
+      const end = new Date(leave.toDate);
+      start.setHours(0,0,0,0);
+      end.setHours(0,0,0,0);
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const currentDate = new Date(d);
+        
+        const existing = await Attendance.findOne({
+          employee: leave.employee._id,
+          date: {
+            $gte: currentDate,
+            $lt: new Date(currentDate.getTime() + 24 * 60 * 60 * 1000)
+          }
+        });
+
+        if (!existing) {
+          await Attendance.create({
+            employee: leave.employee._id,
+            date: currentDate,
+            status: 'Absent',
+            adminStatus: 'Approved'
+          });
+        } else {
+          existing.status = 'Absent';
+          existing.adminStatus = 'Approved';
+          await existing.save();
+        }
+      }
+    }
+    
     res.json(leave);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

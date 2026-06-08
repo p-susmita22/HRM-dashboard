@@ -25,7 +25,7 @@ router.post('/employees/:id/offer-letter', uploadOfferLetter);
 // Attendance Routes
 router.get('/attendance', getAllAttendance);
 router.put('/attendance/:id/approve', approveAttendance);
-router.put('/attendance/:id/correct', correctAttendance);
+router.put('/attendance/:id/reject', rejectAttendance);
 router.post('/attendance/holiday', markHoliday);
 
 // Requests Routes
