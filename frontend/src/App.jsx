@@ -21,7 +21,7 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashb
 
 // Configure Axios to automatically attach JWT token
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -49,9 +49,9 @@ const EmployeeLogin = ({ onLogin }) => {
       });
       
       // Save token (mocked simple state logic for now)
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.role);
-      localStorage.setItem('employeeObjId', response.data._id);
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('role', response.data.role);
+      sessionStorage.setItem('employeeObjId', response.data._id);
       onLogin(response.data.role); // should be 'employee'
       
     } catch (err) {
@@ -160,9 +160,9 @@ const AdminLogin = ({ onLogin }) => {
         return;
       }
       
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.role);
-      localStorage.setItem('employeeObjId', response.data._id);
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('role', response.data.role);
+      sessionStorage.setItem('employeeObjId', response.data._id);
       onLogin(response.data.role); // should be 'admin'   
     } catch (err) {
       setError(err.response?.data?.message || `${isSignUp ? 'Signup' : 'Login'} failed. Please check your details.`);
@@ -247,7 +247,7 @@ const AdminLogin = ({ onLogin }) => {
 };
 
 function App() {
-  const [userRole, setUserRole] = useState(localStorage.getItem('role') || null);
+  const [userRole, setUserRole] = useState(sessionStorage.getItem('role') || null);
 
   const ProtectedRoute = ({ role, children }) => {
     if (!userRole) return <Navigate to={role === 'admin' ? '/admin/login' : '/login'} replace />;

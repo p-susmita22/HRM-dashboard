@@ -6,12 +6,12 @@ const EmployeeMessages = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const employeeId = localStorage.getItem('employeeObjId'); // Wait, we need to ensure the ID is available.
+  const employeeId = sessionStorage.getItem('employeeObjId'); // Wait, we need to ensure the ID is available.
   const messagesEndRef = useRef(null);
 
-  // Fallback for ID if not in localStorage
+  // Fallback for ID if not in sessionStorage
   const getEmployeeId = async () => {
-    let id = localStorage.getItem('employeeObjId');
+    let id = sessionStorage.getItem('employeeObjId');
     if (!id) {
       // Need a profile fetch or something if it wasn't saved on login
       // Actually, loginEmployee only saved 'token' and 'role'. We should update loginEmployee in frontend to save ID, or fetch profile here.
