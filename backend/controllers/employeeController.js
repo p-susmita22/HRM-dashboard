@@ -229,3 +229,31 @@ export const deleteRegularization = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getMonthlyAttendance = async (req, res) => {
+  try {
+    const { year, month } = req.query; // 1-indexed month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const attendances = await Attendance.find({
+      employee: req.user._id,
+      date: { $gte: startDate, $lte: endDate }
+    });
+
+    // Also get approved leaves that fall within this month
+    const leaves = await Leave.find({
+      employee: req.user._id,
+      status: 'Approved',
+      $or: [
+        { fromDate: { $gte: startDate, $lte: endDate } },
+        { toDate: { $gte: startDate, $lte: endDate } },
+        { fromDate: { $lte: startDate }, toDate: { $gte: endDate } }
+      ]
+    });
+
+    res.json({ attendances, leaves });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

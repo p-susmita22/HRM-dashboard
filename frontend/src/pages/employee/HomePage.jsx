@@ -11,6 +11,8 @@ const HomePage = () => {
   const [showLogout, setShowLogout] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [employeeData, setEmployeeData] = useState(null);
+  const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
+  const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, holidays: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,8 +39,75 @@ const HomePage = () => {
         console.error('Error fetching data', err);
       }
     };
+    };
     fetchProfileAndAttendance();
   }, []);
+
+  useEffect(() => {
+    const fetchMonthlyData = async () => {
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        const res = await axios.get(`/api/employee/attendance/monthly?year=${year}&month=${month}`);
+        setMonthlyData(res.data);
+      } catch (err) {
+        console.error('Error fetching monthly data', err);
+      }
+    };
+    fetchMonthlyData();
+  }, [currentDate]);
+
+  useEffect(() => {
+    // Calculate summary
+    let present = 0;
+    let absent = 0;
+    let halfDays = 0;
+    let onLeave = 0;
+    let holidays = 0;
+
+    const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
+    const realToday = new Date();
+
+    days.forEach(date => {
+      if (date.getDay() === 0) {
+        holidays++;
+        return;
+      }
+      
+      const isOnLeave = monthlyData.leaves.some(leave => {
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+      });
+
+      if (isOnLeave) {
+        onLeave++;
+        return;
+      }
+
+      const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+      });
+
+      if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Present') present++;
+        else if (record.status === 'Half Day') halfDays++;
+        else if (record.status === 'Absent') absent++;
+      } else {
+        const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
+        if (isToday && punchedIn) {
+          present++;
+        } else if (date < realToday && !isToday) {
+          // Unmarked past date
+          absent++;
+        }
+      }
+    });
+
+    setSummary({ present, absent, halfDays, onLeave, holidays });
+  }, [monthlyData, currentDate, punchedIn]);
 
   const handlePunchIn = async () => {
     try {
@@ -78,14 +147,42 @@ const HomePage = () => {
                     date.getFullYear() === realToday.getFullYear();
                     
     // Color Sundays as Holiday (Blue) FIRST
-    if (date.getDay() === 0) return 'bg-status-holiday text-white';
-    
-    if (isToday && punchedIn) return 'bg-status-present text-white';
+    if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
+
+    const isOnLeave = monthlyData.leaves.some(leave => {
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+    });
+    if (isOnLeave) return 'bg-status-leave text-white shadow-md border border-status-leave/50';
+
+    const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+    });
+
+    if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
+        if (record.status === 'Half Day') {
+            if (record.halfDayType === 'First Half Absent') {
+                return 'bg-gradient-to-b from-status-absent to-status-present text-white shadow-md font-bold';
+            } else if (record.halfDayType === 'Second Half Absent') {
+                return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
+            }
+            return 'bg-gradient-to-b from-yellow-400 to-yellow-500 text-white shadow-md font-bold'; // Fallback Half Day color
+        }
+        if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
+    }
+
+    if (isToday && punchedIn) return 'bg-status-present/80 text-white shadow-sm ring-2 ring-status-present ring-offset-2';
 
     // If the date is in the future
     if (date > realToday && !isToday) return 'bg-gray-100 text-text-light'; 
     
-    // Default empty status until data is loaded
+    // Default empty status for past dates (unmarked)
+    if (date < realToday && !isToday) return 'bg-red-50 text-status-absent/60 border border-status-absent/20'; // Indicating missing punch
+    
     return 'bg-gray-50 text-text-light';
   };
 
@@ -249,35 +346,35 @@ const HomePage = () => {
                 <span className="font-medium text-text-dark flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-status-present"></div> Present
                 </span>
-                <span className="font-bold text-status-present text-lg">0</span>
+                <span className="font-bold text-lg text-status-present">{summary.present}</span>
               </div>
               
               <div className="flex justify-between items-center p-3 bg-status-absent/5 rounded-lg border border-status-absent/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-status-absent"></div> Absent
                 </span>
-                <span className="font-bold text-status-absent text-lg">0</span>
+                <span className="font-bold text-lg text-status-absent">{summary.absent}</span>
               </div>
               
-              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-status-absent/10 to-status-present/10 rounded-lg border border-gray-200">
+              <div className="flex justify-between items-center p-3 bg-yellow-500/5 rounded-lg border border-yellow-500/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-b from-status-present to-status-absent"></div> Half Days
+                  <div className="w-3 h-3 rounded-full shadow-sm bg-gradient-to-b from-yellow-400 to-yellow-500"></div> Half Days
                 </span>
-                <span className="font-bold text-text-dark text-lg">0</span>
+                <span className="font-bold text-lg text-yellow-600">{summary.halfDays}</span>
               </div>
-
+              
               <div className="flex justify-between items-center p-3 bg-status-leave/5 rounded-lg border border-status-leave/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-status-leave"></div> On Leave
                 </span>
-                <span className="font-bold text-status-leave text-lg">0</span>
+                <span className="font-bold text-lg text-status-leave">{summary.onLeave}</span>
               </div>
               
               <div className="flex justify-between items-center p-3 bg-status-holiday/5 rounded-lg border border-status-holiday/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-status-holiday"></div> Holidays (Off Days)
                 </span>
-                <span className="font-bold text-status-holiday text-lg">0</span>
+                <span className="font-bold text-lg text-status-holiday">{summary.holidays}</span>
               </div>
             </div>
             
