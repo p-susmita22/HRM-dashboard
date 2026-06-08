@@ -1,8 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
+import axios from 'axios';
 
 const HelpPage = () => {
   const [activeTab, setActiveTab] = useState('leave');
+  const [myLeaves, setMyLeaves] = useState([]);
+
+  useEffect(() => {
+    fetchMyLeaves();
+  }, []);
+
+  const fetchMyLeaves = async () => {
+    try {
+      const res = await axios.get('/api/employee/leaves');
+      setMyLeaves(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleApplyLeave = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      leaveType: formData.get('leaveType'),
+      fromDate: formData.get('fromDate'),
+      toDate: formData.get('toDate'),
+      reason: formData.get('reason')
+    };
+    
+    try {
+      await axios.post('/api/employee/leaves', data);
+      e.target.reset();
+      fetchMyLeaves();
+    } catch (err) {
+      alert('Failed to apply leave');
+    }
+  };
+
+  const handleDeleteLeave = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this leave request?')) return;
+    try {
+      await axios.delete(`/api/employee/leaves/${id}`);
+      fetchMyLeaves();
+    } catch (err) {
+      alert('Failed to delete leave');
+    }
+  };
+
   
   // Regularization state
   const [regDates, setRegDates] = useState([]);
@@ -70,11 +115,11 @@ const HelpPage = () => {
       <div className="card">
         {activeTab === 'leave' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <form onSubmit={(e) => { e.preventDefault(); alert('Leave Request Submitted'); e.target.reset(); }}>
+            <form onSubmit={handleApplyLeave}>
               <h3 className="mb-4 text-lg font-semibold">Apply for Leave</h3>
               <div className="mb-4">
                 <label className="block mb-1.5 font-medium text-sm">Leave Type</label>
-                <select className="form-control" required>
+                <select name="leaveType" className="form-control" required>
                   <option value="">Select Leave Type</option>
                   <option value="Casual Leave">Casual Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
@@ -85,16 +130,16 @@ const HelpPage = () => {
               <div className="flex gap-4 mb-4">
                 <div className="flex-1">
                   <label className="block mb-1.5 font-medium text-sm">From Date</label>
-                  <input type="date" className="form-control" required />
+                  <input type="date" name="fromDate" className="form-control" required />
                 </div>
                 <div className="flex-1">
                   <label className="block mb-1.5 font-medium text-sm">To Date</label>
-                  <input type="date" className="form-control" required />
+                  <input type="date" name="toDate" className="form-control" required />
                 </div>
               </div>
               <div className="mb-4">
                 <label className="block mb-1.5 font-medium text-sm">Reason</label>
-                <textarea className="form-control" rows="3" required></textarea>
+                <textarea name="reason" className="form-control" rows="3" required></textarea>
               </div>
               <button type="submit" className="btn btn-primary w-full">Submit Request</button>
             </form>
@@ -102,18 +147,15 @@ const HelpPage = () => {
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col max-h-[400px]">
               <h3 className="mb-4 text-lg font-semibold border-b border-gray-200 pb-2">Recent Leave Requests</h3>
               <div className="space-y-3 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                {[
-                  { type: 'Sick Leave', from: '2026-06-10', to: '2026-06-12', status: 'Pending' },
-                  { type: 'Casual Leave', from: '2026-05-15', to: '2026-05-15', status: 'Approved' },
-                  { type: 'Emergency Leave', from: '2026-04-02', to: '2026-04-03', status: 'Rejected' },
-                  { type: 'Earned Leave', from: '2026-01-10', to: '2026-01-15', status: 'Approved' },
-                ].map((leave, i) => (
-                  <div key={i} className="bg-white p-3.5 rounded-lg border border-gray-100 flex flex-col gap-2 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
+                {myLeaves.length === 0 ? (
+                  <p className="text-sm text-text-light text-center py-4">No leave requests found.</p>
+                ) : myLeaves.map((leave) => (
+                  <div key={leave._id} className="bg-white p-3.5 rounded-lg border border-gray-100 flex flex-col gap-2 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-semibold text-sm text-text-dark">{leave.type}</h4>
+                        <h4 className="font-semibold text-sm text-text-dark">{leave.leaveType}</h4>
                         <p className="text-[11px] text-text-light font-medium mt-0.5">
-                          {format(new Date(leave.from), 'dd MMM yyyy')} - {format(new Date(leave.to), 'dd MMM yyyy')}
+                          {format(new Date(leave.fromDate), 'dd MMM yyyy')} - {format(new Date(leave.toDate), 'dd MMM yyyy')}
                         </p>
                       </div>
                       <span className={`text-[10px] px-2 py-1 rounded font-bold tracking-wide ${
@@ -128,7 +170,7 @@ const HelpPage = () => {
                       <div className="flex justify-end mt-2 pt-2 border-t border-gray-50">
                         <button 
                           type="button" 
-                          onClick={() => alert('Request Deleted')} 
+                          onClick={() => handleDeleteLeave(leave._id)} 
                           className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors flex items-center gap-1"
                         >
                           Delete Request

@@ -139,3 +139,46 @@ export const punchOut = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+import Leave from '../models/Leave.js';
+
+export const applyLeave = async (req, res) => {
+  try {
+    const { leaveType, fromDate, toDate, reason } = req.body;
+    const leave = new Leave({
+      employee: req.user._id,
+      leaveType,
+      fromDate,
+      toDate,
+      reason,
+      status: 'Pending'
+    });
+    await leave.save();
+    res.status(201).json(leave);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getMyLeaves = async (req, res) => {
+  try {
+    const leaves = await Leave.find({ employee: req.user._id }).sort({ createdAt: -1 });
+    res.json(leaves);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteLeave = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    if (leave.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
+    if (leave.status !== 'Pending') return res.status(400).json({ message: 'Cannot delete processed leave' });
+    
+    await leave.deleteOne();
+    res.json({ message: 'Leave deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
