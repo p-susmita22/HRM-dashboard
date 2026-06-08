@@ -4,12 +4,19 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import http from 'http';
 import { Server } from 'socket.io';
+import fs from 'fs';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 
 dotenv.config();
+
+// Create uploads directory if it doesn't exist to prevent 500 errors on file upload
+const uploadsDir = './uploads';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
 const app = express();
 const server = http.createServer(app);
