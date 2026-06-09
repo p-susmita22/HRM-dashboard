@@ -1,37 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CalendarDays, Clock, CheckCircle, XCircle, Edit, Download, Calendar as CalIcon } from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle, XCircle, Edit, Download, Calendar as CalIcon, History } from 'lucide-react';
 
 const AdminAttendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'all'
+  const [activeTab, setActiveTab] = useState('today'); // 'pending', 'today', 'holidays'
   const [filterEmployee, setFilterEmployee] = useState('');
 
   const [showHolidayModal, setShowHolidayModal] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [historyModalEmployee, setHistoryModalEmployee] = useState(null);
   
   const [holidayData, setHolidayData] = useState({ date: '', reason: '' });
 
-  const fetchAttendance = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get('/api/admin/attendance');
-      setAttendanceRecords(response.data);
+      setLoading(true);
+      const [attRes, empRes] = await Promise.all([
+        axios.get('/api/admin/attendance'),
+        axios.get('/api/admin/employees')
+      ]);
+      setAttendanceRecords(attRes.data);
+      setEmployees(empRes.data);
     } catch (error) {
-      console.error('Error fetching attendance:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAttendance();
+    fetchData();
   }, []);
 
   const handleApprove = async (id) => {
     try {
       await axios.put(`/api/admin/attendance/${id}/approve`);
-      fetchAttendance();
+      fetchData();
       alert('Attendance approved and calculated automatically!');
     } catch (error) {
       alert('Failed to approve attendance');
@@ -42,7 +48,7 @@ const AdminAttendance = () => {
     if (window.confirm('Are you sure you want to reject this attendance request?')) {
       try {
         await axios.put(`/api/admin/attendance/${id}/reject`);
-        fetchAttendance();
+        fetchData();
         alert('Attendance request rejected!');
       } catch (error) {
         alert('Failed to reject attendance');
@@ -55,14 +61,12 @@ const AdminAttendance = () => {
     try {
       await axios.post('/api/admin/attendance/holiday', holidayData);
       setShowHolidayModal(false);
-      fetchAttendance();
+      fetchData();
       alert('Holiday marked for all employees!');
     } catch (error) {
       alert('Failed to mark holiday');
     }
   };
-
-
 
   const formatTime = (dateString) => {
     if (!dateString) return '--:--';
@@ -86,10 +90,38 @@ const AdminAttendance = () => {
   };
 
   const pendingRecords = attendanceRecords.filter(r => r.adminStatus === 'Pending');
-  const allRecords = attendanceRecords.filter(r => 
-    r.adminStatus !== 'Pending' && 
-    (filterEmployee === '' || r.employee?.fullName.toLowerCase().includes(filterEmployee.toLowerCase()))
-  );
+
+  // Compute Today's Attendance for Employees
+  const today = new Date();
+  const todayRecords = employees.filter(emp => emp.role === 'employee' && emp.isActive).map(emp => {
+    const record = attendanceRecords.find(r => {
+        if (r.status === 'Holiday') return false; // Ignore holiday records in employee list
+        if (r.employee?._id !== emp._id) return false;
+        const rDate = new Date(r.date);
+        return rDate.getDate() === today.getDate() && rDate.getMonth() === today.getMonth() && rDate.getFullYear() === today.getFullYear();
+    });
+    return {
+        employee: emp,
+        record: record || null
+    };
+  }).filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
+
+  // Unique Holidays
+  const holidaysMap = new Map();
+  attendanceRecords.forEach(r => {
+    if (r.status === 'Holiday') {
+        const dStr = new Date(r.date).toDateString();
+        if (!holidaysMap.has(dStr)) {
+            holidaysMap.set(dStr, r);
+        }
+    }
+  });
+  const holidayList = Array.from(holidaysMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Employee History
+  const historyRecords = historyModalEmployee 
+    ? attendanceRecords.filter(r => r.employee?._id === historyModalEmployee._id && r.status !== 'Holiday').sort((a, b) => new Date(b.date) - new Date(a.date))
+    : [];
 
   return (
     <div className="animate-fade-in pb-10">
@@ -110,16 +142,22 @@ const AdminAttendance = () => {
 
       <div className="flex gap-4 border-b border-gray-200 mb-6">
         <button 
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'today' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('today')}
+        >
+          Today's Attendance
+        </button>
+        <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('pending')}
         >
           Pending Approvals ({pendingRecords.length})
         </button>
         <button 
-          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
-          onClick={() => setActiveTab('all')}
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'holidays' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('holidays')}
         >
-          Monthly Records
+          Official Holidays
         </button>
       </div>
 
@@ -173,11 +211,11 @@ const AdminAttendance = () => {
         </div>
       )}
 
-      {activeTab === 'all' && (
+      {activeTab === 'today' && (
         <div className="card shadow-md border-none overflow-hidden">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
-              <CalendarDays size={20} className="text-primary" /> All Attendance Records
+              <CalendarDays size={20} className="text-primary" /> Today's Employees
             </h3>
             <input 
               type="text" 
@@ -192,45 +230,34 @@ const AdminAttendance = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Punches</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Total Hours</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee ID</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Name</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">In Time</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Out Time</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Status (Today)</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {allRecords.length === 0 ? (
-                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No records found.</td></tr>
+                {todayRecords.length === 0 ? (
+                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No employees found.</td></tr>
                 ) : (
-                  allRecords.map(record => (
-                    <tr key={record._id} className="hover:bg-gray-50">
-                      <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
+                  todayRecords.map(item => (
+                    <tr key={item.employee._id} className="hover:bg-gray-50">
+                      <td className="p-4 text-sm font-medium text-text-light">{item.employee.employeeId}</td>
                       <td className="p-4">
-                        <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
-                        <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
+                        <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
                       </td>
-                      <td className="p-4">
-                        {['Holiday', 'Leave', 'Leave Approved'].includes(record.status) ? (
-                          <span className="text-xs font-medium text-text-light/60 italic bg-gray-50 px-2 py-1 rounded border border-gray-100">Not Applicable</span>
-                        ) : (
-                          <>
-                            <p className="text-xs text-text-light">In: <span className="text-text-dark font-medium">{formatTime(record.punchIn)}</span></p>
-                            <p className="text-xs text-text-light">Out: <span className="text-text-dark font-medium">{formatTime(record.punchOut)}</span></p>
-                          </>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-text-dark font-semibold">
-                        {['Holiday', 'Leave', 'Leave Approved'].includes(record.status) ? (
-                          <span className="text-xs font-medium text-text-light/60 italic bg-gray-50 px-2 py-1 rounded border border-gray-100">Not Applicable</span>
-                        ) : (
-                          record.totalHours > 0 ? `${record.totalHours} hrs` : '-'
-                        )}
-                      </td>
-                      <td className="p-4">{getStatusBadge(record.status)}</td>
+                      <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</td>
+                      <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
+                      <td className="p-4">{item.record ? getStatusBadge(item.record.status) : <span className="text-xs text-text-light italic">No Record</span>}</td>
                       <td className="p-4 text-right">
-                        {/* No action needed for all records since it's already approved/rejected */}
+                        <button 
+                            className="btn py-1 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs flex items-center gap-1 ml-auto"
+                            onClick={() => setHistoryModalEmployee(item.employee)}
+                        >
+                            <History size={14} /> History
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -241,7 +268,105 @@ const AdminAttendance = () => {
         </div>
       )}
 
+      {activeTab === 'holidays' && (
+        <div className="card shadow-md border-none overflow-hidden">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
+              <CalIcon size={20} className="text-yellow-500" /> Official Holidays
+            </h3>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {holidayList.length === 0 ? (
+                  <tr><td colSpan="2" className="p-8 text-center text-text-light">No holidays marked yet.</td></tr>
+                ) : (
+                  holidayList.map(record => (
+                    <tr key={record._id} className="hover:bg-gray-50">
+                      <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
+                      <td className="p-4">{getStatusBadge(record.status)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
+      {/* History Modal */}
+      {historyModalEmployee && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
+                    <History size={20} className="text-primary" /> Attendance History
+                </h2>
+                <p className="text-sm text-text-light mt-1">Viewing records for <span className="font-semibold text-text-dark">{historyModalEmployee.fullName}</span> ({historyModalEmployee.employeeId})</p>
+              </div>
+              <button onClick={() => setHistoryModalEmployee(null)} className="text-gray-400 hover:text-status-absent transition-colors p-2">
+                <XCircle size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+                <div className="overflow-x-auto border border-gray-100 rounded-lg">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="p-3 text-xs font-semibold text-text-light uppercase">Date</th>
+                                <th className="p-3 text-xs font-semibold text-text-light uppercase">Punches</th>
+                                <th className="p-3 text-xs font-semibold text-text-light uppercase">Total Hours</th>
+                                <th className="p-3 text-xs font-semibold text-text-light uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {historyRecords.length === 0 ? (
+                                <tr><td colSpan="4" className="p-8 text-center text-text-light">No attendance records found.</td></tr>
+                            ) : (
+                                historyRecords.map(record => (
+                                    <tr key={record._id} className="hover:bg-gray-50">
+                                        <td className="p-3 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
+                                        <td className="p-3">
+                                            {['Leave', 'Leave Approved'].includes(record.status) ? (
+                                                <span className="text-xs font-medium text-text-light/60 italic">Not Applicable</span>
+                                            ) : (
+                                                <>
+                                                    <span className="text-xs text-text-light mr-3">In: <span className="text-text-dark font-medium">{formatTime(record.punchIn)}</span></span>
+                                                    <span className="text-xs text-text-light">Out: <span className="text-text-dark font-medium">{formatTime(record.punchOut)}</span></span>
+                                                </>
+                                            )}
+                                        </td>
+                                        <td className="p-3 text-sm text-text-dark font-semibold">
+                                            {['Leave', 'Leave Approved'].includes(record.status) ? (
+                                                <span className="text-xs font-medium text-text-light/60 italic">-</span>
+                                            ) : (
+                                                record.totalHours > 0 ? `${record.totalHours} hrs` : '-'
+                                            )}
+                                        </td>
+                                        <td className="p-3">{getStatusBadge(record.status)}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 bg-gray-50 shrink-0 flex justify-end">
+                <button onClick={() => setHistoryModalEmployee(null)} className="btn bg-white border border-gray-200 text-text-dark hover:bg-gray-100">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mark Holiday Modal */}
       {showHolidayModal && (
@@ -254,7 +379,7 @@ const AdminAttendance = () => {
               </button>
             </div>
             <form onSubmit={handleHolidaySubmit} className="p-6">
-              <p className="text-sm text-text-light mb-4">This will mark the selected date as a Holiday (🔵) for all active employees.</p>
+              <p className="text-sm text-text-light mb-4">This will mark the selected date as a Holiday for all active employees.</p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">Holiday Date</label>
