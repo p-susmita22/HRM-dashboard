@@ -393,18 +393,22 @@ const HelpPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         {reg.dates ? (
-                          <div className="flex flex-wrap gap-1 mb-1">
+                          <div className="flex flex-wrap gap-1.5 mb-2">
                             {reg.dates.split(',').map((dateStr, idx) => {
                               const d = new Date(dateStr);
                               return (
-                                <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded font-bold text-[10px] whitespace-nowrap">
+                                <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
                                   {d.getDate().toString().padStart(2, '0')} {format(d, 'MMM yyyy')}
                                 </span>
                               );
                             })}
                           </div>
                         ) : (
-                          <h4 className="font-semibold text-sm text-text-dark mb-1">Date: {format(new Date(reg.fromDate), 'dd MMM yyyy')}</h4>
+                          <div className="mb-2">
+                            <span className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
+                              {format(new Date(reg.fromDate), 'dd MMM yyyy')}
+                            </span>
+                          </div>
                         )}
                         <p className="text-[11px] text-text-light font-medium mt-0.5 max-w-[150px] truncate" title={reg.reason}>
                           {reg.reason}

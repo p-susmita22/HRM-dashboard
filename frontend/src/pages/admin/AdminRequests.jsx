@@ -165,21 +165,23 @@ const AdminRequests = () => {
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
                     </td>
                     <td className="p-4">
-                      {req.dates ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {req.dates.split(',').map((dateStr, idx) => {
+                      <div className="flex flex-wrap gap-1.5">
+                        {req.dates ? (
+                          req.dates.split(',').map((dateStr, idx) => {
                             const d = new Date(dateStr);
                             const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
                             return (
-                              <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded font-bold text-[11px] whitespace-nowrap">
+                              <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
                                 {formatted}
                               </span>
                             );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-text-dark">{formatDate(req.fromDate)}</span>
-                      )}
+                          })
+                        ) : (
+                          <span className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
+                            {formatDate(req.fromDate)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="p-4">
