@@ -6,11 +6,27 @@ const HelpPage = () => {
   const [activeTab, setActiveTab] = useState('leave');
   const [myLeaves, setMyLeaves] = useState([]);
   const [myRegularizations, setMyRegularizations] = useState([]);
+  const [regDates, setRegDates] = useState([]);
+  const [regCurrentDate, setRegCurrentDate] = useState(new Date());
+  const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
 
   useEffect(() => {
     fetchMyLeaves();
     fetchMyRegularizations();
   }, []);
+
+  useEffect(() => {
+    fetchMonthlyAttendance(regCurrentDate.getFullYear(), regCurrentDate.getMonth() + 1);
+  }, [regCurrentDate]);
+
+  const fetchMonthlyAttendance = async (year, month) => {
+    try {
+      const res = await axios.get(`/api/employee/attendance/monthly?year=${year}&month=${month}`);
+      setMonthlyData(res.data);
+    } catch (error) {
+      console.error('Error fetching monthly attendance:', error);
+    }
+  };
 
   const fetchMyLeaves = async () => {
     try {
@@ -87,11 +103,6 @@ const HelpPage = () => {
     }
   };
 
-  
-  // Regularization state
-  const [regDates, setRegDates] = useState([]);
-  const [regCurrentDate, setRegCurrentDate] = useState(new Date());
-
   const daysInRegMonth = eachDayOfInterval({
     start: startOfMonth(regCurrentDate),
     end: endOfMonth(regCurrentDate)
@@ -100,17 +111,44 @@ const HelpPage = () => {
   const realToday = new Date();
 
   const getAttendanceColor = (date) => {
-    // Sundays are Holidays
-    if (date.getDay() === 0) return 'bg-status-holiday text-white';
-    
     const isToday = date.getDate() === realToday.getDate() && 
                     date.getMonth() === realToday.getMonth() && 
                     date.getFullYear() === realToday.getFullYear();
-                    
-    // Future dates
+
+    // Color Sundays as Holiday (Blue) FIRST
+    if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
+
+    const isOnLeave = monthlyData.leaves.some(leave => {
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+    });
+    if (isOnLeave) return 'bg-status-absent text-white shadow-md font-bold';
+
+    const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+    });
+
+    if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Holiday') return 'bg-yellow-400 text-white shadow-md font-bold border-2 border-yellow-500';
+        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-absent text-white shadow-md font-bold';
+        if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
+        if (record.status === 'Half Day') {
+            if (record.halfDayType === 'First Half Absent') {
+                return 'bg-gradient-to-b from-status-absent to-status-present text-white shadow-md font-bold';
+            } else if (record.halfDayType === 'Second Half Absent') {
+                return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
+            }
+            return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
+        }
+        if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
+    }
+
     if (date > realToday && !isToday) return 'text-gray-300';
+    if (date < realToday && !isToday) return 'bg-red-50 text-status-absent/60 border border-status-absent/20';
     
-    // Past dates default (Will be replaced with actual DB data later)
     return 'bg-gray-50 text-text-dark';
   };
 
