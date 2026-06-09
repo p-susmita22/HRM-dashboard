@@ -39,7 +39,6 @@ const HomePage = () => {
         console.error('Error fetching data', err);
       }
     };
-    };
     fetchProfileAndAttendance();
   }, []);
 
