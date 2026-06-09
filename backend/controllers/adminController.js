@@ -148,9 +148,8 @@ export const approveAttendance = async (req, res) => {
 
       // For testing/demo purposes, we mark them as Present if they punched out at all.
       // In a real system, you'd strictly check hours >= 8 for Present.
-      if (hours >= 0) record.status = 'Present';
-      else if (hours >= 4) record.status = 'Half Day';
-      else record.status = 'Absent';
+      if (hours >= 8) record.status = 'Present';
+      else record.status = 'Half Day';
     } else {
       record.status = 'Absent'; // If no punch out, it's considered absent
     }
