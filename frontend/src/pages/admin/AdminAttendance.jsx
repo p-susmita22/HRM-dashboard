@@ -173,61 +173,109 @@ const AdminAttendance = () => {
     historyRecords = [...regularRecords, ...leaveBlocks].sort((a, b) => b.sortDate - a.sortDate);
   }
 
-  const handleDownloadReport = () => {
-    const activeEmployees = employees.filter(e => e.role === 'employee' && e.isActive);
+  const handleIndividualReportDownload = (emp) => {
     const today = new Date();
     const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    // Generate dates array from 1st of month to today
     const dates = [];
     for (let d = new Date(startOfCurrentMonth); d <= today; d.setDate(d.getDate() + 1)) {
         dates.push(new Date(d));
     }
+    
+    let csvContent = "Date,In Time,Out Time,Status\n";
 
-    let csvContent = "Emp ID,Date,Name,In Time,Out Time,Status\n";
+    dates.forEach(date => {
+        const dateStr = date.toLocaleDateString('en-GB');
+        const isSunday = date.getDay() === 0;
+        const isHoliday = attendanceRecords.some(r => r.status === 'Holiday' && new Date(r.date).toDateString() === date.toDateString());
+        const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
+        const record = attendanceRecords.find(r => r.employee?._id === emp._id && new Date(r.date).toDateString() === date.toDateString() && r.status !== 'Holiday');
 
-    activeEmployees.forEach(emp => {
-        dates.forEach(date => {
-            const dateStr = date.toLocaleDateString('en-GB'); // DD/MM/YYYY
-            const isSunday = date.getDay() === 0;
+        let inTime = '--:--';
+        let outTime = '--:--';
+        let status = 'Absent';
 
-            // Check if holiday
-            const isHoliday = attendanceRecords.some(r => r.status === 'Holiday' && new Date(r.date).toDateString() === date.toDateString());
-            
-            // Check if on leave
-            const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
-
-            // Check attendance record
-            const record = attendanceRecords.find(r => r.employee?._id === emp._id && new Date(r.date).toDateString() === date.toDateString() && r.status !== 'Holiday');
-
-            let inTime = '--:--';
-            let outTime = '--:--';
-            let status = 'Absent';
-
-            if (isSunday) {
-                status = 'Sunday';
-            } else if (isHoliday) {
-                status = 'Official Holiday';
-            } else if (isOnLeave) {
-                status = 'Leave';
-            } else if (record) {
-                inTime = record.punchIn ? formatTime(record.punchIn) : '--:--';
-                outTime = record.punchOut ? formatTime(record.punchOut) : '--:--';
-                if (record.status === 'Present') status = 'Full Day';
-                else if (record.status === 'Half Day') status = 'Half Day';
-                else if (record.status === 'Absent') status = 'Absent';
-            }
-
-            // CSV row
-            csvContent += `"${emp.employeeId}","${dateStr}","${emp.fullName}","${inTime}","${outTime}","${status}"\n`;
-        });
+        if (isSunday) status = 'Sunday';
+        else if (isHoliday) status = 'Official Holiday';
+        else if (isOnLeave) status = 'Leave';
+        else if (record) {
+            inTime = record.punchIn ? formatTime(record.punchIn) : '--:--';
+            outTime = record.punchOut ? formatTime(record.punchOut) : '--:--';
+            if (record.status === 'Present') status = 'Full Day';
+            else if (record.status === 'Half Day') status = 'Half Day';
+            else if (record.status === 'Absent') status = 'Absent';
+        }
+        csvContent += `"${dateStr}","${inTime}","${outTime}","${status}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Attendance_Report_${today.toLocaleString('default', { month: 'short' })}_${today.getFullYear()}.csv`);
+    link.setAttribute('download', `Attendance_${emp.fullName.replace(/\s+/g, '_')}_${today.toLocaleString('default', { month: 'short' })}_${today.getFullYear()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleTotalReportDownload = () => {
+    const activeEmployees = employees.filter(e => e.role === 'employee' && e.isActive);
+    const today = new Date();
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    const dates = [];
+    for (let d = new Date(startOfCurrentMonth); d <= today; d.setDate(d.getDate() + 1)) {
+        dates.push(new Date(d));
+    }
+
+    let headerRow = "Date";
+    activeEmployees.forEach(emp => {
+        headerRow += `,"${emp.fullName} In Time","${emp.fullName} Out Time"`;
+    });
+    let csvContent = headerRow + "\n";
+
+    dates.forEach(date => {
+        const dateStr = date.toLocaleDateString('en-GB');
+        const isSunday = date.getDay() === 0;
+        const isHoliday = attendanceRecords.some(r => r.status === 'Holiday' && new Date(r.date).toDateString() === date.toDateString());
+        
+        let row = `"${dateStr}"`;
+
+        activeEmployees.forEach(emp => {
+            let inTime = '--:--';
+            let outTime = '--:--';
+
+            if (isSunday) {
+                inTime = 'Sunday';
+                outTime = 'Sunday';
+            } else if (isHoliday) {
+                inTime = 'Holiday';
+                outTime = 'Holiday';
+            } else {
+                const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
+                if (isOnLeave) {
+                    inTime = 'Leave';
+                    outTime = 'Leave';
+                } else {
+                    const record = attendanceRecords.find(r => r.employee?._id === emp._id && new Date(r.date).toDateString() === date.toDateString() && r.status !== 'Holiday');
+                    if (record) {
+                        inTime = record.punchIn ? formatTime(record.punchIn) : '--:--';
+                        outTime = record.punchOut ? formatTime(record.punchOut) : '--:--';
+                    } else {
+                        inTime = 'Absent';
+                        outTime = 'Absent';
+                    }
+                }
+            }
+            row += `,"${inTime}","${outTime}"`;
+        });
+        csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Total_Attendance_Report_${today.toLocaleString('default', { month: 'short' })}_${today.getFullYear()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -244,7 +292,7 @@ const AdminAttendance = () => {
           <button onClick={() => setShowHolidayModal(true)} className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-2">
             <CalIcon size={16} /> Mark Holiday
           </button>
-          <button onClick={handleDownloadReport} className="btn bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 flex items-center gap-2">
+          <button onClick={handleTotalReportDownload} className="btn bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 flex items-center gap-2">
             <Download size={16} /> Download Report
           </button>
         </div>
@@ -452,9 +500,17 @@ const AdminAttendance = () => {
                 </h2>
                 <p className="text-sm text-text-light mt-1">Viewing records for <span className="font-semibold text-text-dark">{historyModalEmployee.fullName}</span> ({historyModalEmployee.employeeId})</p>
               </div>
-              <button onClick={() => setHistoryModalEmployee(null)} className="text-gray-400 hover:text-status-absent transition-colors p-2">
-                <XCircle size={24} />
-              </button>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => handleIndividualReportDownload(historyModalEmployee)} 
+                  className="btn bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 flex items-center gap-2 text-sm py-1.5 px-3"
+                >
+                  <Download size={14} /> Download Report
+                </button>
+                <button onClick={() => setHistoryModalEmployee(null)} className="text-gray-400 hover:text-status-absent transition-colors p-2">
+                  <XCircle size={24} />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto">
