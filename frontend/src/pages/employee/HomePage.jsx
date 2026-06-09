@@ -156,7 +156,7 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (isOnLeave) return 'bg-status-leave text-white shadow-md border border-status-leave/50';
+    if (isOnLeave) return 'bg-status-absent text-white shadow-md font-bold';
 
     const record = monthlyData.attendances.find(a => {
         const aDate = new Date(a.date);
@@ -164,8 +164,8 @@ const HomePage = () => {
     });
 
     if (record && record.adminStatus === 'Approved') {
-        if (record.status === 'Holiday') return 'bg-status-holiday text-white shadow-md font-bold border-2 border-blue-400';
-        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-leave text-white shadow-md border border-status-leave/50';
+        if (record.status === 'Holiday') return 'bg-yellow-400 text-white shadow-md font-bold border-2 border-yellow-500';
+        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-absent text-white shadow-md font-bold';
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
             if (record.halfDayType === 'First Half Absent') {
@@ -315,13 +315,13 @@ const HomePage = () => {
                   <div className="w-4 h-4 rounded-full bg-status-present shadow-sm"></div> Present
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent
+                  <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent / Leave
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Holidays (Sunday)
+                  <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-status-leave shadow-sm"></div> Leave
+                  <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Official Holidays
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day (1st Half Absent)
@@ -366,11 +366,11 @@ const HomePage = () => {
                 <span className="font-bold text-lg text-yellow-600">{summary.halfDays}</span>
               </div>
               
-              <div className="flex justify-between items-center p-3 bg-status-leave/5 rounded-lg border border-status-leave/20">
+              <div className="flex justify-between items-center p-3 bg-red-500/5 rounded-lg border border-red-500/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-leave"></div> On Leave
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div> On Leave
                 </span>
-                <span className="font-bold text-lg text-status-leave">{summary.onLeave}</span>
+                <span className="font-bold text-lg text-red-500">{summary.onLeave}</span>
               </div>
               
               <div className="flex justify-between items-center p-3 bg-status-holiday/5 rounded-lg border border-status-holiday/20">

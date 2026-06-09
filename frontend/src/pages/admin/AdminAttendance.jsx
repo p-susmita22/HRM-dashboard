@@ -78,8 +78,8 @@ const AdminAttendance = () => {
       case 'Present': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 border border-green-200"><div className="w-2 h-2 rounded-full bg-green-500"></div> Present</span>;
       case 'Absent': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 border border-red-200"><div className="w-2 h-2 rounded-full bg-red-500"></div> Absent</span>;
       case 'Leave Approved': 
-      case 'Leave': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200"><div className="w-2 h-2 rounded-full bg-yellow-500"></div> Leave</span>;
-      case 'Holiday': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Holiday</span>;
+      case 'Leave': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 border border-red-200"><div className="w-2 h-2 rounded-full bg-red-500"></div> Leave</span>;
+      case 'Holiday': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200"><div className="w-2 h-2 rounded-full bg-yellow-500"></div> Holiday</span>;
       case 'Half Day': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200"><div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-red-500"></div> Half Day</span>;
       default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-50 text-gray-700 border border-gray-200"><div className="w-2 h-2 rounded-full bg-gray-400"></div> Pending</span>;
     }
