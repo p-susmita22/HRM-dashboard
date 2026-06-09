@@ -75,13 +75,13 @@ const AdminAttendance = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'Present': return <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">🟢 Present</span>;
-      case 'Absent': return <span className="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-700">🔴 Absent</span>;
+      case 'Present': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 border border-green-200"><div className="w-2 h-2 rounded-full bg-green-500"></div> Present</span>;
+      case 'Absent': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 border border-red-200"><div className="w-2 h-2 rounded-full bg-red-500"></div> Absent</span>;
       case 'Leave Approved': 
-      case 'Leave': return <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">🟡 Leave</span>;
-      case 'Holiday': return <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">🔵 Holiday</span>;
-      case 'Half Day': return <span className="px-2 py-1 rounded text-xs font-semibold bg-orange-100 text-orange-700">🟢🔴 Half Day</span>;
-      default: return <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">Pending</span>;
+      case 'Leave': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200"><div className="w-2 h-2 rounded-full bg-yellow-500"></div> Leave</span>;
+      case 'Holiday': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Holiday</span>;
+      case 'Half Day': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200"><div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-red-500"></div> Half Day</span>;
+      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-50 text-gray-700 border border-gray-200"><div className="w-2 h-2 rounded-full bg-gray-400"></div> Pending</span>;
     }
   };
 
@@ -212,10 +212,22 @@ const AdminAttendance = () => {
                         <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
                       </td>
                       <td className="p-4">
-                        <p className="text-xs text-text-light">In: <span className="text-text-dark font-medium">{formatTime(record.punchIn)}</span></p>
-                        <p className="text-xs text-text-light">Out: <span className="text-text-dark font-medium">{formatTime(record.punchOut)}</span></p>
+                        {['Holiday', 'Leave', 'Leave Approved'].includes(record.status) ? (
+                          <span className="text-xs font-medium text-text-light/60 italic bg-gray-50 px-2 py-1 rounded border border-gray-100">Not Applicable</span>
+                        ) : (
+                          <>
+                            <p className="text-xs text-text-light">In: <span className="text-text-dark font-medium">{formatTime(record.punchIn)}</span></p>
+                            <p className="text-xs text-text-light">Out: <span className="text-text-dark font-medium">{formatTime(record.punchOut)}</span></p>
+                          </>
+                        )}
                       </td>
-                      <td className="p-4 text-sm text-text-dark font-semibold">{record.totalHours > 0 ? `${record.totalHours} hrs` : '-'}</td>
+                      <td className="p-4 text-sm text-text-dark font-semibold">
+                        {['Holiday', 'Leave', 'Leave Approved'].includes(record.status) ? (
+                          <span className="text-xs font-medium text-text-light/60 italic bg-gray-50 px-2 py-1 rounded border border-gray-100">Not Applicable</span>
+                        ) : (
+                          record.totalHours > 0 ? `${record.totalHours} hrs` : '-'
+                        )}
+                      </td>
                       <td className="p-4">{getStatusBadge(record.status)}</td>
                       <td className="p-4 text-right">
                         {/* No action needed for all records since it's already approved/rejected */}
