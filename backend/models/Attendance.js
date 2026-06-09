@@ -20,7 +20,8 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['First Half Absent', 'Second Half Absent', 'None'],
     default: 'None'
   },
-  totalHours: { type: Number, default: 0 }
+  totalHours: { type: Number, default: 0 },
+  holidayName: { type: String }
 }, { timestamps: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);

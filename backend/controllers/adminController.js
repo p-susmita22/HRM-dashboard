@@ -207,11 +207,13 @@ export const markHoliday = async (req, res) => {
           employee: emp._id,
           date: targetDate,
           status: 'Holiday',
-          adminStatus: 'Approved'
+          adminStatus: 'Approved',
+          holidayName: reason
         });
       } else {
         existing.status = 'Holiday';
         existing.adminStatus = 'Approved';
+        existing.holidayName = reason;
         await existing.save();
       }
     }

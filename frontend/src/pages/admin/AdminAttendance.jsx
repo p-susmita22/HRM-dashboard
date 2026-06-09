@@ -301,16 +301,18 @@ const AdminAttendance = () => {
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Holiday Name</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {holidayList.length === 0 ? (
-                  <tr><td colSpan="2" className="p-8 text-center text-text-light">No holidays marked yet.</td></tr>
+                  <tr><td colSpan="3" className="p-8 text-center text-text-light">No holidays marked yet.</td></tr>
                 ) : (
                   holidayList.map(record => (
                     <tr key={record._id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
+                      <td className="p-4 text-sm text-text-dark font-semibold">{record.holidayName || 'Official Holiday'}</td>
                       <td className="p-4">{getStatusBadge(record.status)}</td>
                     </tr>
                   ))
