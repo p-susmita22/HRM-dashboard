@@ -227,11 +227,13 @@ const AdminAttendance = () => {
         dates.push(new Date(d));
     }
 
-    let headerRow = "Date";
+    let headerRow1 = "Date";
+    let headerRow2 = "Time";
     activeEmployees.forEach(emp => {
-        headerRow += `,"${emp.fullName} In Time","${emp.fullName} Out Time"`;
+        headerRow1 += `,"${emp.fullName}",""`;
+        headerRow2 += `,"in time","out time"`;
     });
-    let csvContent = headerRow + "\n";
+    let csvContent = headerRow1 + "\n" + headerRow2 + "\n";
 
     dates.forEach(date => {
         const dateStr = date.toLocaleDateString('en-GB');
