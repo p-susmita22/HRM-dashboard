@@ -173,6 +173,66 @@ const AdminAttendance = () => {
     historyRecords = [...regularRecords, ...leaveBlocks].sort((a, b) => b.sortDate - a.sortDate);
   }
 
+  const handleDownloadReport = () => {
+    const activeEmployees = employees.filter(e => e.role === 'employee' && e.isActive);
+    const today = new Date();
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Generate dates array from 1st of month to today
+    const dates = [];
+    for (let d = new Date(startOfCurrentMonth); d <= today; d.setDate(d.getDate() + 1)) {
+        dates.push(new Date(d));
+    }
+
+    let csvContent = "Emp ID,Date,Name,In Time,Out Time,Status\n";
+
+    activeEmployees.forEach(emp => {
+        dates.forEach(date => {
+            const dateStr = date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+            const isSunday = date.getDay() === 0;
+
+            // Check if holiday
+            const isHoliday = attendanceRecords.some(r => r.status === 'Holiday' && new Date(r.date).toDateString() === date.toDateString());
+            
+            // Check if on leave
+            const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
+
+            // Check attendance record
+            const record = attendanceRecords.find(r => r.employee?._id === emp._id && new Date(r.date).toDateString() === date.toDateString() && r.status !== 'Holiday');
+
+            let inTime = '--:--';
+            let outTime = '--:--';
+            let status = 'Absent';
+
+            if (isSunday) {
+                status = 'Sunday';
+            } else if (isHoliday) {
+                status = 'Official Holiday';
+            } else if (isOnLeave) {
+                status = 'Leave';
+            } else if (record) {
+                inTime = record.punchIn ? formatTime(record.punchIn) : '--:--';
+                outTime = record.punchOut ? formatTime(record.punchOut) : '--:--';
+                if (record.status === 'Present') status = 'Full Day';
+                else if (record.status === 'Half Day') status = 'Half Day';
+                else if (record.status === 'Absent') status = 'Absent';
+            }
+
+            // CSV row
+            csvContent += `"${emp.employeeId}","${dateStr}","${emp.fullName}","${inTime}","${outTime}","${status}"\n`;
+        });
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Attendance_Report_${today.toLocaleString('default', { month: 'short' })}_${today.getFullYear()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="animate-fade-in pb-10">
       <div className="flex justify-between items-end mb-6">
@@ -184,7 +244,7 @@ const AdminAttendance = () => {
           <button onClick={() => setShowHolidayModal(true)} className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-2">
             <CalIcon size={16} /> Mark Holiday
           </button>
-          <button className="btn bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 flex items-center gap-2">
+          <button onClick={handleDownloadReport} className="btn bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 flex items-center gap-2">
             <Download size={16} /> Download Report
           </button>
         </div>
