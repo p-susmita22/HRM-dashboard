@@ -348,9 +348,10 @@ export const updateRegularizationStatus = async (req, res) => {
   try {
     const reg = await Regularization.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('employee', 'fullName employeeId');
     
-    if (req.body.status === 'Approved' && reg.dates) {
-      const dates = reg.dates.split(',');
-      for (const d of dates) {
+    if (req.body.status === 'Approved') {
+      const datesToProcess = reg.dates && reg.dates.length > 0 ? reg.dates : [reg.fromDate];
+      for (const d of datesToProcess) {
+        if (!d) continue;
         const currentDate = new Date(d);
         currentDate.setHours(0,0,0,0);
         const nextDay = new Date(currentDate);

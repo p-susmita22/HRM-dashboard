@@ -191,16 +191,13 @@ export const applyRegularization = async (req, res) => {
     // dates is a comma separated string
     const dateArray = dates.split(',');
     
-    // Create a request for each date
-    const requests = dateArray.map(date => ({
+    await Regularization.create({
       employee: req.user._id,
-      fromDate: date,
-      toDate: date,
+      dates: dateArray,
       reason,
       status: 'Pending'
-    }));
+    });
     
-    await Regularization.insertMany(requests);
     res.status(201).json({ message: 'Regularization requested' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

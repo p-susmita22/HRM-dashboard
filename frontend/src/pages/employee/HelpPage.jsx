@@ -392,9 +392,9 @@ const HelpPage = () => {
                   <div key={reg._id} className="bg-white p-3.5 rounded-lg border border-gray-100 flex flex-col gap-2 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
                     <div className="flex justify-between items-start">
                       <div>
-                        {reg.dates ? (
+                        {reg.dates && reg.dates.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5 mb-2">
-                            {reg.dates.split(',').map((dateStr, idx) => {
+                            {reg.dates.map((dateStr, idx) => {
                               const d = new Date(dateStr);
                               return (
                                 <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">

@@ -166,8 +166,8 @@ const AdminRequests = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1.5">
-                        {req.dates ? (
-                          req.dates.split(',').map((dateStr, idx) => {
+                        {req.dates && req.dates.length > 0 ? (
+                          req.dates.map((dateStr, idx) => {
                             const d = new Date(dateStr);
                             const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
                             return (
