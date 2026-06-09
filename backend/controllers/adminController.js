@@ -347,6 +347,44 @@ export const getRegularizationRequests = async (req, res) => {
 export const updateRegularizationStatus = async (req, res) => {
   try {
     const reg = await Regularization.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('employee', 'fullName employeeId');
+    
+    if (req.body.status === 'Approved' && reg.dates) {
+      const dates = reg.dates.split(',');
+      for (const d of dates) {
+        const currentDate = new Date(d);
+        currentDate.setHours(0,0,0,0);
+        const nextDay = new Date(currentDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        // 1. Update or create Attendance as Present
+        const existing = await Attendance.findOne({
+          employee: reg.employee._id,
+          date: { $gte: currentDate, $lt: nextDay }
+        });
+
+        if (existing) {
+          existing.status = 'Present';
+          existing.halfDayType = null;
+          existing.adminStatus = 'Approved';
+          await existing.save();
+        } else {
+          await Attendance.create({
+            employee: reg.employee._id,
+            date: currentDate,
+            status: 'Present',
+            adminStatus: 'Approved'
+          });
+        }
+
+        // 2. Cancel any overlapping Leaves
+        await Leave.deleteMany({
+          employee: reg.employee._id,
+          fromDate: { $lte: currentDate },
+          toDate: { $gte: currentDate }
+        });
+      }
+    }
+
     res.json(reg);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

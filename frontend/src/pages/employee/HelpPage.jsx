@@ -152,9 +152,23 @@ const HelpPage = () => {
     return 'bg-gray-50 text-text-dark';
   };
 
+  const getAttendanceStatus = (date) => {
+    if (date.getDay() === 0) return 'Holiday';
+    const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+    });
+    if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Holiday') return 'Holiday';
+        if (record.status === 'Present') return 'Present';
+    }
+    return 'None';
+  };
+
   const toggleRegDate = (date) => {
-    // Prevent selecting future dates or Sundays(Holidays)
-    if (date > new Date() || date.getDay() === 0) return;
+    if (date > new Date()) return;
+    const status = getAttendanceStatus(date);
+    if (status === 'Holiday' || status === 'Present') return;
     
     const dateStr = format(date, 'yyyy-MM-dd');
     if (regDates.includes(dateStr)) {
@@ -329,10 +343,10 @@ const HelpPage = () => {
                      const dateStr = format(date, 'yyyy-MM-dd');
                      const isSelected = regDates.includes(dateStr);
                      
-                     // Prevent clicking dates in the future
+                     // Prevent clicking dates in the future or Holidays/Present dates
                      const isFuture = new Date(date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
-                     const isSunday = date.getDay() === 0;
-                     const isDisabled = isFuture || isSunday;
+                     const status = getAttendanceStatus(date);
+                     const isDisabled = isFuture || status === 'Holiday' || status === 'Present';
                      
                      const baseStyle = getAttendanceColor(date);
                      
