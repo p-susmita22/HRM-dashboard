@@ -164,7 +164,23 @@ const AdminRequests = () => {
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
                     </td>
-                    <td className="p-4 text-sm text-text-dark">{formatDate(req.fromDate)}</td>
+                    <td className="p-4">
+                      {req.dates ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {req.dates.split(',').map((dateStr, idx) => {
+                            const d = new Date(dateStr);
+                            const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
+                            return (
+                              <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded font-bold text-[11px] whitespace-nowrap">
+                                {formatted}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-text-dark">{formatDate(req.fromDate)}</span>
+                      )}
+                    </td>
                     <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="p-4">
                       {req.status === 'Pending' ? (
