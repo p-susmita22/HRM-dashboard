@@ -149,10 +149,12 @@ const AdminAttendance = () => {
               return rDate.toDateString() === date.toDateString();
           });
           return { employee: emp, record: record || null };
-      }).filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
+      })
+      .filter(item => item.record !== null)
+      .filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
       
       return { date, records: recordsForDate };
-  });
+  }).filter(group => group.records.length > 0 || group.date.toDateString() === todayDateStr);
 
   // Unique Holidays
   const holidaysMap = new Map();
