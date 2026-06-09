@@ -169,11 +169,11 @@ const HomePage = () => {
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
             if (record.halfDayType === 'First Half Absent') {
-                return 'bg-gradient-to-b from-yellow-400 to-status-present text-white shadow-md font-bold';
+                return 'bg-gradient-to-b from-status-absent to-status-present text-white shadow-md font-bold';
             } else if (record.halfDayType === 'Second Half Absent') {
-                return 'bg-gradient-to-b from-status-present to-yellow-400 text-white shadow-md font-bold';
+                return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
             }
-            return 'bg-gradient-to-b from-status-present to-yellow-400 text-white shadow-md font-bold'; // Fallback Half Day color
+            return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold'; // Fallback Half Day color
         }
         if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
     }
@@ -207,7 +207,7 @@ const HomePage = () => {
       const punchDetails = `(In: ${formatT(record.punchIn)} | Out: ${formatT(record.punchOut)})`;
       if (record.status === 'Holiday') return 'Official Holiday';
       if (record.status === 'Leave' || record.status === 'Leave Approved') return 'On Leave';
-      if (record.status === 'Present') return `Present ${punchDetails}`;
+      if (record.status === 'Present') return `Full Day ${punchDetails}`;
       if (record.status === 'Half Day') return `Half Day ${punchDetails}`;
       if (record.status === 'Absent') return `Absent ${punchDetails}`;
     }
@@ -367,7 +367,7 @@ const HomePage = () => {
               <h4 className="text-sm font-semibold mb-3 text-text-dark">Legend:</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px] font-medium text-text-dark">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-status-present shadow-sm"></div> Present
+                  <div className="w-4 h-4 rounded-full bg-status-present shadow-sm"></div> Full Day
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent / Leave
@@ -379,10 +379,10 @@ const HomePage = () => {
                   <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Official Holidays
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-yellow-400 to-status-present"></div> Half Day (1st Half Absent)
+                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day (1st Half Absent)
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-present to-yellow-400"></div> Half Day (2nd Half Absent)
+                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-present to-status-absent"></div> Half Day (2nd Half Absent)
                 </div>
               </div>
               
@@ -402,7 +402,7 @@ const HomePage = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center p-3 bg-status-present/5 rounded-lg border border-status-present/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-present"></div> Present
+                  <div className="w-3 h-3 rounded-full bg-status-present"></div> Full Day
                 </span>
                 <span className="font-bold text-lg text-status-present">{summary.present}</span>
               </div>
@@ -416,7 +416,7 @@ const HomePage = () => {
               
               <div className="flex justify-between items-center p-3 bg-yellow-500/5 rounded-lg border border-yellow-500/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-sm bg-gradient-to-b from-yellow-400 to-yellow-500"></div> Half Days
+                  <div className="w-3 h-3 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Days
                 </span>
                 <span className="font-bold text-lg text-yellow-600">{summary.halfDays}</span>
               </div>
