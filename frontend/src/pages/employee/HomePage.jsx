@@ -169,11 +169,11 @@ const HomePage = () => {
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
             if (record.halfDayType === 'First Half Absent') {
-                return 'bg-gradient-to-b from-status-absent to-status-present text-white shadow-md font-bold';
+                return 'bg-gradient-to-b from-yellow-400 to-status-present text-white shadow-md font-bold';
             } else if (record.halfDayType === 'Second Half Absent') {
-                return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
+                return 'bg-gradient-to-b from-status-present to-yellow-400 text-white shadow-md font-bold';
             }
-            return 'bg-gradient-to-b from-yellow-400 to-yellow-500 text-white shadow-md font-bold'; // Fallback Half Day color
+            return 'bg-gradient-to-b from-status-present to-yellow-400 text-white shadow-md font-bold'; // Fallback Half Day color
         }
         if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
     }
@@ -344,13 +344,23 @@ const HomePage = () => {
                 <div key={`empty-${i}`} />
               ))}
 
-              {daysInMonth.map((date) => (
-                <div key={date.toISOString()} className="flex justify-center">
-                  <div title={getDayTooltip(date)} className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
+              {daysInMonth.map((date) => {
+                const record = monthlyData.attendances.find(a => {
+                    const aDate = new Date(a.date);
+                    return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+                });
+                const isHalfDay = record && record.adminStatus === 'Approved' && record.status === 'Half Day';
+                
+                return (
+                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14">
+                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
                     {date.getDate()}
                   </div>
+                  {isHalfDay && (
+                    <span className="text-[9px] font-bold text-gray-500 mt-0.5 leading-tight text-center">Half Day</span>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
 
             <div className="mt-8 pt-4 border-t border-gray-100">
@@ -369,10 +379,10 @@ const HomePage = () => {
                   <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Official Holidays
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day (1st Half Absent)
+                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-yellow-400 to-status-present"></div> Half Day (1st Half Absent)
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-present to-status-absent"></div> Half Day (2nd Half Absent)
+                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-present to-yellow-400"></div> Half Day (2nd Half Absent)
                 </div>
               </div>
               
