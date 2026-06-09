@@ -5,6 +5,7 @@ import { CalendarDays, Clock, CheckCircle, XCircle, Edit, Download, Calendar as 
 const AdminAttendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('today'); // 'pending', 'today', 'holidays'
   const [filterEmployee, setFilterEmployee] = useState('');
@@ -17,12 +18,14 @@ const AdminAttendance = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [attRes, empRes] = await Promise.all([
+      const [attRes, empRes, leavesRes] = await Promise.all([
         axios.get('/api/admin/attendance'),
-        axios.get('/api/admin/employees')
+        axios.get('/api/admin/employees'),
+        axios.get('/api/admin/leaves')
       ]);
       setAttendanceRecords(attRes.data);
       setEmployees(empRes.data);
+      setLeaves(leavesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -119,9 +122,26 @@ const AdminAttendance = () => {
   const holidayList = Array.from(holidaysMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Employee History
-  const historyRecords = historyModalEmployee 
-    ? attendanceRecords.filter(r => r.employee?._id === historyModalEmployee._id && r.status !== 'Holiday').sort((a, b) => new Date(b.date) - new Date(a.date))
-    : [];
+  let historyRecords = [];
+  if (historyModalEmployee) {
+    const regularRecords = attendanceRecords
+        .filter(r => r.employee?._id === historyModalEmployee._id && r.status !== 'Holiday' && r.status !== 'Leave' && r.status !== 'Leave Approved')
+        .map(r => ({ ...r, sortDate: new Date(r.date) }));
+        
+    const leaveBlocks = leaves
+        .filter(l => l.employee?._id === historyModalEmployee._id && l.status === 'Approved')
+        .map(l => ({
+            isLeaveBlock: true,
+            _id: l._id,
+            fromDate: new Date(l.fromDate),
+            toDate: new Date(l.toDate),
+            reason: l.reason,
+            status: 'Leave Approved',
+            sortDate: new Date(l.fromDate)
+        }));
+        
+    historyRecords = [...regularRecords, ...leaveBlocks].sort((a, b) => b.sortDate - a.sortDate);
+  }
 
   return (
     <div className="animate-fade-in pb-10">
@@ -303,7 +323,7 @@ const AdminAttendance = () => {
 
       {/* History Modal */}
       {historyModalEmployee && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4 animate-fade-in">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
               <div>
@@ -333,11 +353,18 @@ const AdminAttendance = () => {
                                 <tr><td colSpan="4" className="p-8 text-center text-text-light">No attendance records found.</td></tr>
                             ) : (
                                 historyRecords.map(record => (
-                                    <tr key={record._id} className="hover:bg-gray-50">
-                                        <td className="p-3 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
+                                    <tr key={record._id} className={`hover:bg-gray-50 ${record.isLeaveBlock ? 'bg-red-50/30' : ''}`}>
+                                        <td className="p-3 text-sm text-text-dark font-medium">
+                                            {record.isLeaveBlock 
+                                                ? (record.fromDate.toDateString() === record.toDate.toDateString() 
+                                                    ? formatDate(record.fromDate) 
+                                                    : `${formatDate(record.fromDate)} - ${formatDate(record.toDate)}`)
+                                                : formatDate(record.date)
+                                            }
+                                        </td>
                                         <td className="p-3">
-                                            {['Leave', 'Leave Approved'].includes(record.status) ? (
-                                                <span className="text-xs font-medium text-text-light/60 italic">Not Applicable</span>
+                                            {record.isLeaveBlock ? (
+                                                <span className="text-xs font-medium text-text-light/80 italic">Reason: {record.reason || 'Not specified'}</span>
                                             ) : (
                                                 <>
                                                     <span className="text-xs text-text-light mr-3">In: <span className="text-text-dark font-medium">{formatTime(record.punchIn)}</span></span>
@@ -346,7 +373,7 @@ const AdminAttendance = () => {
                                             )}
                                         </td>
                                         <td className="p-3 text-sm text-text-dark font-semibold">
-                                            {['Leave', 'Leave Approved'].includes(record.status) ? (
+                                            {record.isLeaveBlock ? (
                                                 <span className="text-xs font-medium text-text-light/60 italic">-</span>
                                             ) : (
                                                 record.totalHours > 0 ? `${record.totalHours} hrs` : '-'
@@ -370,7 +397,7 @@ const AdminAttendance = () => {
 
       {/* Mark Holiday Modal */}
       {showHolidayModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4 animate-fade-in">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
               <h2 className="text-xl font-bold text-text-dark">Mark Holiday</h2>
