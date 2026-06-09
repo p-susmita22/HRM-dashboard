@@ -213,14 +213,18 @@ const AdminAttendance = () => {
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchIn)}</td>
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
                       <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
-                            <XCircle size={12} /> Reject
-                          </button>
-                          <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
-                            <CheckCircle size={12} /> Accept
-                          </button>
-                        </div>
+                        {record.punchOut ? (
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                              <XCircle size={12} /> Reject
+                            </button>
+                            <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
+                              <CheckCircle size={12} /> Accept
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-orange-500 font-medium italic">Waiting for Punch Out...</span>
+                        )}
                       </td>
                     </tr>
                   ))
