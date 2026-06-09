@@ -304,7 +304,7 @@ const AdminAttendance = () => {
                       </td>
                       <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</td>
                       <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
-                      <td className="p-4">{item.record ? getStatusBadge(item.record.status) : <span className="text-xs text-text-light italic">No Record</span>}</td>
+                      <td className="p-4">{item.record?.punchIn ? getStatusBadge('Present') : getStatusBadge('Absent')}</td>
                       <td className="p-4 text-right">
                         <button 
                             className="btn py-1 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs flex items-center gap-1 ml-auto"
