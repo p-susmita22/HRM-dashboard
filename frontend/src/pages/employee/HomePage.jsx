@@ -189,6 +189,46 @@ const HomePage = () => {
     return 'bg-gray-50 text-text-light';
   };
 
+  const getDayTooltip = (date) => {
+    if (date > realToday) return 'Future Date';
+
+    const isToday = date.getDate() === realToday.getDate() && 
+                    date.getMonth() === realToday.getMonth() && 
+                    date.getFullYear() === realToday.getFullYear();
+
+    const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+    });
+
+    const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
+
+    if (record && record.adminStatus === 'Approved') {
+      const punchDetails = `(In: ${formatT(record.punchIn)} | Out: ${formatT(record.punchOut)})`;
+      if (record.status === 'Holiday') return 'Official Holiday';
+      if (record.status === 'Leave' || record.status === 'Leave Approved') return 'On Leave';
+      if (record.status === 'Present') return `Present ${punchDetails}`;
+      if (record.status === 'Half Day') return `Half Day ${punchDetails}`;
+      if (record.status === 'Absent') return `Absent ${punchDetails}`;
+    }
+
+    if (isToday && punchedIn) return `Working (In: ${format(punchTime, 'hh:mm a')})`;
+
+    const isOnLeave = monthlyData.leaves.some(leave => {
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+    });
+    if (isOnLeave) return 'On Leave';
+
+    if (date.getDay() === 0) return 'Sunday (Holiday)';
+
+    if (date < realToday && !isToday) return 'Absent (No punches)';
+
+    return 'Pending';
+  };
+
   return (
     <div className="animate-fade-in pb-10">
       {/* Header with Punch In/Out Top Right */}
@@ -257,10 +297,15 @@ const HomePage = () => {
 
       <div className="p-5 max-w-6xl mx-auto mt-4">
         {punchedIn && (
-          <div className="card mb-6 text-center border-l-4 border-status-present">
-            <h3 className="text-text-light mb-1 text-sm">Current Working Status</h3>
-            <p className="text-primary text-2xl font-bold mb-1">{format(new Date(), 'hh:mm a')}</p>
-            <p className="text-xs text-text-light">Punched in at {format(punchTime, 'hh:mm a')}</p>
+          <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-6 p-3 flex justify-between items-center max-w-lg mx-auto bg-green-50/30">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-status-present animate-pulse"></div>
+              <span className="text-sm font-semibold text-text-dark">Current Working Status</span>
+            </div>
+            <div className="text-right">
+              <span className="text-status-present font-bold text-sm mr-2">{format(new Date(), 'hh:mm a')}</span>
+              <span className="text-xs text-text-light">(In at {format(punchTime, 'hh:mm a')})</span>
+            </div>
           </div>
         )}
 
@@ -301,7 +346,7 @@ const HomePage = () => {
 
               {daysInMonth.map((date) => (
                 <div key={date.toISOString()} className="flex justify-center">
-                  <div className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 ${getDayStatus(date)}`}>
+                  <div title={getDayTooltip(date)} className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
                     {date.getDate()}
                   </div>
                 </div>
