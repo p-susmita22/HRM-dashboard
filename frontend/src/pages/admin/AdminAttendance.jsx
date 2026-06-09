@@ -124,20 +124,35 @@ const AdminAttendance = () => {
 
   const pendingRecords = attendanceRecords.filter(r => r.adminStatus === 'Pending');
 
-  // Compute Today's Attendance for Employees
-  const today = new Date();
-  const todayRecords = employees.filter(emp => emp.role === 'employee' && emp.isActive).map(emp => {
-    const record = attendanceRecords.find(r => {
-        if (r.status === 'Holiday') return false; // Ignore holiday records in employee list
-        if (r.employee?._id !== emp._id) return false;
-        const rDate = new Date(r.date);
-        return rDate.getDate() === today.getDate() && rDate.getMonth() === today.getMonth() && rDate.getFullYear() === today.getFullYear();
-    });
-    return {
-        employee: emp,
-        record: record || null
-    };
-  }).filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
+  // Group Attendance by Date
+  const activeEmployees = employees.filter(emp => emp.role === 'employee' && emp.isActive);
+  const uniqueDatesSet = new Set();
+  const todayDateStr = new Date().toDateString();
+  uniqueDatesSet.add(todayDateStr);
+  
+  attendanceRecords.forEach(r => {
+    if (r.status !== 'Holiday') {
+        uniqueDatesSet.add(new Date(r.date).toDateString());
+    }
+  });
+
+  const sortedDates = Array.from(uniqueDatesSet)
+    .map(d => new Date(d))
+    .sort((a, b) => b - a);
+
+  const groupedRecordsByDate = sortedDates.map(date => {
+      const recordsForDate = activeEmployees.map(emp => {
+          const record = attendanceRecords.find(r => {
+              if (r.status === 'Holiday') return false;
+              if (r.employee?._id !== emp._id) return false;
+              const rDate = new Date(r.date);
+              return rDate.toDateString() === date.toDateString();
+          });
+          return { employee: emp, record: record || null };
+      }).filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
+      
+      return { date, records: recordsForDate };
+  });
 
   // Unique Holidays
   const holidaysMap = new Map();
@@ -305,7 +320,7 @@ const AdminAttendance = () => {
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'today' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('today')}
         >
-          Today's Attendance
+          Daily Attendance
         </button>
         <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
@@ -376,59 +391,66 @@ const AdminAttendance = () => {
       )}
 
       {activeTab === 'today' && (
-        <div className="card shadow-md border-none overflow-hidden">
-          <div className="flex justify-between items-center mb-6">
+        <div className="space-y-8">
+          <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
-              <CalendarDays size={20} className="text-primary" /> Today's Employees
+              <CalendarDays size={20} className="text-primary" /> Daily Attendance
             </h3>
             <input 
               type="text" 
               placeholder="Filter by Employee Name..." 
-              className="form-control text-sm py-2"
+              className="form-control text-sm py-2 w-64"
               value={filterEmployee}
               onChange={(e) => setFilterEmployee(e.target.value)}
             />
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee ID</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Name</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">In Time</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Out Time</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Status (Today)</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {todayRecords.length === 0 ? (
-                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No employees found.</td></tr>
-                ) : (
-                  todayRecords.map(item => (
-                    <tr key={item.employee._id} className="hover:bg-gray-50">
-                      <td className="p-4 text-sm font-medium text-text-light">{item.employee.employeeId}</td>
-                      <td className="p-4">
-                        <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
-                      </td>
-                      <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</td>
-                      <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
-                      <td className="p-4">{item.record?.punchIn ? getStatusBadge('Present') : getStatusBadge('Absent')}</td>
-                      <td className="p-4 text-right">
-                        <button 
-                            className="btn py-1 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs flex items-center gap-1 ml-auto"
-                            onClick={() => setHistoryModalEmployee(item.employee)}
-                        >
-                            <History size={14} /> History
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {groupedRecordsByDate.map((group) => (
+            <div key={group.date.toISOString()} className="card shadow-md border-none overflow-hidden">
+                <div className="bg-gray-50 border-b border-gray-100 p-4">
+                    <h4 className="font-bold text-text-dark text-base">{group.date.toLocaleDateString('en-GB')}</h4>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-y border-gray-100">
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee ID</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Name</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">In Time</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Out Time</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {group.records.length === 0 ? (
+                          <tr><td colSpan="6" className="p-8 text-center text-text-light">No employees found.</td></tr>
+                        ) : (
+                          group.records.map(item => (
+                            <tr key={item.employee._id} className="hover:bg-gray-50">
+                              <td className="p-4 text-sm font-medium text-text-light">{item.employee.employeeId}</td>
+                              <td className="p-4">
+                                <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
+                              </td>
+                              <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</td>
+                              <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
+                              <td className="p-4">{item.record?.punchIn ? getStatusBadge('Present') : getStatusBadge('Absent')}</td>
+                              <td className="p-4 text-right">
+                                <button 
+                                    className="btn py-1 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs flex items-center gap-1 ml-auto"
+                                    onClick={() => setHistoryModalEmployee(item.employee)}
+                                >
+                                    <History size={14} /> History
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                </div>
+            </div>
+          ))}
         </div>
       )}
 
