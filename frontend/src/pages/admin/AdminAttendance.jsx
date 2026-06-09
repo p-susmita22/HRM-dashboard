@@ -150,11 +150,11 @@ const AdminAttendance = () => {
           });
           return { employee: emp, record: record || null };
       })
-      .filter(item => item.record !== null)
+      .filter(item => item.record !== null && item.record.punchIn) // Must have punched in
       .filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
       
       return { date, records: recordsForDate };
-  }).filter(group => group.records.length > 0 || group.date.toDateString() === todayDateStr);
+  }).filter(group => group.records.length > 0); // Only keep dates that have at least one present employee
 
   // Unique Holidays
   const holidaysMap = new Map();
