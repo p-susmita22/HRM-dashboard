@@ -225,6 +225,60 @@ export const markHoliday = async (req, res) => {
   }
 };
 
+export const editHoliday = async (req, res) => {
+  try {
+    const { date } = req.params;
+    const { newDate, reason } = req.body;
+    
+    const targetDate = new Date(date);
+    targetDate.setHours(0,0,0,0);
+    
+    const newTargetDate = new Date(newDate || date);
+    newTargetDate.setHours(0,0,0,0);
+    
+    // Find all attendance records marked as holiday on the old date
+    const holidays = await Attendance.find({
+      status: 'Holiday',
+      date: {
+        $gte: targetDate,
+        $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    for (const holiday of holidays) {
+      holiday.date = newTargetDate;
+      holiday.holidayName = reason;
+      await holiday.save();
+    }
+
+    res.json({ message: 'Holiday updated successfully' });
+  } catch (error) {
+    console.error('Error updating holiday:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const deleteHoliday = async (req, res) => {
+  try {
+    const { date } = req.params;
+    const targetDate = new Date(date);
+    targetDate.setHours(0,0,0,0);
+    
+    await Attendance.deleteMany({
+      status: 'Holiday',
+      date: {
+        $gte: targetDate,
+        $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.json({ message: 'Holiday deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting holiday:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 // --- Requests Management ---
 import Leave from '../models/Leave.js';
 import Regularization from '../models/Regularization.js';

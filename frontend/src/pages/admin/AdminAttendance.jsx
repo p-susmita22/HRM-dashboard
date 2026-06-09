@@ -15,6 +15,9 @@ const AdminAttendance = () => {
   
   const [holidayData, setHolidayData] = useState({ date: '', reason: '' });
 
+  const [showEditHolidayModal, setShowEditHolidayModal] = useState(false);
+  const [editHolidayData, setEditHolidayData] = useState({ oldDate: '', newDate: '', reason: '' });
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -68,6 +71,33 @@ const AdminAttendance = () => {
       alert('Holiday marked for all employees!');
     } catch (error) {
       alert('Failed to mark holiday');
+    }
+  };
+
+  const handleEditHolidaySubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`/api/admin/attendance/holiday/${editHolidayData.oldDate}`, {
+        newDate: editHolidayData.newDate,
+        reason: editHolidayData.reason
+      });
+      setShowEditHolidayModal(false);
+      fetchData();
+      alert('Holiday updated successfully!');
+    } catch (error) {
+      alert('Failed to update holiday');
+    }
+  };
+
+  const handleDeleteHoliday = async (date) => {
+    if (window.confirm('Are you sure you want to delete this holiday for all employees?')) {
+      try {
+        await axios.delete(`/api/admin/attendance/holiday/${date}`);
+        fetchData();
+        alert('Holiday deleted successfully!');
+      } catch (error) {
+        alert('Failed to delete holiday');
+      }
     }
   };
 
@@ -307,17 +337,41 @@ const AdminAttendance = () => {
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Holiday Name</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {holidayList.length === 0 ? (
-                  <tr><td colSpan="3" className="p-8 text-center text-text-light">No holidays marked yet.</td></tr>
+                  <tr><td colSpan="4" className="p-8 text-center text-text-light">No holidays marked yet.</td></tr>
                 ) : (
                   holidayList.map(record => (
                     <tr key={record._id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
                       <td className="p-4 text-sm text-text-dark font-semibold">{record.holidayName || 'Official Holiday'}</td>
                       <td className="p-4">{getStatusBadge(record.status)}</td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            className="text-blue-600 hover:text-blue-800 p-1"
+                            onClick={() => {
+                              setEditHolidayData({
+                                oldDate: record.date,
+                                newDate: new Date(record.date).toISOString().split('T')[0],
+                                reason: record.holidayName || 'Official Holiday'
+                              });
+                              setShowEditHolidayModal(true);
+                            }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="text-red-600 hover:text-red-800 p-1"
+                            onClick={() => handleDeleteHoliday(record.date)}
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -426,6 +480,36 @@ const AdminAttendance = () => {
               <div className="mt-8 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowHolidayModal(false)} className="btn bg-gray-100 text-text-dark hover:bg-gray-200">Cancel</button>
                 <button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white px-6">Mark Holiday</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Holiday Modal */}
+      {showEditHolidayModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-text-dark">Edit Holiday</h2>
+              <button onClick={() => setShowEditHolidayModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
+                <XCircle size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleEditHolidaySubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Holiday Date</label>
+                  <input type="date" className="form-control w-full" value={editHolidayData.newDate} onChange={e => setEditHolidayData({...editHolidayData, newDate: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Holiday Name / Reason</label>
+                  <input type="text" className="form-control w-full" placeholder="e.g. Diwali, Christmas..." value={editHolidayData.reason} onChange={e => setEditHolidayData({...editHolidayData, reason: e.target.value})} required />
+                </div>
+              </div>
+              <div className="mt-8 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowEditHolidayModal(false)} className="btn bg-gray-100 text-text-dark hover:bg-gray-200">Cancel</button>
+                <button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white px-6">Update Holiday</button>
               </div>
             </form>
           </div>
