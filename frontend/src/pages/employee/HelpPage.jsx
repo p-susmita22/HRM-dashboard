@@ -154,6 +154,15 @@ const HelpPage = () => {
 
   const getAttendanceStatus = (date) => {
     if (date.getDay() === 0) return 'Holiday';
+
+    const isOnLeave = monthlyData.leaves.some(leave => {
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+    });
+    if (isOnLeave) return 'Leave';
+
     const record = monthlyData.attendances.find(a => {
         const aDate = new Date(a.date);
         return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
@@ -166,9 +175,10 @@ const HelpPage = () => {
   };
 
   const toggleRegDate = (date) => {
-    if (date > new Date()) return;
     const status = getAttendanceStatus(date);
-    if (status === 'Holiday' || status === 'Present') return;
+    const isFuture = new Date(date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
+    
+    if (status === 'Holiday' || status === 'Present' || (isFuture && status !== 'Leave')) return;
     
     const dateStr = format(date, 'yyyy-MM-dd');
     if (regDates.includes(dateStr)) {
@@ -343,10 +353,10 @@ const HelpPage = () => {
                      const dateStr = format(date, 'yyyy-MM-dd');
                      const isSelected = regDates.includes(dateStr);
                      
-                     // Prevent clicking dates in the future or Holidays/Present dates
+                     // Prevent clicking dates in the future (unless it's a Leave date), or Holidays/Present dates
                      const isFuture = new Date(date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
                      const status = getAttendanceStatus(date);
-                     const isDisabled = isFuture || status === 'Holiday' || status === 'Present';
+                     const isDisabled = status === 'Holiday' || status === 'Present' || (isFuture && status !== 'Leave');
                      
                      const baseStyle = getAttendanceColor(date);
                      
