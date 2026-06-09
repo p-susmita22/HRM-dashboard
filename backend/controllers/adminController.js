@@ -262,11 +262,11 @@ export const updateLeaveStatus = async (req, res) => {
           await Attendance.create({
             employee: leave.employee._id,
             date: currentDate,
-            status: 'Absent',
+            status: 'Leave Approved',
             adminStatus: 'Approved'
           });
         } else {
-          existing.status = 'Absent';
+          existing.status = 'Leave Approved';
           existing.adminStatus = 'Approved';
           await existing.save();
         }
