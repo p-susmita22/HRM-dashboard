@@ -94,6 +94,8 @@ const HomePage = () => {
         if (record.status === 'Present') present++;
         else if (record.status === 'Half Day') halfDays++;
         else if (record.status === 'Absent') absent++;
+        else if (record.status === 'Holiday') holidays++;
+        else if (record.status === 'Leave Approved') onLeave++;
       } else {
         const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
         if (isToday && punchedIn) {
@@ -162,6 +164,8 @@ const HomePage = () => {
     });
 
     if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Holiday') return 'bg-status-holiday text-white shadow-md font-bold border-2 border-blue-400';
+        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-leave text-white shadow-md border border-status-leave/50';
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
             if (record.halfDayType === 'First Half Absent') {
