@@ -287,11 +287,22 @@ const AdminEmployees = () => {
                     onChange={e => setFormData({...formData, password: e.target.value})} 
                     required={!isEditing} 
                     placeholder={isEditing ? 'Leave blank to keep current' : ''}
+                    pattern="^(?=.*[!@#$%^&*])(?=.*\d)[A-Z].{5,9}$"
+                    title="Password must be 6-10 characters long, start with a capital letter, and include at least one number and one special character"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">Phone Number</label>
-                  <input type="text" className="form-control w-full" value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} required />
+                  <input 
+                    type="text" 
+                    className="form-control w-full" 
+                    value={formData.phoneNumber} 
+                    onChange={e => setFormData({...formData, phoneNumber: e.target.value})} 
+                    required 
+                    pattern="^[1-9][0-9]{9}$"
+                    maxLength={10}
+                    title="Phone number must be exactly 10 digits and cannot start with 0"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">Department</label>

@@ -215,6 +215,8 @@ const AdminLogin = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
+                pattern={isSignUp ? "^(?=.*[!@#$%^&*])(?=.*\\d)[A-Z].{5,9}$" : undefined}
+                title={isSignUp ? "Password must be 6-10 characters long, start with a capital letter, and include at least one number and one special character" : undefined}
               />
               <button 
                 type="button" 

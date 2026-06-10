@@ -134,6 +134,9 @@ const AdminSettings = () => {
                   onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})}
                   required 
                   disabled={!isEditing}
+                  pattern="^[1-9][0-9]{9}$"
+                  maxLength={10}
+                  title="Phone number must be exactly 10 digits and cannot start with 0"
                 />
               </div>
               <div className="pt-2 flex justify-end gap-3">
@@ -163,7 +166,8 @@ const AdminSettings = () => {
                     value={passwords.newPassword}
                     onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
                     required 
-                    minLength="6"
+                    pattern="^(?=.*[!@#$%^&*])(?=.*\d)[A-Z].{5,9}$"
+                    title="Password must be 6-10 characters long, start with a capital letter, and include at least one number and one special character"
                   />
                 </div>
                 <div>
@@ -174,7 +178,8 @@ const AdminSettings = () => {
                     value={passwords.confirmPassword}
                     onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
                     required 
-                    minLength="6"
+                    pattern="^(?=.*[!@#$%^&*])(?=.*\d)[A-Z].{5,9}$"
+                    title="Password must be 6-10 characters long, start with a capital letter, and include at least one number and one special character"
                   />
                 </div>
               </div>
