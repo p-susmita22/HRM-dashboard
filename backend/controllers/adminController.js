@@ -12,19 +12,23 @@ export const getAllEmployees = async (req, res) => {
 
 export const addEmployee = async (req, res) => {
   try {
-    const { fullName, email, password, phoneNumber, department, designation, joiningDate } = req.body;
+    const { employeeId: customEmployeeId, firstName, middleName, lastName, email, password, phoneNumber, department, designation, gender, region, zone, joiningDate } = req.body;
     
-    // Generate a serial EMP ID
-    const lastEmployee = await Employee.findOne({ employeeId: /^EMP-/ }).sort({ createdAt: -1 });
-    let nextIdNum = 1;
-    if (lastEmployee && lastEmployee.employeeId) {
-      const lastIdStr = lastEmployee.employeeId.replace('EMP-', '');
-      const lastIdNum = parseInt(lastIdStr, 10);
-      if (!isNaN(lastIdNum)) {
-        nextIdNum = lastIdNum + 1;
+    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    
+    let employeeId = customEmployeeId;
+    if (!employeeId) {
+      const lastEmployee = await Employee.findOne({ employeeId: /^EMP-/ }).sort({ createdAt: -1 });
+      let nextIdNum = 1;
+      if (lastEmployee && lastEmployee.employeeId) {
+        const lastIdStr = lastEmployee.employeeId.replace('EMP-', '');
+        const lastIdNum = parseInt(lastIdStr, 10);
+        if (!isNaN(lastIdNum)) {
+          nextIdNum = lastIdNum + 1;
+        }
       }
+      employeeId = `EMP-${String(nextIdNum).padStart(3, '0')}`;
     }
-    const employeeId = `EMP-${String(nextIdNum).padStart(3, '0')}`;
 
     const employeeExists = await Employee.findOne({ email });
     if (employeeExists) {
@@ -33,13 +37,19 @@ export const addEmployee = async (req, res) => {
 
     const employee = new Employee({
       employeeId,
+      firstName,
+      middleName,
+      lastName,
       fullName,
+      gender,
       email,
       password,
       plainPassword: password,
       phoneNumber,
       department,
       designation,
+      region,
+      zone,
       joiningDate: joiningDate || new Date(),
       role: 'employee'
     });
@@ -72,16 +82,25 @@ export const deleteEmployee = async (req, res) => {
 };
 export const editEmployee = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, department, designation, password } = req.body;
+    const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password } = req.body;
+    
+    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     
     const employee = await Employee.findById(req.params.id);
     if (!employee) return res.status(404).json({ message: 'Employee not found' });
     
+    if (employeeId) employee.employeeId = employeeId;
+    employee.firstName = firstName;
+    employee.middleName = middleName;
+    employee.lastName = lastName;
     employee.fullName = fullName;
+    employee.gender = gender;
     employee.email = email;
     employee.phoneNumber = phoneNumber;
     employee.department = department;
     employee.designation = designation;
+    employee.region = region;
+    employee.zone = zone;
     
     if (password && password.trim() !== '') {
       employee.password = password;

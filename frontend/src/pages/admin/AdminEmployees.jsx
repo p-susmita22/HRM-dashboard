@@ -17,7 +17,7 @@ const AdminEmployees = () => {
   const [uploadingFor, setUploadingFor] = useState(null);
 
   const [formData, setFormData] = useState({
-    fullName: '', email: '', password: '', phoneNumber: '', department: '', designation: ''
+    firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: ''
   });
 
   const fetchDashboardData = async () => {
@@ -55,7 +55,7 @@ const AdminEmployees = () => {
         alert('Employee added successfully!');
       }
       setShowAddModal(false);
-      setFormData({ fullName: '', email: '', password: '', phoneNumber: '', department: '', designation: '' });
+      setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '' });
       setIsEditing(false);
       setSelectedEmployee(null);
       fetchDashboardData();
@@ -122,12 +122,18 @@ const AdminEmployees = () => {
   const openEditModal = (emp) => {
     setSelectedEmployee(emp);
     setFormData({
-      fullName: emp.fullName,
-      email: emp.email,
+      firstName: emp.firstName || '',
+      middleName: emp.middleName || '',
+      lastName: emp.lastName || '',
+      employeeId: emp.employeeId || '',
+      gender: emp.gender || 'Male',
+      email: emp.email || '',
       password: '', // Leave empty for edit unless they want to change it
-      phoneNumber: emp.phoneNumber,
-      department: emp.department,
-      designation: emp.designation
+      phoneNumber: emp.phoneNumber || '',
+      department: emp.department || '',
+      designation: emp.designation || '',
+      region: emp.region || '',
+      zone: emp.zone || ''
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -137,7 +143,7 @@ const AdminEmployees = () => {
   const openAddModal = () => {
     setIsEditing(false);
     setSelectedEmployee(null);
-    setFormData({ fullName: '', email: '', password: '', phoneNumber: '', department: '', designation: '' });
+    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '' });
     setShowAddModal(true);
   };
 
@@ -269,11 +275,31 @@ const AdminEmployees = () => {
             <form onSubmit={handleAddEmployee} className="p-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Full Name</label>
-                  <input type="text" className="form-control w-full" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required />
+                  <label className="block text-sm font-medium text-text-dark mb-1">First name</label>
+                  <input type="text" className="form-control w-full" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Email ID</label>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Middle name</label>
+                  <input type="text" className="form-control w-full" value={formData.middleName} onChange={e => setFormData({...formData, middleName: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Last name</label>
+                  <input type="text" className="form-control w-full" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Employee Code</label>
+                  <input type="text" className="form-control w-full" value={formData.employeeId} onChange={e => setFormData({...formData, employeeId: e.target.value})} placeholder="Auto-generated if empty" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Gender</label>
+                  <select className="form-control w-full" value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})} required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Work email</label>
                   <input type="email" className="form-control w-full" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
                 </div>
                 <div>
@@ -292,7 +318,7 @@ const AdminEmployees = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-dark mb-1">Phone Number</label>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Mobile number</label>
                   <input 
                     type="text" 
                     className="form-control w-full" 
@@ -311,6 +337,14 @@ const AdminEmployees = () => {
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">Designation</label>
                   <input type="text" className="form-control w-full" value={formData.designation} onChange={e => setFormData({...formData, designation: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Region</label>
+                  <input type="text" className="form-control w-full" value={formData.region} onChange={e => setFormData({...formData, region: e.target.value})} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Zone</label>
+                  <input type="text" className="form-control w-full" value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})} required />
                 </div>
               </div>
               <div className="mt-8 flex justify-end gap-3">
@@ -345,15 +379,27 @@ const AdminEmployees = () => {
               
               <div className="grid grid-cols-2 gap-y-4 gap-x-8">
                 <div>
-                  <p className="text-xs text-text-light mb-1">Email ID</p>
+                  <p className="text-xs text-text-light mb-1">First name</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Middle name</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.middleName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Last name</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Gender</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.gender}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Work email</p>
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-text-light mb-1">Password</p>
-                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.plainPassword || 'Hashed (Legacy)'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-text-light mb-1">Phone Number</p>
+                  <p className="text-xs text-text-light mb-1">Mobile number</p>
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.phoneNumber}</p>
                 </div>
                 <div>
@@ -365,8 +411,20 @@ const AdminEmployees = () => {
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.designation}</p>
                 </div>
                 <div>
+                  <p className="text-xs text-text-light mb-1">Region</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.region}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Zone</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.zone}</p>
+                </div>
+                <div>
                   <p className="text-xs text-text-light mb-1">Joining Date</p>
                   <p className="text-sm font-medium text-text-dark">{new Date(selectedEmployee.joiningDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Password</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.plainPassword || 'Hashed (Legacy)'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-light mb-1">Status</p>
