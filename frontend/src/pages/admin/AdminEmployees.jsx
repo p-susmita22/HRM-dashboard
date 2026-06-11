@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Users, MoreVertical, Trash2, Eye, Edit, Lock, Unlock, FileUp, X, Download, FileText } from 'lucide-react';
+import { Users, MoreVertical, Trash2, Eye, Edit, Lock, Unlock, FileUp, X, Download, FileText, Send } from 'lucide-react';
+import PayslipModal from '../../components/PayslipModal';
 
 const AdminEmployees = () => {
   const [employees, setEmployees] = useState([]);
@@ -8,6 +9,7 @@ const AdminEmployees = () => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showPayslipModal, setShowPayslipModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -247,6 +249,9 @@ const AdminEmployees = () => {
                           <button onClick={() => handleUploadOfferLetter(emp._id)} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
                             <FileUp size={14} className="text-blue-500" /> Upload Offer Letter
                           </button>
+                          <button onClick={() => { setSelectedEmployee(emp); setShowPayslipModal(true); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
+                            <Send size={14} className="text-green-500" /> Send Payslip
+                          </button>
                           <div className="border-t border-gray-100 my-1"></div>
                           <button onClick={() => openViewModal(emp)} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
                             <Eye size={14} className="text-text-light" /> View Details
@@ -469,6 +474,10 @@ const AdminEmployees = () => {
           </div>
         </div>
       )}
+      {showPayslipModal && selectedEmployee && (
+        <PayslipModal employee={selectedEmployee} onClose={() => setShowPayslipModal(false)} />
+      )}
+
       {/* Hidden File Input for Offer Letter Upload */}
       <input 
         type="file" 
