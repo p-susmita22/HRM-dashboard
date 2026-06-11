@@ -144,12 +144,13 @@ import Leave from '../models/Leave.js';
 
 export const applyLeave = async (req, res) => {
   try {
-    const { leaveType, fromDate, toDate, reason } = req.body;
+    const { leaveType, dates, reason } = req.body;
+    const dateArray = dates ? dates.split(',') : [];
+
     const leave = new Leave({
       employee: req.user._id,
       leaveType,
-      fromDate,
-      toDate,
+      dates: dateArray,
       reason,
       status: 'Pending'
     });

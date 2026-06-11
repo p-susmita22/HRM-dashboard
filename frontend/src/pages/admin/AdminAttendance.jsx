@@ -177,15 +177,19 @@ const AdminAttendance = () => {
         
     const leaveBlocks = leaves
         .filter(l => l.employee?._id === historyModalEmployee._id && l.status === 'Approved')
-        .map(l => ({
-            isLeaveBlock: true,
-            _id: l._id,
-            fromDate: new Date(l.fromDate),
-            toDate: new Date(l.toDate),
-            reason: l.reason,
-            status: 'Leave Approved',
-            sortDate: new Date(l.fromDate)
-        }));
+        .map(l => {
+            const sortD = l.dates && l.dates.length > 0 ? new Date(l.dates[0]) : new Date(l.fromDate);
+            return {
+                isLeaveBlock: true,
+                _id: l._id,
+                dates: l.dates,
+                fromDate: new Date(l.fromDate),
+                toDate: new Date(l.toDate),
+                reason: l.reason,
+                status: 'Leave Approved',
+                sortDate: sortD
+            };
+        });
         
     historyRecords = [...regularRecords, ...leaveBlocks].sort((a, b) => b.sortDate - a.sortDate);
   }
@@ -204,7 +208,13 @@ const AdminAttendance = () => {
         const dateStr = date.toLocaleDateString('en-GB');
         const isSunday = date.getDay() === 0;
         const isHoliday = attendanceRecords.some(r => r.status === 'Holiday' && new Date(r.date).toDateString() === date.toDateString());
-        const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
+        const isOnLeave = leaves.some(l => {
+            if (l.employee?._id !== emp._id || l.status !== 'Approved') return false;
+            if (l.dates && l.dates.length > 0) {
+              return l.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+            }
+            return new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime();
+        });
         const record = attendanceRecords.find(r => r.employee?._id === emp._id && new Date(r.date).toDateString() === date.toDateString() && r.status !== 'Holiday');
 
         let inTime = '--:--';
@@ -270,7 +280,13 @@ const AdminAttendance = () => {
                 inTime = 'Holiday';
                 outTime = 'Holiday';
             } else {
-                const isOnLeave = leaves.some(l => l.employee?._id === emp._id && l.status === 'Approved' && new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime());
+                const isOnLeave = leaves.some(l => {
+                    if (l.employee?._id !== emp._id || l.status !== 'Approved') return false;
+                    if (l.dates && l.dates.length > 0) {
+                      return l.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+                    }
+                    return new Date(l.fromDate).setHours(0,0,0,0) <= date.getTime() && new Date(l.toDate).setHours(23,59,59,999) >= date.getTime();
+                });
                 if (isOnLeave) {
                     inTime = 'Leave';
                     outTime = 'Leave';
@@ -558,9 +574,11 @@ const AdminAttendance = () => {
                                     <tr key={record._id} className={`hover:bg-gray-50 ${record.isLeaveBlock ? 'bg-red-50/30' : ''}`}>
                                         <td className="p-3 text-sm text-text-dark font-medium">
                                             {record.isLeaveBlock 
-                                                ? (record.fromDate.toDateString() === record.toDate.toDateString() 
-                                                    ? formatDate(record.fromDate) 
-                                                    : `${formatDate(record.fromDate)} - ${formatDate(record.toDate)}`)
+                                                ? (record.dates && record.dates.length > 0 
+                                                    ? <div className="flex flex-wrap gap-1 max-w-[200px]">{record.dates.map((d, i) => <span key={i} className="px-1.5 py-0.5 bg-status-absent/10 text-status-absent rounded text-[10px] font-bold inline-block border border-status-absent/20">{formatDate(d)}</span>)}</div>
+                                                    : (record.fromDate.toDateString() === record.toDate.toDateString() 
+                                                        ? formatDate(record.fromDate) 
+                                                        : `${formatDate(record.fromDate)} - ${formatDate(record.toDate)}`))
                                                 : formatDate(record.date)
                                             }
                                         </td>

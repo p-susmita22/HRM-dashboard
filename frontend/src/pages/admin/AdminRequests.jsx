@@ -136,7 +136,19 @@ const AdminRequests = () => {
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
                     </td>
                     <td className="p-4 text-sm text-text-dark font-medium">{req.leaveType}</td>
-                    <td className="p-4 text-sm text-text-dark">{formatDate(req.fromDate)} - {formatDate(req.toDate)}</td>
+                    <td className="p-4 text-sm text-text-dark">
+                      {req.dates && req.dates.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {req.dates.map((d, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold inline-block border border-primary/20">
+                              {formatDate(d)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span>{formatDate(req.fromDate)} - {formatDate(req.toDate)}</span>
+                      )}
+                    </td>
                     <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="p-4">
                       {req.status === 'Pending' ? (

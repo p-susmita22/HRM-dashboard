@@ -298,13 +298,23 @@ export const updateLeaveStatus = async (req, res) => {
     const leave = await Leave.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('employee', 'fullName employeeId');
     
     if (req.body.status === 'Approved') {
-      const start = new Date(leave.fromDate);
-      const end = new Date(leave.toDate);
-      start.setHours(0,0,0,0);
-      end.setHours(0,0,0,0);
-      
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      let datesToProcess = [];
+      if (leave.dates && leave.dates.length > 0) {
+        datesToProcess = leave.dates;
+      } else {
+        const start = new Date(leave.fromDate);
+        const end = new Date(leave.toDate);
+        start.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          datesToProcess.push(new Date(d));
+        }
+      }
+
+      for (const d of datesToProcess) {
+        if (!d) continue;
         const currentDate = new Date(d);
+        currentDate.setHours(0,0,0,0);
         
         const existing = await Attendance.findOne({
           employee: leave.employee._id,

@@ -74,6 +74,9 @@ const HomePage = () => {
       }
       
       const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
         const d = date.getTime();
@@ -151,6 +154,9 @@ const HomePage = () => {
     if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
 
     const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
         const d = date.getTime();
@@ -215,6 +221,9 @@ const HomePage = () => {
     if (isToday && punchedIn) return `Working (In: ${format(punchTime, 'hh:mm a')})`;
 
     const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
         const d = date.getTime();

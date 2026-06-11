@@ -8,6 +8,8 @@ const HelpPage = () => {
   const [myRegularizations, setMyRegularizations] = useState([]);
   const [regDates, setRegDates] = useState([]);
   const [regCurrentDate, setRegCurrentDate] = useState(new Date());
+  const [leaveDates, setLeaveDates] = useState([]);
+  const [leaveCurrentDate, setLeaveCurrentDate] = useState(new Date());
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
 
   useEffect(() => {
@@ -42,14 +44,14 @@ const HelpPage = () => {
     const formData = new FormData(e.target);
     const data = {
       leaveType: formData.get('leaveType'),
-      fromDate: formData.get('fromDate'),
-      toDate: formData.get('toDate'),
+      dates: leaveDates.join(','),
       reason: formData.get('reason')
     };
     
     try {
       await axios.post('/api/employee/leaves', data);
       e.target.reset();
+      setLeaveDates([]);
       fetchMyLeaves();
     } catch (err) {
       alert('Failed to apply leave');
@@ -119,6 +121,12 @@ const HelpPage = () => {
     if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
 
     const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => {
+            const dDate = new Date(dStr).setHours(0,0,0,0);
+            return date.getTime() === dDate;
+          });
+        }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
         const d = date.getTime();
@@ -156,6 +164,12 @@ const HelpPage = () => {
     if (date.getDay() === 0) return 'Holiday';
 
     const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => {
+            const dDate = new Date(dStr).setHours(0,0,0,0);
+            return date.getTime() === dDate;
+          });
+        }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
         const d = date.getTime();
@@ -185,6 +199,23 @@ const HelpPage = () => {
       setRegDates(regDates.filter(d => d !== dateStr));
     } else {
       setRegDates([...regDates, dateStr].sort());
+    }
+  };
+
+  const daysInLeaveMonth = eachDayOfInterval({
+    start: startOfMonth(leaveCurrentDate),
+    end: endOfMonth(leaveCurrentDate)
+  });
+
+  const toggleLeaveDate = (date) => {
+    const status = getAttendanceStatus(date);
+    if (status === 'Holiday' || status === 'Present' || status === 'Leave') return;
+    
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (leaveDates.includes(dateStr)) {
+      setLeaveDates(leaveDates.filter(d => d !== dateStr));
+    } else {
+      setLeaveDates([...leaveDates, dateStr].sort());
     }
   };
 
@@ -228,22 +259,94 @@ const HelpPage = () => {
                   <option value="Earned Leave">Earned Leave</option>
                 </select>
               </div>
-              <div className="flex gap-4 mb-4">
-                <div className="flex-1">
-                  <label className="block mb-1.5 font-medium text-sm">From Date</label>
-                  <input type="date" name="fromDate" className="form-control" required />
-                </div>
-                <div className="flex-1">
-                  <label className="block mb-1.5 font-medium text-sm">To Date</label>
-                  <input type="date" name="toDate" className="form-control" required />
-                </div>
+              <div className="mb-4">
+                <label className="block mb-1.5 font-medium text-sm">Selected Dates ({leaveDates.length})</label>
+                {leaveDates.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mb-2 p-3 bg-gray-50 border border-gray-100 rounded-lg max-h-[100px] overflow-y-auto">
+                    {leaveDates.map(d => (
+                      <span key={d} className="inline-flex items-center px-2 py-1 bg-white border border-primary/20 text-primary-dark text-xs font-semibold rounded-md shadow-sm">
+                        {format(new Date(d), 'dd MMM yyyy')}
+                        <button 
+                          type="button" 
+                          onClick={() => setLeaveDates(leaveDates.filter(date => date !== d))}
+                          className="ml-1 text-primary hover:text-status-absent hover:bg-status-absent/10 rounded-full w-4 h-4 flex items-center justify-center transition-colors text-[10px]"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary-dark mb-2">
+                    Please select dates for leave from the calendar &#8594;
+                  </div>
+                )}
+                <input 
+                  type="hidden" 
+                  value={leaveDates.join(',')} 
+                  required 
+                />
               </div>
               <div className="mb-4">
                 <label className="block mb-1.5 font-medium text-sm">Reason</label>
                 <textarea name="reason" className="form-control" rows="3" required></textarea>
               </div>
-              <button type="submit" className="btn btn-primary w-full">Submit Request</button>
+              <button 
+                type="submit" 
+                className={`btn w-full ${leaveDates.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'btn-primary'}`}
+                disabled={leaveDates.length === 0}
+              >
+                Submit Request
+              </button>
             </form>
+
+            <div className="border border-gray-100 rounded-xl p-5 bg-bg-gray shadow-sm flex flex-col justify-center">
+               <h4 className="font-semibold text-center mb-4 text-text-dark">Select Dates to Apply Leave</h4>
+               <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                 <div className="flex items-center justify-between mb-4">
+                   <button type="button" onClick={() => setLeaveCurrentDate(subMonths(leaveCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8592;</button>
+                   <span className="font-bold text-sm text-primary-dark">{format(leaveCurrentDate, 'MMMM yyyy')}</span>
+                   <button type="button" onClick={() => setLeaveCurrentDate(addMonths(leaveCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8594;</button>
+                 </div>
+                 
+                 <div className="grid grid-cols-7 gap-1 text-center text-[10px] mb-2 font-bold text-text-light uppercase">
+                   {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => <div key={i}>{d}</div>)}
+                 </div>
+                 
+                 <div className="grid grid-cols-7 gap-1 text-sm">
+                   {Array.from({ length: startOfMonth(leaveCurrentDate).getDay() }).map((_, i) => <div key={`el-${i}`} />)}
+                   {daysInLeaveMonth.map(date => {
+                     const dateStr = format(date, 'yyyy-MM-dd');
+                     const isSelected = leaveDates.includes(dateStr);
+                     
+                     const status = getAttendanceStatus(date);
+                     const isDisabled = status === 'Holiday' || status === 'Present' || status === 'Leave';
+                     
+                     const baseStyle = getAttendanceColor(date);
+                     
+                     return (
+                       <button
+                         key={dateStr}
+                         type="button"
+                         disabled={isDisabled}
+                         onClick={() => toggleLeaveDate(date)}
+                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all mx-auto font-medium text-sm border border-transparent
+                           ${isDisabled ? `cursor-not-allowed opacity-60 ${baseStyle}` : 
+                             isSelected ? 'bg-primary text-white shadow-md scale-110 ring-2 ring-primary/30 ring-offset-1' : 
+                             `${baseStyle} hover:ring-2 hover:ring-gray-300`}`}
+                       >
+                         {date.getDate()}
+                       </button>
+                     );
+                   })}
+                 </div>
+                 
+                 <div className="mt-4 flex gap-3 text-[10px] justify-center text-text-light font-medium uppercase">
+                   <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary"></span> Selected</div>
+                   <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-50 border border-gray-200"></span> Available</div>
+                 </div>
+               </div>
+            </div>
 
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col max-h-[400px]">
               <h3 className="mb-4 text-lg font-semibold border-b border-gray-200 pb-2">Recent Leave Requests</h3>
@@ -255,9 +358,21 @@ const HelpPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold text-sm text-text-dark">{leave.leaveType}</h4>
-                        <p className="text-[11px] text-text-light font-medium mt-0.5">
-                          {format(new Date(leave.fromDate), 'dd MMM yyyy')} - {format(new Date(leave.toDate), 'dd MMM yyyy')}
-                        </p>
+                        <div className="mt-0.5">
+                          {leave.dates && leave.dates.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {leave.dates.map((d, i) => (
+                                <span key={i} className="inline-block px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                  {new Date(d).toLocaleDateString()}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-text-light font-medium">
+                              {new Date(leave.fromDate).toLocaleDateString()} - {new Date(leave.toDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <span className={`text-[10px] px-2 py-1 rounded font-bold tracking-wide ${
                         leave.status === 'Approved' ? 'bg-status-present/10 text-status-present' :
