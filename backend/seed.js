@@ -18,7 +18,10 @@ const seedDatabase = async () => {
 
     const dummyEmployee = new Employee({
       employeeId: 'EMP-10024',
+      firstName: 'John',
+      lastName: 'Doe',
       fullName: 'John Doe',
+      gender: 'Male',
       email: 'employee@multimaart.com',
       password: 'password123',
       phoneNumber: '1234567890',
