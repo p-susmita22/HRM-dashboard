@@ -51,9 +51,9 @@ const PayslipModal = ({ employee, onClose }) => {
   );
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8 relative flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl sticky top-0 z-10">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl relative flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50 rounded-t-xl shrink-0">
           <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
             <Send size={20} className="text-primary" /> Send Payslip
           </h2>
@@ -231,7 +231,7 @@ const PayslipModal = ({ employee, onClose }) => {
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 rounded-b-xl">
+        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-xl">
           <button onClick={onClose} className="btn bg-gray-200 text-gray-700 px-6">Cancel</button>
           <button onClick={handleSend} className="btn btn-primary px-8 flex items-center gap-2">
             <Send size={16} /> Send Payslip
