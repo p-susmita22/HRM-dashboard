@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Send } from 'lucide-react';
 import logo from '../assets/multimaart-logo.png';
 
@@ -49,7 +50,7 @@ const PayslipModal = ({ employee, onClose }) => {
     />
   );
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-fade-in overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8 relative flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl sticky top-0 z-10">
@@ -237,7 +238,8 @@ const PayslipModal = ({ employee, onClose }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
