@@ -104,9 +104,11 @@ const ProfilePage = () => {
       <div className="animate-fade-in p-5 max-w-5xl mx-auto relative">
         <div className="text-center my-5">
           <div className="w-24 h-24 rounded-full bg-accent mx-auto mb-2.5 flex items-center justify-center text-3xl color-primary font-bold text-primary">
-            {employeeData?.fullName?.charAt(0) || 'E'}
+            {employeeData?.firstName?.charAt(0) || employeeData?.fullName?.charAt(0) || 'E'}
           </div>
-        <h2 className="text-2xl font-bold">{employeeData?.fullName || 'Employee Name'}</h2>
+        <h2 className="text-2xl font-bold">
+          {[employeeData?.firstName, employeeData?.middleName, employeeData?.lastName].filter(Boolean).join(' ') || employeeData?.fullName || 'Employee Name'}
+        </h2>
         <p className="text-text-light font-medium mt-0.5 tracking-wider">{employeeData?.employeeId || 'EMP ID-XXXX'}</p>
       </div>
 
