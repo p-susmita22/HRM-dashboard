@@ -35,4 +35,8 @@ router.get('/regularizations', getMyRegularizations);
 router.post('/regularizations', applyRegularization);
 router.delete('/regularizations/:id', deleteRegularization);
 
+import { getMyResignation, applyResignation } from '../controllers/employeeController.js';
+router.get('/resignation', getMyResignation);
+router.post('/resignation', applyResignation);
+
 export default router;

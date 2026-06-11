@@ -10,11 +10,13 @@ const HelpPage = () => {
   const [regCurrentDate, setRegCurrentDate] = useState(new Date());
   const [leaveDates, setLeaveDates] = useState([]);
   const [leaveCurrentDate, setLeaveCurrentDate] = useState(new Date());
+  const [myResignation, setMyResignation] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
 
   useEffect(() => {
     fetchMyLeaves();
     fetchMyRegularizations();
+    fetchMyResignation();
   }, []);
 
   useEffect(() => {
@@ -102,6 +104,39 @@ const HelpPage = () => {
       fetchMyRegularizations();
     } catch (err) {
       alert('Failed to delete regularization');
+    }
+  };
+
+  const fetchMyResignation = async () => {
+    try {
+      const res = await axios.get('/api/employee/resignation');
+      setMyResignation(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleApplyResignation = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const today = new Date();
+    const lastWorkingDay = new Date(today);
+    lastWorkingDay.setDate(lastWorkingDay.getDate() + 45);
+
+    const data = {
+      resignationDate: today,
+      lastWorkingDay: lastWorkingDay,
+      reason: formData.get('reason'),
+      agreedToNoticePeriod: formData.get('notice') === 'on'
+    };
+    
+    try {
+      await axios.post('/api/employee/resignation', data);
+      e.target.reset();
+      fetchMyResignation();
+      alert('Resignation request submitted successfully.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit resignation request');
     }
   };
 
@@ -556,25 +591,89 @@ const HelpPage = () => {
         )}
 
         {activeTab === 'resign' && (
-          <form onSubmit={(e) => { e.preventDefault(); alert('Resignation Request Submitted'); e.target.reset(); }}>
-            <h3 className="mb-4 text-lg font-semibold text-status-absent">Resignation Request</h3>
-            <div className="bg-status-absent/10 p-4 rounded-lg mb-4 text-sm text-status-absent">
-              <strong>IMPORTANT:</strong> You must serve a mandatory 45 Days Notice Period before final resignation approval.
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1.5 font-medium text-sm">Resignation Date</label>
-              <input type="date" className="form-control" required />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1.5 font-medium text-sm">Reason for Resignation</label>
-              <textarea className="form-control" rows="3" required></textarea>
-            </div>
-            <div className="mb-4 flex items-center gap-2.5">
-              <input type="checkbox" id="notice" required className="w-4 h-4 accent-status-absent" />
-              <label htmlFor="notice" className="font-normal m-0 text-sm">I agree to serve the 45 days notice period.</label>
-            </div>
-            <button type="submit" className="btn btn-danger w-full">Submit Resignation</button>
-          </form>
+          <div>
+            {myResignation ? (
+              <div className="card max-w-2xl mx-auto border-t-4 border-status-absent">
+                <h3 className="mb-4 text-xl font-bold text-text-dark text-center border-b border-gray-100 pb-4">My Resignation Status</h3>
+                
+                <div className="space-y-5 p-2">
+                  <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                    <span className="text-sm font-semibold text-text-light">Current Status</span>
+                    <span className={`px-4 py-1.5 rounded-full font-bold text-sm shadow-sm ${
+                      myResignation.status === 'Approved' ? 'bg-status-present/20 text-status-present border border-status-present/30' :
+                      myResignation.status === 'Rejected' ? 'bg-status-absent/20 text-status-absent border border-status-absent/30' :
+                      'bg-yellow-500/20 text-yellow-700 border border-yellow-500/30'
+                    }`}>
+                      {myResignation.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white border border-gray-100 p-4 rounded-lg shadow-sm">
+                      <span className="block text-xs font-semibold text-text-light mb-1 uppercase tracking-wider">Applied On</span>
+                      <span className="text-base font-bold text-text-dark">{format(new Date(myResignation.resignationDate), 'dd MMM yyyy')}</span>
+                    </div>
+                    <div className="bg-white border border-gray-100 p-4 rounded-lg shadow-sm">
+                      <span className="block text-xs font-semibold text-text-light mb-1 uppercase tracking-wider">Last Working Day</span>
+                      <span className="text-base font-bold text-status-absent">{format(new Date(myResignation.lastWorkingDay), 'dd MMM yyyy')}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 p-4 rounded-lg shadow-sm">
+                    <span className="block text-xs font-semibold text-text-light mb-2 uppercase tracking-wider">Reason</span>
+                    <p className="text-sm text-text-dark leading-relaxed">{myResignation.reason}</p>
+                  </div>
+
+                  {myResignation.status === 'Approved' && (
+                    <div className="bg-status-present/10 p-4 rounded-lg mt-4 border border-status-present/20 text-sm text-status-present font-medium flex items-start gap-2">
+                      <span>✓</span>
+                      <span>Your resignation has been formally accepted by the administration. Please ensure a smooth handover of your responsibilities before your last working day.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleApplyResignation} className="card max-w-2xl mx-auto">
+                <h3 className="mb-4 text-xl font-bold text-status-absent border-b border-gray-100 pb-3">Resignation Request</h3>
+                <div className="bg-status-absent/10 p-4 rounded-lg mb-6 text-sm text-status-absent border border-status-absent/20">
+                  <strong>IMPORTANT:</strong> You must serve a mandatory 45 Days Notice Period before final resignation approval.
+                </div>
+                
+                <div className="mb-5">
+                  <label className="block mb-2 font-semibold text-sm text-text-dark">Resignation Date (Today)</label>
+                  <input 
+                    type="date" 
+                    className="form-control bg-gray-50 text-gray-500 cursor-not-allowed font-medium" 
+                    value={new Date().toISOString().split('T')[0]} 
+                    readOnly 
+                  />
+                  <p className="text-xs text-text-light mt-1.5 ml-1">The date is automatically set to today's date.</p>
+                </div>
+                
+                <div className="mb-5">
+                  <label className="block mb-2 font-semibold text-sm text-text-dark">Reason for Resignation</label>
+                  <textarea 
+                    name="reason"
+                    className="form-control" 
+                    rows="4" 
+                    placeholder="Please specify your reason for leaving..."
+                    required
+                  ></textarea>
+                </div>
+                
+                <div className="mb-6 flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <input type="checkbox" id="notice" name="notice" required className="w-5 h-5 accent-status-absent mt-0.5 cursor-pointer" />
+                  <label htmlFor="notice" className="font-medium text-sm text-text-dark cursor-pointer leading-relaxed">
+                    I acknowledge and agree to serve the mandatory 45 days notice period. I understand that my last working day will be calculated automatically.
+                  </label>
+                </div>
+                
+                <button type="submit" className="btn btn-danger w-full py-2.5 text-base font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                  Submit Resignation
+                </button>
+              </form>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -255,3 +255,39 @@ export const getMonthlyAttendance = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+import Resignation from '../models/Resignation.js';
+
+export const applyResignation = async (req, res) => {
+  try {
+    const { resignationDate, lastWorkingDay, reason, agreedToNoticePeriod } = req.body;
+    
+    // Check if already applied
+    const existing = await Resignation.findOne({ employee: req.user._id, status: { $ne: 'Rejected' } });
+    if (existing) {
+      return res.status(400).json({ message: 'You have already submitted a resignation request.' });
+    }
+
+    const resignation = await Resignation.create({
+      employee: req.user._id,
+      resignationDate,
+      lastWorkingDay,
+      reason,
+      agreedToNoticePeriod,
+      status: 'Pending'
+    });
+    
+    res.status(201).json(resignation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getMyResignation = async (req, res) => {
+  try {
+    const resignation = await Resignation.findOne({ employee: req.user._id }).sort({ createdAt: -1 });
+    res.json(resignation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
