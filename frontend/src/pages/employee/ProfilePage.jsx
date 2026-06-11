@@ -130,20 +130,32 @@ const ProfilePage = () => {
           <h3 className="mb-5 border-b border-gray-100 pb-2.5 text-lg font-semibold">Personal Details</h3>
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <p className="text-xs text-text-light mb-0.5">Employee Name</p>
-              <p className="font-medium text-sm text-text-dark">{employeeData?.fullName || '-'}</p>
+              <p className="text-xs text-text-light mb-0.5">First name</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.firstName || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-text-light mb-0.5">Phone Number</p>
-              <p className="font-medium text-sm text-text-dark">{employeeData?.phoneNumber || '-'}</p>
+              <p className="text-xs text-text-light mb-0.5">Middle name</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.middleName || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-text-light mb-0.5">Mail ID</p>
+              <p className="text-xs text-text-light mb-0.5">Last name</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.lastName || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Employee Code</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.employeeId || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Gender</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.gender || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Work email</p>
               <p className="font-medium text-sm text-text-dark">{employeeData?.email || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-text-light mb-0.5">Joining Date</p>
-              <p className="font-medium text-sm text-text-dark">{employeeData?.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString() : '-'}</p>
+              <p className="text-xs text-text-light mb-0.5">Mobile number</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.phoneNumber || '-'}</p>
             </div>
             <div>
               <p className="text-xs text-text-light mb-0.5">Department</p>
@@ -152,6 +164,18 @@ const ProfilePage = () => {
             <div>
               <p className="text-xs text-text-light mb-0.5">Designation</p>
               <p className="font-medium text-sm text-text-dark">{employeeData?.designation || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Region</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.region || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Zone</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.zone || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-light mb-0.5">Joining Date</p>
+              <p className="font-medium text-sm text-text-dark">{employeeData?.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString() : '-'}</p>
             </div>
           </div>
         </div>
