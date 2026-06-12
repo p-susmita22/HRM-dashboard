@@ -88,12 +88,12 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
               <div>
-                <img src={logo} alt="Multimaart Logo" className="h-12 mb-4 object-contain" />
+                <img src={logo} alt="Multimaart Logo" className="h-20 mb-4 object-contain" />
               </div>
               <div className="text-right">
                 <h1 className="text-2xl font-bold text-gray-800">MULTIMAART</h1>
-                <p className="text-sm text-gray-600">Bhubaneswar</p>
-                <p className="text-sm text-gray-600">Odisha, India</p>
+                <p className="text-sm font-bold text-gray-800">Bhubaneswar</p>
+                <p className="text-sm font-bold text-gray-800">Odisha, India</p>
               </div>
             </div>
 

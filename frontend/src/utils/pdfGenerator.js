@@ -6,12 +6,12 @@ export const downloadPayslipPDF = (payslip, employee) => {
     <div style="padding: 40px; font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
         <div>
-          <img src="${logo}" alt="Multimaart Logo" style="height: 50px; margin-bottom: 15px;" />
+          <img src="${logo}" alt="Multimaart Logo" style="height: 80px; margin-bottom: 15px;" />
         </div>
         <div style="text-align: right;">
           <h1 style="margin: 0; font-size: 24px; color: #222;">MULTIMAART</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Bhubaneswar</p>
-          <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">Odisha, India</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; color: #222; font-weight: bold;">Bhubaneswar</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; color: #222; font-weight: bold;">Odisha, India</p>
         </div>
       </div>
 
