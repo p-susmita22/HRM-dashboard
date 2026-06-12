@@ -150,6 +150,24 @@ const AdminEmployees = () => {
     setShowAddModal(true);
   };
 
+  const handleFileDownload = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download file. It might be blocked by browser policies.');
+    }
+  };
+
   return (
     <div className="animate-fade-in pb-10 relative">
       <div className="mb-6">
@@ -455,9 +473,13 @@ const AdminEmployees = () => {
                           <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${doc.url}`} target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="View">
                             <Eye size={14} />
                           </a>
-                          <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${doc.url}`} download target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Download">
+                          <button 
+                            onClick={() => handleFileDownload(`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${doc.url}`, doc.fileName || 'document')}
+                            className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" 
+                            title="Download"
+                          >
                             <Download size={14} />
-                          </a>
+                          </button>
                         </div>
                       </div>
                     ))}
