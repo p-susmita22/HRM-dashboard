@@ -149,9 +149,27 @@ export const sendPayslip = async (req, res) => {
     employee.payslips.push(req.body);
     await employee.save();
     
-    res.json({ message: 'Payslip saved and sent successfully' });
+    res.json({ message: 'Payslip saved and sent successfully', payslips: employee.payslips });
   } catch (error) {
     console.error('Error sending payslip:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const updatePayslip = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    
+    const payslip = employee.payslips.id(req.params.payslipId);
+    if (!payslip) return res.status(404).json({ message: 'Payslip not found' });
+    
+    Object.assign(payslip, req.body);
+    await employee.save();
+    
+    res.json({ message: 'Payslip updated successfully', payslips: employee.payslips });
+  } catch (error) {
+    console.error('Error updating payslip:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

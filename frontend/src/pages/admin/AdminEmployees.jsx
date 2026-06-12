@@ -11,6 +11,7 @@ const AdminEmployees = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showPayslipModal, setShowPayslipModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   
@@ -249,7 +250,7 @@ const AdminEmployees = () => {
                           <button onClick={() => handleUploadOfferLetter(emp._id)} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
                             <FileUp size={14} className="text-blue-500" /> Upload Offer Letter
                           </button>
-                          <button onClick={() => { setSelectedEmployee(emp); setShowPayslipModal(true); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
+                          <button onClick={() => { setSelectedEmployee(emp); setSelectedPayslip(null); setShowPayslipModal(true); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
                             <Send size={14} className="text-green-500" /> Send Payslip
                           </button>
                           <div className="border-t border-gray-100 my-1"></div>
@@ -467,6 +468,33 @@ const AdminEmployees = () => {
                   </div>
                 )}
               </div>
+
+              {/* Generated Payslips */}
+              <div className="mt-8">
+                <h4 className="text-sm font-bold text-text-dark border-b border-gray-100 pb-2 mb-4">Generated Payslips</h4>
+                {selectedEmployee.payslips && selectedEmployee.payslips.length > 0 ? (
+                  <div className="flex flex-col gap-2.5">
+                    {selectedEmployee.payslips.map((payslip, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} className="text-green-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-text-dark">Payslip - {payslip.monthYear}</span>
+                        </div>
+                        <button 
+                          onClick={() => { setSelectedPayslip(payslip); setShowPayslipModal(true); setShowViewModal(false); }} 
+                          className="btn px-3 py-1.5 text-xs bg-white border border-gray-200 text-text-dark hover:border-primary hover:text-primary shadow-sm transition-colors flex items-center gap-1"
+                        >
+                          <Edit size={14} /> Edit
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200 text-center">
+                    <p className="text-sm text-text-light">No payslips have been generated for this employee.</p>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
               <button onClick={() => setShowViewModal(false)} className="btn btn-primary px-6">Close</button>
@@ -475,7 +503,15 @@ const AdminEmployees = () => {
         </div>
       )}
       {showPayslipModal && selectedEmployee && (
-        <PayslipModal employee={selectedEmployee} onClose={() => setShowPayslipModal(false)} />
+        <PayslipModal 
+          employee={selectedEmployee} 
+          initialData={selectedPayslip}
+          onClose={() => {
+            setShowPayslipModal(false);
+            setSelectedPayslip(null);
+            fetchEmployees(); // Refresh data after close
+          }} 
+        />
       )}
 
       {/* Hidden File Input for Offer Letter Upload */}

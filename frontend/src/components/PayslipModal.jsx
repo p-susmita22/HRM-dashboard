@@ -4,8 +4,8 @@ import axios from 'axios';
 import { X, Send } from 'lucide-react';
 import logo from '../assets/multimaart-logo.png';
 
-const PayslipModal = ({ employee, onClose }) => {
-  const [formData, setFormData] = useState({
+const PayslipModal = ({ employee, onClose, initialData = null }) => {
+  const [formData, setFormData] = useState(initialData || {
     monthYear: '',
     panNo: '',
     accountNumber: '',
@@ -35,10 +35,17 @@ const PayslipModal = ({ employee, onClose }) => {
     e.preventDefault();
     try {
       const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006';
-      await axios.post(`${API_URL}/api/admin/employees/${employee._id}/payslip`, formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      alert('Payslip saved and sent successfully to ' + employee.email);
+      if (initialData && initialData._id) {
+        await axios.put(`${API_URL}/api/admin/employees/${employee._id}/payslip/${initialData._id}`, formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        alert('Payslip updated successfully');
+      } else {
+        await axios.post(`${API_URL}/api/admin/employees/${employee._id}/payslip`, formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        alert('Payslip saved and sent successfully to ' + employee.email);
+      }
       onClose();
     } catch (error) {
       console.error('Error sending payslip:', error);
@@ -67,7 +74,7 @@ const PayslipModal = ({ employee, onClose }) => {
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl relative flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50 rounded-t-xl shrink-0">
           <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
-            <Send size={20} className="text-primary" /> Send Payslip
+            <Send size={20} className="text-primary" /> {initialData ? 'Edit Payslip' : 'Send Payslip'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-status-absent transition-colors p-1">
             <X size={24} />
@@ -247,7 +254,7 @@ const PayslipModal = ({ employee, onClose }) => {
           <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-xl">
             <button type="button" onClick={onClose} className="btn bg-gray-200 text-gray-700 px-6">Cancel</button>
             <button type="submit" className="btn btn-primary px-8 flex items-center gap-2">
-              <Send size={16} /> Send Payslip
+              <Send size={16} /> {initialData ? 'Update Payslip' : 'Send Payslip'}
             </button>
           </div>
         </form>
