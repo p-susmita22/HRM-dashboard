@@ -164,7 +164,10 @@ export const updatePayslip = async (req, res) => {
     const payslip = employee.payslips.id(req.params.payslipId);
     if (!payslip) return res.status(404).json({ message: 'Payslip not found' });
     
-    Object.assign(payslip, req.body);
+    // Remove _id from body to prevent modifying immutable field error
+    delete req.body._id;
+    
+    payslip.set(req.body);
     await employee.save();
     
     res.json({ message: 'Payslip updated successfully', payslips: employee.payslips });
