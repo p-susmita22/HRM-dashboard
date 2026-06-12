@@ -30,6 +30,25 @@ const employeeSchema = new mongoose.Schema({
     docType: String,
     url: String,
     fileName: String
+  }],
+  payslips: [{
+    monthYear: String,
+    panNo: String,
+    accountNumber: String,
+    pfAccountNumber: String,
+    uanNumber: String,
+    leavingDate: String,
+    basicAnnual: String, basicMonthly: String, basicArrear: String, basicTotal: String,
+    hraAnnual: String, hraMonthly: String, hraArrear: String, hraTotal: String,
+    specialAnnual: String, specialMonthly: String, specialArrear: String, specialTotal: String,
+    conveyanceAnnual: String, conveyanceMonthly: String, conveyanceArrear: String, conveyanceTotal: String,
+    clientAnnual: String, clientMonthly: String, clientArrear: String, clientTotal: String,
+    totalEarningsAnnual: String, totalEarningsMonthly: String, totalEarningsArrear: String, totalEarningsTotal: String,
+    pfDeduction: String,
+    totalDeductions: String,
+    netPay: String,
+    netPayWords: String,
+    createdAt: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });
 

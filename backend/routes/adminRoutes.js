@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter } from '../controllers/adminController.js';
+import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, sendPayslip } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday } from '../controllers/adminController.js';
 import { 
   getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
@@ -21,6 +21,7 @@ router.delete('/employees/:id', deleteEmployee);
 router.put('/employees/:id', editEmployee);
 router.put('/employees/:id/lock', toggleLockEmployee);
 router.post('/employees/:id/offer-letter', uploadOfferLetter);
+router.post('/employees/:id/payslip', sendPayslip);
 
 // Attendance Routes
 router.get('/attendance', getAllAttendance);

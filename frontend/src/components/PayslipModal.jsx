@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import { X, Send } from 'lucide-react';
 import logo from '../assets/multimaart-logo.png';
 
@@ -30,11 +31,19 @@ const PayslipModal = ({ employee, onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    // Simulate sending email/payslip
-    alert('Payslip sent successfully to ' + employee.email);
-    onClose();
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006';
+      await axios.post(`${API_URL}/api/admin/employees/${employee._id}/payslip`, formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      alert('Payslip saved and sent successfully to ' + employee.email);
+      onClose();
+    } catch (error) {
+      console.error('Error sending payslip:', error);
+      alert('Failed to send payslip');
+    }
   };
 
   if (!employee) return null;
@@ -46,6 +55,7 @@ const PayslipModal = ({ employee, onClose }) => {
       value={formData[name]}
       onChange={handleChange}
       placeholder={placeholder}
+      required
       className="w-full bg-transparent border-b border-gray-300 focus:border-primary outline-none px-1 py-0.5 text-sm"
     />
   );
@@ -62,7 +72,8 @@ const PayslipModal = ({ employee, onClose }) => {
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto bg-white custom-scrollbar">
+        <form onSubmit={handleSend} className="overflow-y-auto flex-1 flex flex-col custom-scrollbar">
+          <div className="p-8 bg-white flex-1">
           {/* Payslip Document */}
           <div className="border border-gray-200 p-8 shadow-sm">
             {/* Header */}
@@ -79,7 +90,7 @@ const PayslipModal = ({ employee, onClose }) => {
 
             <div className="text-center mb-6">
               <h2 className="text-lg font-bold border-b border-gray-300 inline-block pb-1 px-4">
-                PAYSLIP FOR <input type="text" name="monthYear" value={formData.monthYear} onChange={handleChange} placeholder="Month, Year" className="border-none outline-none font-bold text-center w-32 bg-gray-50" />
+                PAYSLIP FOR <input type="text" required name="monthYear" value={formData.monthYear} onChange={handleChange} placeholder="Month, Year" className="border-none outline-none font-bold text-center w-32 bg-gray-50" />
               </h2>
             </div>
 
@@ -229,14 +240,15 @@ const PayslipModal = ({ employee, onClose }) => {
               Note: This is a system generated payslip and does not require any signature.
             </div>
           </div>
-        </div>
+          </div>
 
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-xl">
-          <button onClick={onClose} className="btn bg-gray-200 text-gray-700 px-6">Cancel</button>
-          <button onClick={handleSend} className="btn btn-primary px-8 flex items-center gap-2">
-            <Send size={16} /> Send Payslip
-          </button>
-        </div>
+          <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-xl">
+            <button type="button" onClick={onClose} className="btn bg-gray-200 text-gray-700 px-6">Cancel</button>
+            <button type="submit" className="btn btn-primary px-8 flex items-center gap-2">
+              <Send size={16} /> Send Payslip
+            </button>
+          </div>
+        </form>
       </div>
     </div>,
     document.body

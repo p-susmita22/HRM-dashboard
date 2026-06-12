@@ -140,6 +140,21 @@ export const uploadOfferLetter = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+export const sendPayslip = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    
+    employee.payslips.push(req.body);
+    await employee.save();
+    
+    res.json({ message: 'Payslip saved and sent successfully' });
+  } catch (error) {
+    console.error('Error sending payslip:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
 // --- Attendance Management ---
 import Attendance from '../models/Attendance.js';
 

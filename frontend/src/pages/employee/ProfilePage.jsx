@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Upload, FileText, Download, Eye, CheckCircle } from 'lucide-react';
 import axios from 'axios';
+import { downloadPayslipPDF } from '../../utils/pdfGenerator';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -339,6 +340,31 @@ const ProfilePage = () => {
                 ))}
               </div>
             </div>
+            
+            {/* Payslips Section */}
+            <div className="card !mb-0 border-t-4 border-green-500">
+              <h3 className="mb-4 text-lg font-semibold border-b border-gray-100 pb-2">My Payslips</h3>
+              <div className="flex flex-col gap-2.5">
+                {employeeData?.payslips && employeeData.payslips.length > 0 ? (
+                  employeeData.payslips.map((payslip, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-2.5">
+                        <FileText size={20} className="text-green-600 flex-shrink-0" />
+                        <span className="text-sm font-medium text-text-dark">Payslip - {payslip.monthYear}</span>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => downloadPayslipPDF(payslip, employeeData)} className="btn px-3 py-1.5 text-xs bg-green-500 text-white hover:bg-green-600 shadow-sm transition-colors flex items-center gap-1" title="Download PDF">
+                          <Download size={14} /> PDF
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-text-light italic text-center py-2">No payslips available</p>
+                )}
+              </div>
+            </div>
+            
           </div>
         </div>
       )}
