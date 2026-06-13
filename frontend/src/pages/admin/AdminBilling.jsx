@@ -133,8 +133,11 @@ const AdminBilling = () => {
             .grid-cols-1 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
             
             @page {
-              margin: 15mm;
               size: A4 portrait;
+              margin: 0; /* Hides browser headers and footers (URL, Title, etc.) */
+            }
+            body {
+              padding: 15mm !important; /* Restore margin inside the content area */
             }
           }
         `}
