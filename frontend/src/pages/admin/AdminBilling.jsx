@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import html2pdf from 'html2pdf.js';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 import { Plus, Trash2, Download } from 'lucide-react';
 
 const generateInvoiceNo = () => {
@@ -98,71 +99,64 @@ const AdminBilling = () => {
   const grandTotal = Math.round(grandTotalExact);
   const roundOff = (grandTotal - grandTotalExact).toFixed(2);
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const element = invoiceRef.current;
+    if (!element) return;
+
+    // We use html-to-image instead of html2canvas/html2pdf because html2canvas
+    // has a fatal parsing bug with Tailwind v4's oklch() color functions.
+    // html-to-image uses native browser SVG rendering so it handles ALL modern CSS perfectly.
+
+    // Temporarily hide borders of inputs for a clean print look
+    const inputs = element.querySelectorAll('input, textarea');
+    const originalStyles = [];
     
-    // We need to bypass the tailwind oklch crash in html2canvas.
-    // We do this by intercepting the cloned document before render.
-    const opt = {
-      margin: 10,
-      filename: `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true,
-        backgroundColor: '#ffffff', // Prevent blank/black backgrounds
-        windowWidth: 800, // Force desktop width for rendering
-        onclone: (doc) => {
-          const clonedElement = doc.getElementById('invoice-capture');
-          if (!clonedElement) return;
+    inputs.forEach(input => {
+      originalStyles.push({
+        border: input.style.border,
+        background: input.style.background,
+        appearance: input.style.appearance
+      });
+      // Make them look like plain text
+      input.style.border = 'none';
+      input.style.borderBottom = '1px solid #d1d5db'; // Keep a subtle line if needed, or remove completely
+      input.style.background = 'transparent';
+      input.style.appearance = 'none';
+    });
 
-          // Make inputs look like plain text
-          const originalInputs = element.querySelectorAll('input, textarea');
-          const clonedInputs = clonedElement.querySelectorAll('input, textarea');
-          clonedInputs.forEach((clonedInput, index) => {
-            const span = doc.createElement('span');
-            span.textContent = originalInputs[index].value || ' ';
-            span.style.cssText = 'display:inline-block; width:100%; border-bottom:1px solid #d1d5db; padding:2px 0; font-family:sans-serif; color:#1f2937;';
-            clonedInput.parentNode.replaceChild(span, clonedInput);
-          });
+    try {
+      // Capture the DOM as a high-quality PNG
+      const dataUrl = await toPng(element, { 
+        quality: 0.98, 
+        backgroundColor: '#ffffff',
+        pixelRatio: 2 // High resolution
+      });
 
-          // Override Tailwind colors to HEX so html2canvas doesn't crash on oklch()
-          const elements = [clonedElement, ...clonedElement.querySelectorAll('*')];
-          elements.forEach(el => {
-            const classStr = el.getAttribute('class') || '';
-            
-            // Text Colors
-            if (classStr.includes('text-gray-800')) el.style.color = '#1f2937';
-            else if (classStr.includes('text-gray-600')) el.style.color = '#4b5563';
-            else if (classStr.includes('text-gray-500')) el.style.color = '#6b7280';
-            else if (classStr.includes('text-red-500')) el.style.color = '#ef4444';
-            else if (!el.style.color) el.style.color = '#000000'; // fallback
-            
-            // Background Colors
-            if (classStr.includes('bg-gray-100')) el.style.backgroundColor = '#f3f4f6';
-            else if (classStr.includes('bg-gray-50')) el.style.backgroundColor = '#f9fafb';
-            
-            // Border Colors
-            if (classStr.includes('border-gray-300')) el.style.borderColor = '#d1d5db';
-            else if (classStr.includes('border-gray-400')) el.style.borderColor = '#9ca3af';
-            else if (classStr.includes('border-black')) el.style.borderColor = '#000000';
-            else if (classStr.includes('border')) el.style.borderColor = '#d1d5db'; // fallback
-            
-            // Strip tailwind color classes to prevent inherited oklch parsing
-            const newClassStr = classStr
-                .replace(/text-[a-z]+-\d+/g, '')
-                .replace(/bg-[a-z]+-\d+/g, '')
-                .replace(/border-[a-z]+-\d+/g, '')
-                .replace(/text-text-[a-z]+/g, '');
-                
-            el.setAttribute('class', newClassStr);
-          });
-        }
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+      // Initialize jsPDF (A4 size, portrait)
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Calculate dimensions to fit A4 page width while maintaining aspect ratio
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (element.scrollHeight * pdfWidth) / element.scrollWidth;
+      
+      // Add the image to the PDF with a small margin (e.g., 10mm)
+      const margin = 10;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = (element.scrollHeight * contentWidth) / element.scrollWidth;
 
-    html2pdf().set(opt).from(element).save();
+      pdf.addImage(dataUrl, 'PNG', margin, margin, contentWidth, contentHeight);
+      pdf.save(`Invoice_${invoiceData.invoiceNo || 'New'}.pdf`);
+      
+    } catch (error) {
+      console.error('Failed to generate PDF', error);
+    } finally {
+      // Restore the original input styles
+      inputs.forEach((input, i) => {
+        input.style.border = originalStyles[i].border;
+        input.style.background = originalStyles[i].background;
+        input.style.appearance = originalStyles[i].appearance;
+      });
+    }
   };
 
   return (
