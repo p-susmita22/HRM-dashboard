@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 const AdminDashboard = () => {
   const [employees, setEmployees] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -21,13 +22,15 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [empRes, leavesRes, regRes, resRes] = await Promise.all([
+      const [empRes, leavesRes, regRes, resRes, attendanceRes] = await Promise.all([
         axios.get('/api/admin/employees'),
         axios.get('/api/admin/leaves'),
         axios.get('/api/admin/regularizations'),
-        axios.get('/api/admin/resignations')
+        axios.get('/api/admin/resignations'),
+        axios.get('/api/admin/attendance')
       ]);
       setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
+      setAttendanceRecords(Array.isArray(attendanceRes.data) ? attendanceRes.data : []);
       
       const leavesCount = Array.isArray(leavesRes.data) ? leavesRes.data.length : 0;
       const regCount = Array.isArray(regRes.data) ? regRes.data.length : 0;
@@ -89,15 +92,44 @@ const AdminDashboard = () => {
     return acc;
   }, []);
 
-  // Mock data for attendance
-  const attendanceData = [
-    { name: 'Jan', present: 85, absent: 5, late: 10 },
-    { name: 'Feb', present: 80, absent: 8, late: 12 },
-    { name: 'Mar', present: 90, absent: 2, late: 8 },
-    { name: 'Apr', present: 88, absent: 5, late: 7 },
-    { name: 'May', present: 92, absent: 3, late: 5 },
-    { name: 'Jun', present: 95, absent: 1, late: 4 },
-  ];
+  // Process attendance data from records
+  const processAttendanceData = () => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    const result = [];
+    
+    // Get last 6 months
+    for (let i = 5; i >= 0; i--) {
+      let d = new Date();
+      d.setMonth(currentMonth - i);
+      result.push({
+        name: monthNames[d.getMonth()],
+        month: d.getMonth(),
+        year: d.getFullYear(),
+        present: 0,
+        absent: 0,
+        leave: 0
+      });
+    }
+
+    attendanceRecords.forEach(record => {
+      if (!record.date) return;
+      const date = new Date(record.date);
+      const m = date.getMonth();
+      const y = date.getFullYear();
+      
+      const monthData = result.find(item => item.month === m && item.year === y);
+      if (monthData) {
+        if (record.status === 'Present') monthData.present += 1;
+        else if (record.status === 'Absent') monthData.absent += 1;
+        else if (record.status === 'Leave Approved' || record.status === 'Half Day') monthData.leave += 1;
+      }
+    });
+
+    return result;
+  };
+
+  const attendanceData = processAttendanceData();
 
   return (
     <div className="animate-fade-in pb-10 relative">
@@ -153,7 +185,7 @@ const AdminDashboard = () => {
                 <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
                 <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
-                <Bar dataKey="late" name="Late" stackId="a" fill="#f59e0b" />
+                <Bar dataKey="leave" name="Leave" stackId="a" fill="#eab308" />
                 <Bar dataKey="absent" name="Absent" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
