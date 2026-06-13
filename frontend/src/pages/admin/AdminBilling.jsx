@@ -166,7 +166,7 @@ const AdminBilling = () => {
 
         <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
           <table style="width: 300px; font-size: 14px; border-collapse: collapse;">
-            <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Total Taxable Value:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${taxableValue.toFixed(2)}</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Total Taxable Value:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${taxableAmount.toFixed(2)}</td></tr>
             <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Total GST Amount:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${totalGst.toFixed(2)}</td></tr>
             <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Round Off:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${roundOff}</td></tr>
             <tr><td style="padding: 8px; font-weight: bold; font-size: 16px; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; color: #222;">Grand Total:</td><td style="padding: 8px; font-weight: bold; font-size: 16px; text-align: right; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; color: #222;">₹${grandTotal.toFixed(2)}</td></tr>
