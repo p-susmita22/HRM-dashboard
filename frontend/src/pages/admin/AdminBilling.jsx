@@ -105,20 +105,26 @@ const AdminBilling = () => {
     const clone = element.cloneNode(true);
     
     // Replace all inputs with spans in the clone to look like plain text
-    const inputs = clone.querySelectorAll('input, textarea');
-    inputs.forEach(input => {
+    const originalInputs = element.querySelectorAll('input, textarea');
+    const clonedInputs = clone.querySelectorAll('input, textarea');
+    
+    clonedInputs.forEach((clonedInput, index) => {
+      const originalInput = originalInputs[index];
       const span = document.createElement('span');
-      span.textContent = input.value || ' ';
-      span.className = input.className;
+      span.textContent = originalInput.value || ' ';
+      span.className = clonedInput.className;
       span.style.border = 'none';
       span.style.background = 'transparent';
       span.style.padding = '0';
-      input.parentNode.replaceChild(span, input);
+      clonedInput.parentNode.replaceChild(span, clonedInput);
     });
 
     // Force desktop layout for PDF on mobile
     clone.style.width = '800px';
     clone.style.maxWidth = 'none';
+    clone.style.position = 'absolute';
+    clone.style.top = '-9999px';
+    clone.style.left = '-9999px';
     
     const grids = clone.querySelectorAll('.grid-cols-1');
     grids.forEach(g => {
@@ -132,6 +138,8 @@ const AdminBilling = () => {
       h.classList.add('w-1/2');
     });
 
+    document.body.appendChild(clone);
+
     const opt = {
       margin: 10,
       filename: `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
@@ -140,7 +148,9 @@ const AdminBilling = () => {
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(clone).save();
+    html2pdf().set(opt).from(clone).save().then(() => {
+      document.body.removeChild(clone);
+    });
   };
 
   return (
