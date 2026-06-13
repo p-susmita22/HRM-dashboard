@@ -129,31 +129,33 @@ const AdminBilling = () => {
           // Override Tailwind colors to HEX so html2canvas doesn't crash on oklch()
           const elements = [clonedElement, ...clonedElement.querySelectorAll('*')];
           elements.forEach(el => {
-            const classList = el.className || '';
+            const classStr = el.getAttribute('class') || '';
             
             // Text Colors
-            if (classList.includes('text-gray-800')) el.style.color = '#1f2937';
-            else if (classList.includes('text-gray-600')) el.style.color = '#4b5563';
-            else if (classList.includes('text-gray-500')) el.style.color = '#6b7280';
-            else if (classList.includes('text-red-500')) el.style.color = '#ef4444';
+            if (classStr.includes('text-gray-800')) el.style.color = '#1f2937';
+            else if (classStr.includes('text-gray-600')) el.style.color = '#4b5563';
+            else if (classStr.includes('text-gray-500')) el.style.color = '#6b7280';
+            else if (classStr.includes('text-red-500')) el.style.color = '#ef4444';
             else if (!el.style.color) el.style.color = '#000000'; // fallback
             
             // Background Colors
-            if (classList.includes('bg-gray-100')) el.style.backgroundColor = '#f3f4f6';
-            else if (classList.includes('bg-gray-50')) el.style.backgroundColor = '#f9fafb';
+            if (classStr.includes('bg-gray-100')) el.style.backgroundColor = '#f3f4f6';
+            else if (classStr.includes('bg-gray-50')) el.style.backgroundColor = '#f9fafb';
             
             // Border Colors
-            if (classList.includes('border-gray-300')) el.style.borderColor = '#d1d5db';
-            else if (classList.includes('border-gray-400')) el.style.borderColor = '#9ca3af';
-            else if (classList.includes('border-black')) el.style.borderColor = '#000000';
-            else if (classList.includes('border')) el.style.borderColor = '#d1d5db'; // fallback
+            if (classStr.includes('border-gray-300')) el.style.borderColor = '#d1d5db';
+            else if (classStr.includes('border-gray-400')) el.style.borderColor = '#9ca3af';
+            else if (classStr.includes('border-black')) el.style.borderColor = '#000000';
+            else if (classStr.includes('border')) el.style.borderColor = '#d1d5db'; // fallback
             
             // Strip tailwind color classes to prevent inherited oklch parsing
-            el.className = classList
+            const newClassStr = classStr
                 .replace(/text-[a-z]+-\d+/g, '')
                 .replace(/bg-[a-z]+-\d+/g, '')
                 .replace(/border-[a-z]+-\d+/g, '')
                 .replace(/text-text-[a-z]+/g, '');
+                
+            el.setAttribute('class', newClassStr);
           });
         }
       },
