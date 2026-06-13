@@ -173,8 +173,14 @@ const AdminBilling = () => {
           </table>
         </div>
 
-        <div style="margin-top: 40px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
-          Note: This is a system generated invoice and does not require any signature.
+        <div style="display: flex; justify-content: flex-end; margin-top: 50px; margin-bottom: 20px;">
+          <div style="text-align: center; width: 200px;">
+            <p style="font-size: 14px; font-weight: bold; margin: 0; color: #333;">Customer Signature</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
+          Note: This is a system generated invoice.
         </div>
       </div>
     `;
@@ -213,7 +219,7 @@ const AdminBilling = () => {
           
           {/* Header */}
           <div className="text-center border-b pb-6 mb-6">
-            <h1 className="text-3xl font-bold uppercase tracking-wider mb-2">MONEY RECEIPT</h1>
+            <h1 className="text-3xl font-bold uppercase tracking-wider mb-2">TAX BILLING INVOICE</h1>
             <h2 className="text-xl font-bold mb-1">MULTIMAART E-COMMERCE PVT. LTD.</h2>
             <p className="text-sm text-gray-600">Bhubaneswar, Odisha, India</p>
             <p className="text-sm text-gray-600">Phone: +91 8658192230 | Email: info@multimaart.com</p>
@@ -373,22 +379,15 @@ const AdminBilling = () => {
             </div>
           </div>
 
-          {/* Declarations */}
-          <div className="border-t border-gray-300 pt-6 mt-6 flex justify-between">
-            <div className="w-2/3 pr-8">
-              <h4 className="font-bold mb-2 text-sm">Declaration</h4>
-              <p className="text-xs text-gray-600">
-                We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
-              </p>
-            </div>
+          {/* Signatures */}
+          <div className="pt-6 mt-6 flex justify-end">
             <div className="w-1/3 text-center pt-8">
-              <div className="border-b border-gray-400 w-full mb-2"></div>
               <p className="text-sm font-semibold">Customer Signature</p>
             </div>
           </div>
           
-          <div className="mt-16 text-center">
-            <p className="text-xs text-gray-500 italic font-semibold">Note: This is a system generated payslip and does not require any signature.</p>
+          <div className="mt-16 text-center border-t border-gray-200 pt-4">
+            <p className="text-xs text-gray-500 italic font-semibold">Note: This is a system generated invoice.</p>
           </div>
 
         </div>
