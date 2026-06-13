@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Users, UserCheck, UserX, Clock, CalendarDays, MoreVertical, Trash2, Eye, X, FileText, Building } from 'lucide-react';
-
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
 const AdminDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [totalRequests, setTotalRequests] = useState(0);
@@ -73,6 +76,29 @@ const AdminDashboard = () => {
 
   const totalDepartments = new Set(employees.map(e => e.department).filter(Boolean)).size;
 
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+  const departmentData = employees.reduce((acc, employee) => {
+    const dept = employee.department || 'Unassigned';
+    const existing = acc.find(item => item.name === dept);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: dept, value: 1 });
+    }
+    return acc;
+  }, []);
+
+  // Mock data for attendance
+  const attendanceData = [
+    { name: 'Jan', present: 85, absent: 5, late: 10 },
+    { name: 'Feb', present: 80, absent: 8, late: 12 },
+    { name: 'Mar', present: 90, absent: 2, late: 8 },
+    { name: 'Apr', present: 88, absent: 5, late: 7 },
+    { name: 'May', present: 92, absent: 3, late: 5 },
+    { name: 'Jun', present: 95, absent: 1, late: 4 },
+  ];
+
   return (
     <div className="animate-fade-in pb-10 relative">
       <div className="mb-6">
@@ -118,14 +144,47 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
         <div className="card lg:col-span-2 !mb-0">
           <h3 className="text-lg font-semibold mb-4">Monthly Attendance</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 text-gray-400">
-            [Attendance Chart Placeholder]
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={attendanceData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
+                <Bar dataKey="late" name="Late" stackId="a" fill="#f59e0b" />
+                <Bar dataKey="absent" name="Absent" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
         <div className="card !mb-0">
           <h3 className="text-lg font-semibold mb-4">Department Distribution</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 text-gray-400">
-            [Distribution Chart Placeholder]
+          <div className="h-72 w-full flex items-center justify-center">
+            {departmentData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={departmentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {departmentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend iconType="circle" layout="vertical" verticalAlign="bottom" align="center" />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-text-light text-sm">No department data available</div>
+            )}
           </div>
         </div>
       </div>
