@@ -52,6 +52,10 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
           <NavLink to="/admin/billing" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Receipt size={20} /> Generate Billing
           </NavLink>
+          <NavLink to="/admin/money-receipt" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
+            Money Receipt
+          </NavLink>
           <NavLink to="/admin/settings" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Settings size={20} /> Settings
           </NavLink>
