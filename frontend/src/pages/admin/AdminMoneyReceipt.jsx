@@ -24,7 +24,7 @@ const AdminMoneyReceipt = () => {
   const generatePDF = () => {
     // Generate pure HTML string with inline styles for precise PDF generation
     const htmlContent = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white; min-height: 1050px; position: relative;">
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white; position: relative;">
         
         <!-- Header Gradient -->
         <div style="background: linear-gradient(to right, #e0f2fe, #3b82f6); padding: 20px; text-align: center; position: relative;">
@@ -222,7 +222,7 @@ const AdminMoneyReceipt = () => {
             </div>
             
             <div className="overflow-x-auto p-4 bg-gray-50 flex justify-center">
-               <div style={{ width: '800px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-100px' }} className="bg-white shadow-md relative min-h-[1050px]">
+               <div style={{ width: '800px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-100px' }} className="bg-white shadow-md relative">
                   
                   {/* PREVIEW HTML (Identical to PDF output) */}
                   <div style={{ background: 'linear-gradient(to right, #e0f2fe, #3b82f6)', padding: '20px', textAlign: 'center', position: 'relative' }}>
