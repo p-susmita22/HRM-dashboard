@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { toPng } from 'html-to-image';
-import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import { Plus, Trash2, Download } from 'lucide-react';
 
 const generateInvoiceNo = () => {
@@ -99,64 +98,102 @@ const AdminBilling = () => {
   const grandTotal = Math.round(grandTotalExact);
   const roundOff = (grandTotal - grandTotalExact).toFixed(2);
 
-  const generatePDF = async () => {
-    const element = invoiceRef.current;
-    if (!element) return;
+  const generatePDF = () => {
+    // Generate pure HTML string with inline styles just like PayslipModal
+    // This avoids all Tailwind oklch parsing bugs and overflow clipping issues
+    const htmlContent = `
+      <div style="padding: 40px; font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white;">
+        <div style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 20px;">
+          <h1 style="font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; color: #222;">MONEY RECEIPT</h1>
+          <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #222;">MULTIMAART E-COMMERCE PVT. LTD.</h2>
+          <p style="font-size: 14px; color: #555; margin: 0;">Bhubaneswar, Odisha, India</p>
+          <p style="font-size: 14px; color: #555; margin: 0;">Phone: +91 8658192230 | Email: info@multimaart.com</p>
+          <p style="font-size: 14px; color: #555; margin: 0;">Website: www.multimaart.com</p>
+          <p style="font-size: 14px; color: #555; margin-top: 5px;"><strong>GSTIN:</strong> 21ACHFM1903F1ZT | <strong>State:</strong> Odisha (02)</p>
+        </div>
 
-    // We use html-to-image instead of html2canvas/html2pdf because html2canvas
-    // has a fatal parsing bug with Tailwind v4's oklch() color functions.
-    // html-to-image uses native browser SVG rendering so it handles ALL modern CSS perfectly.
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+          <div style="width: 48%;">
+            <h3 style="font-size: 16px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; color: #222;">Bill Details</h3>
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              <tr><td style="padding: 4px 0; font-weight: bold; width: 40%;">Invoice No.</td><td>${invoiceData.invoiceNo || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Invoice Date</td><td>${invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString() : '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Payment Mode</td><td>${invoiceData.paymentMode || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Place of Supply</td><td>Odisha (02)</td></tr>
+            </table>
+          </div>
+          <div style="width: 48%;">
+            <h3 style="font-size: 16px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; color: #222;">Customer Details</h3>
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              <tr><td style="padding: 4px 0; font-weight: bold; width: 40%;">Customer Name</td><td>${invoiceData.customerName || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Mobile Number</td><td>${invoiceData.mobileNumber || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Email ID</td><td>${invoiceData.emailId || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">Billing Address</td><td>${invoiceData.billingAddress || '-'}</td></tr>
+              <tr><td style="padding: 4px 0; font-weight: bold;">GSTIN (If Any)</td><td>${invoiceData.gstin || '-'}</td></tr>
+            </table>
+          </div>
+        </div>
 
-    // Temporarily hide borders of inputs for a clean print look
-    const inputs = element.querySelectorAll('input, textarea');
-    const originalStyles = [];
-    
-    inputs.forEach(input => {
-      originalStyles.push({
-        border: input.style.border,
-        background: input.style.background,
-        appearance: input.style.appearance
-      });
-      // Make them look like plain text
-      input.style.border = 'none';
-      input.style.borderBottom = '1px solid #d1d5db'; // Keep a subtle line if needed, or remove completely
-      input.style.background = 'transparent';
-      input.style.appearance = 'none';
+        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #222;">Product Details</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px; text-align: center;">
+          <thead>
+            <tr style="background-color: #f1f1f1;">
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Product Name</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">Rate (₹)</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">GST %</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">GST Amount (₹)</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => {
+              const rate = parseFloat(p.rate || 0);
+              const gstPercent = parseFloat(p.gstPercent || 0);
+              const gstAmount = rate * gstPercent / 100;
+              const total = rate + gstAmount;
+              return `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: left;">${p.name || '-'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${rate.toFixed(2)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${gstPercent}%</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${gstAmount.toFixed(2)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${total.toFixed(2)}</td>
+              </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+          <table style="width: 300px; font-size: 14px; border-collapse: collapse;">
+            <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Total Taxable Value:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${taxableValue.toFixed(2)}</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Total GST Amount:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${totalGst.toFixed(2)}</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid #eee;">Round Off:</td><td style="padding: 6px; text-align: right; border-bottom: 1px solid #eee;">₹${roundOff}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; font-size: 16px; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; color: #222;">Grand Total:</td><td style="padding: 8px; font-weight: bold; font-size: 16px; text-align: right; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; color: #222;">₹${grandTotal.toFixed(2)}</td></tr>
+          </table>
+        </div>
+
+        <div style="margin-top: 40px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
+          Note: This is a system generated invoice and does not require any signature.
+        </div>
+      </div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+    document.body.appendChild(container);
+
+    const opt = {
+      margin:       0.5,
+      filename:     `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().from(container).set(opt).save().then(() => {
+      document.body.removeChild(container);
     });
-
-    try {
-      // Capture the DOM as a high-quality PNG
-      const dataUrl = await toPng(element, { 
-        quality: 0.98, 
-        backgroundColor: '#ffffff',
-        pixelRatio: 2 // High resolution
-      });
-
-      // Initialize jsPDF (A4 size, portrait)
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      // Calculate dimensions to fit A4 page width while maintaining aspect ratio
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.scrollHeight * pdfWidth) / element.scrollWidth;
-      
-      // Add the image to the PDF with a small margin (e.g., 10mm)
-      const margin = 10;
-      const contentWidth = pdfWidth - (margin * 2);
-      const contentHeight = (element.scrollHeight * contentWidth) / element.scrollWidth;
-
-      pdf.addImage(dataUrl, 'PNG', margin, margin, contentWidth, contentHeight);
-      pdf.save(`Invoice_${invoiceData.invoiceNo || 'New'}.pdf`);
-      
-    } catch (error) {
-      console.error('Failed to generate PDF', error);
-    } finally {
-      // Restore the original input styles
-      inputs.forEach((input, i) => {
-        input.style.border = originalStyles[i].border;
-        input.style.background = originalStyles[i].background;
-        input.style.appearance = originalStyles[i].appearance;
-      });
-    }
   };
 
   return (
