@@ -34,6 +34,9 @@ const AdminBilling = () => {
   const handleProductChange = (id, field, value) => {
     setProducts(products.map(p => {
       if (p.id === id) {
+        if ((field === 'rate' || field === 'gstPercent') && parseFloat(value) < 0) {
+          value = 0;
+        }
         return { ...p, [field]: value };
       }
       return p;
@@ -221,10 +224,10 @@ const AdminBilling = () => {
                     <input type="text" value={p.name} onChange={(e) => handleProductChange(p.id, 'name', e.target.value)} className="w-full p-1 focus:outline-none" placeholder="Item Name" />
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <input type="number" value={p.rate || ''} onChange={(e) => handleProductChange(p.id, 'rate', e.target.value)} className="w-full p-1 focus:outline-none text-center" placeholder="0" />
+                    <input type="number" min="0" value={p.rate === 0 ? '' : p.rate} onChange={(e) => handleProductChange(p.id, 'rate', e.target.value)} className="w-full p-1 focus:outline-none text-center" placeholder="0" />
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <input type="number" value={p.gstPercent} onChange={(e) => handleProductChange(p.id, 'gstPercent', e.target.value)} className="w-full p-1 focus:outline-none text-center" />
+                    <input type="number" min="0" value={p.gstPercent} onChange={(e) => handleProductChange(p.id, 'gstPercent', e.target.value)} className="w-full p-1 focus:outline-none text-center" />
                   </td>
                   <td className="border border-gray-300 p-2 bg-gray-50">{p.gstAmount.toFixed(2)}</td>
                   <td className="border border-gray-300 p-2 bg-gray-50 font-medium">{p.amount.toFixed(2)}</td>
