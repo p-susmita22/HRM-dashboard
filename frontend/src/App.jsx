@@ -12,6 +12,7 @@ import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminRequests from './pages/admin/AdminRequests';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminBilling from './pages/admin/AdminBilling';
 import EmployeeMessages from './pages/employee/EmployeeMessages';
 import './index.css';
 import axios from 'axios';
@@ -279,6 +280,7 @@ function App() {
             <Route path="attendance" element={<AdminAttendance />} />
             <Route path="requests" element={<AdminRequests />} />
             <Route path="notifications" element={<AdminNotifications />} />
+            <Route path="billing" element={<AdminBilling />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="*" element={<div className="p-8 text-center text-xl text-text-light">Admin Page Not Found</div>} />
           </Route>

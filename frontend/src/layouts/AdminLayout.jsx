@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X, Receipt } from 'lucide-react';
 import axios from 'axios';
 
 const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
@@ -48,6 +48,9 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
           </NavLink>
           <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Bell size={20} /> Notifications
+          </NavLink>
+          <NavLink to="/admin/billing" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <Receipt size={20} /> Generate Billing
           </NavLink>
           <NavLink to="/admin/settings" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Settings size={20} /> Settings
