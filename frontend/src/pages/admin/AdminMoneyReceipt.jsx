@@ -93,13 +93,7 @@ const AdminMoneyReceipt = () => {
             </div>
           </div>
 
-          <!-- Signatory -->
-          <div style="display: flex; justify-content: flex-end; margin-bottom: 40px; text-align: center;">
-            <div style="width: 250px;">
-              <p style="color: #1e40af; font-weight: bold; margin-bottom: 60px;">For Multimaart</p>
-              <div style="border-top: 1px solid #000; padding-top: 5px; font-size: 14px;">Authorized Signatory</div>
-            </div>
-          </div>
+          <!-- Signatory Removed as per request -->
 
           <!-- Declaration -->
           <div style="text-align: center; margin-bottom: 15px;">
@@ -114,6 +108,9 @@ const AdminMoneyReceipt = () => {
             <p style="font-size: 14px; color: #1e40af; font-weight: 500; font-style: italic; margin-top: 15px;">
               Thank you for partnering with Multimaart.
             </p>
+            <div style="margin-top: 30px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
+              Note: This is a system generated invoice and does not require any signature.
+            </div>
           </div>
         </div>
 
@@ -290,12 +287,7 @@ const AdminMoneyReceipt = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px', textAlign: 'center' }}>
-                      <div style={{ width: '250px' }}>
-                        <p style={{ color: '#1e40af', fontWeight: 'bold', marginBottom: '60px' }}>For Multimaart</p>
-                        <div style={{ borderTop: '1px solid #000', paddingTop: '5px', fontSize: '14px' }}>Authorized Signatory</div>
-                      </div>
-                    </div>
+                    {/* Signatory Removed as per request */}
 
                     <div style={{ textAlign: 'center', marginBottom: '15px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -309,6 +301,9 @@ const AdminMoneyReceipt = () => {
                       <p style={{ fontSize: '14px', color: '#1e40af', fontWeight: 500, fontStyle: 'italic', marginTop: '15px' }}>
                         Thank you for partnering with Multimaart.
                       </p>
+                      <div style={{ marginTop: '30px', fontSize: '12px', color: '#777', fontStyle: 'italic', borderTop: '1px solid #eee', paddingTop: '15px', textAlign: 'center' }}>
+                        Note: This is a system generated invoice and does not require any signature.
+                      </div>
                     </div>
                   </div>
 
