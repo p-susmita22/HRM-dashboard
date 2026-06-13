@@ -190,7 +190,7 @@ const AdminBilling = () => {
     document.body.appendChild(container);
 
     const opt = {
-      margin:       0.5,
+      margin:       0,
       filename:     `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2 },
