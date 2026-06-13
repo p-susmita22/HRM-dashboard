@@ -15,6 +15,7 @@ const AdminBilling = () => {
     placeOfSupply: 'Odisha (21)',
     customerName: '',
     mobileNumber: '',
+    emailId: '',
     billingAddress: '',
     shippingAddress: '',
     gstin: ''
@@ -27,7 +28,20 @@ const AdminBilling = () => {
   const invoiceRef = useRef();
 
   const handleInvoiceChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    if (name === 'mobileNumber') {
+      value = value.replace(/\D/g, ''); // Allow only numbers
+      if (value.startsWith('0')) {
+        value = value.substring(1); // Do not allow starting with 0
+      }
+      if (value.length > 10) {
+        value = value.substring(0, 10); // Max 10 digits
+      }
+    } else if (name === 'emailId') {
+      value = value.toLowerCase(); // Ensure lowercase
+    }
+
     setInvoiceData({ ...invoiceData, [name]: value });
   };
 
@@ -191,7 +205,11 @@ const AdminBilling = () => {
                   </tr>
                   <tr>
                     <td className="py-1 font-semibold">Mobile Number</td>
-                    <td className="py-1"><input type="text" name="mobileNumber" value={invoiceData.mobileNumber} onChange={handleInvoiceChange} className="border-b border-gray-300 focus:outline-none w-full" /></td>
+                    <td className="py-1"><input type="text" name="mobileNumber" value={invoiceData.mobileNumber} onChange={handleInvoiceChange} className="border-b border-gray-300 focus:outline-none w-full" placeholder="10-digit number" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-1 font-semibold">Email ID</td>
+                    <td className="py-1"><input type="email" name="emailId" value={invoiceData.emailId} onChange={handleInvoiceChange} className="border-b border-gray-300 focus:outline-none w-full" placeholder="customer@example.com" /></td>
                   </tr>
                   <tr>
                     <td className="py-1 font-semibold align-top">Billing Address</td>
