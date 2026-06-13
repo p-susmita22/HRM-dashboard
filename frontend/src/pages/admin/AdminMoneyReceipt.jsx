@@ -27,7 +27,7 @@ const AdminMoneyReceipt = () => {
       <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white; min-height: 1050px; position: relative;">
         
         <!-- Header Gradient -->
-        <div style="background: linear-gradient(to right, #e0f2fe, #3b82f6); padding: 20px; text-align: center; position: relative; height: 160px; overflow: hidden;">
+        <div style="background: linear-gradient(to right, #e0f2fe, #3b82f6); padding: 20px; text-align: center; position: relative;">
           <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background: radial-gradient(circle, white 10%, transparent 80%);"></div>
           <div style="position: relative; z-index: 10;">
             <div style="background: white; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -38,7 +38,7 @@ const AdminMoneyReceipt = () => {
           </div>
         </div>
 
-        <div style="padding: 30px 40px;">
+        <div style="padding: 30px 40px; padding-bottom: 120px;">
           <!-- Title -->
           <div style="text-align: center; margin-bottom: 40px;">
             <h2 style="font-size: 22px; color: #1e40af; text-decoration: underline; display: inline-block; font-weight: bold;">MONEY RECEIPT</h2>
@@ -228,7 +228,7 @@ const AdminMoneyReceipt = () => {
                <div style={{ width: '800px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-100px' }} className="bg-white shadow-md relative min-h-[1050px]">
                   
                   {/* PREVIEW HTML (Identical to PDF output) */}
-                  <div style={{ background: 'linear-gradient(to right, #e0f2fe, #3b82f6)', padding: '20px', textAlign: 'center', position: 'relative', height: '160px', overflow: 'hidden' }}>
+                  <div style={{ background: 'linear-gradient(to right, #e0f2fe, #3b82f6)', padding: '20px', textAlign: 'center', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.1, background: 'radial-gradient(circle, white 10%, transparent 80%)' }}></div>
                     <div style={{ position: 'relative', zIndex: 10 }}>
                       <div style={{ background: 'white', width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 10px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
@@ -239,7 +239,7 @@ const AdminMoneyReceipt = () => {
                     </div>
                   </div>
 
-                  <div style={{ padding: '30px 40px' }}>
+                  <div style={{ padding: '30px 40px', paddingBottom: '120px' }}>
                     <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                       <h2 style={{ fontSize: '22px', color: '#1e40af', textDecoration: 'underline', display: 'inline-block', fontWeight: 'bold' }}>MONEY RECEIPT</h2>
                     </div>
