@@ -100,97 +100,91 @@ const AdminBilling = () => {
 
   const generatePDF = () => {
     const element = invoiceRef.current;
-    
-    // Create a clone to manipulate for PDF to hide borders of inputs
-    const clone = element.cloneNode(true);
-    
-    // Replace all inputs with spans in the clone to look like plain text
-    const originalInputs = element.querySelectorAll('input, textarea');
-    const clonedInputs = clone.querySelectorAll('input, textarea');
-    
-    clonedInputs.forEach((clonedInput, index) => {
-      const originalInput = originalInputs[index];
-      const span = document.createElement('span');
-      span.textContent = originalInput.value || ' ';
-      span.className = clonedInput.className;
-      span.style.border = 'none';
-      span.style.background = 'transparent';
-      span.style.padding = '0';
-      clonedInput.parentNode.replaceChild(span, clonedInput);
-    });
-
-    // Force desktop layout for PDF on mobile
-    clone.style.width = '800px';
-    clone.style.maxWidth = 'none';
-    clone.style.position = 'absolute';
-    clone.style.top = '-9999px';
-    clone.style.left = '-9999px';
-    
-    const grids = clone.querySelectorAll('.grid-cols-1');
-    grids.forEach(g => {
-      g.classList.remove('grid-cols-1');
-      g.classList.add('grid-cols-2');
-    });
-
-    const halves = clone.querySelectorAll('.md\\:w-1\\/2');
-    halves.forEach(h => {
-      h.classList.remove('w-full');
-      h.classList.add('w-1/2');
-    });
-
-    // Strip Tailwind color classes and replace with explicit HEX inline styles
-    // because html2canvas crashes on 'oklch' color functions used by Tailwind v4.
-    const classColorMap = {
-      'bg-white': { backgroundColor: '#ffffff' },
-      'text-gray-800': { color: '#1f2937' },
-      'text-gray-600': { color: '#4b5563' },
-      'text-gray-500': { color: '#6b7280' },
-      'text-red-500': { color: '#ef4444' },
-      'border-gray-300': { borderColor: '#d1d5db' },
-      'border-gray-400': { borderColor: '#9ca3af' },
-      'bg-gray-100': { backgroundColor: '#f3f4f6' },
-      'bg-gray-50': { backgroundColor: '#f9fafb' },
-      'border-black': { borderColor: '#000000' }
-    };
-
-    const elements = [clone, ...clone.querySelectorAll('*')];
-    
-    elements.forEach(el => {
-      let matchedColors = {};
-      for (const [className, styles] of Object.entries(classColorMap)) {
-        if (el.classList.contains(className)) {
-          Object.assign(matchedColors, styles);
-          el.classList.remove(className);
-        }
-      }
-      
-      let hasBorderClass = false;
-      el.classList.forEach(cls => {
-        if (cls.startsWith('border')) hasBorderClass = true;
-      });
-
-      // Apply fallback hex colors to prevent ANY oklch inheritance
-      if (!matchedColors.color && !el.style.color) el.style.color = '#1f2937'; 
-      if (hasBorderClass && !matchedColors.borderColor && !el.style.borderColor) el.style.borderColor = '#d1d5db'; 
-      if (!matchedColors.backgroundColor && !el.style.backgroundColor) el.style.backgroundColor = 'transparent';
-      
-      // Apply the matched specific hex colors
-      Object.assign(el.style, matchedColors);
-    });
-
-    document.body.appendChild(clone);
 
     const opt = {
       margin: 10,
       filename: `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        onclone: (doc) => {
+          const clonedElement = doc.getElementById('invoice-capture');
+          if (!clonedElement) return;
+
+          // Replace inputs with spans
+          const originalInputs = element.querySelectorAll('input, textarea');
+          const clonedInputs = clonedElement.querySelectorAll('input, textarea');
+          
+          clonedInputs.forEach((clonedInput, index) => {
+            const originalInput = originalInputs[index];
+            const span = doc.createElement('span');
+            span.textContent = originalInput.value || ' ';
+            span.className = clonedInput.className;
+            span.style.border = 'none';
+            span.style.background = 'transparent';
+            span.style.padding = '0';
+            clonedInput.parentNode.replaceChild(span, clonedInput);
+          });
+
+          // Force desktop layout for PDF on mobile
+          clonedElement.style.width = '800px';
+          clonedElement.style.maxWidth = 'none';
+          
+          const grids = clonedElement.querySelectorAll('.grid-cols-1');
+          grids.forEach(g => {
+            g.classList.remove('grid-cols-1');
+            g.classList.add('grid-cols-2');
+          });
+
+          const halves = clonedElement.querySelectorAll('.md\\:w-1\\/2');
+          halves.forEach(h => {
+            h.classList.remove('w-full');
+            h.classList.add('w-1/2');
+          });
+
+          // Strip Tailwind oklch colors
+          const classColorMap = {
+            'bg-white': { backgroundColor: '#ffffff' },
+            'text-gray-800': { color: '#1f2937' },
+            'text-gray-600': { color: '#4b5563' },
+            'text-gray-500': { color: '#6b7280' },
+            'text-red-500': { color: '#ef4444' },
+            'border-gray-300': { borderColor: '#d1d5db' },
+            'border-gray-400': { borderColor: '#9ca3af' },
+            'bg-gray-100': { backgroundColor: '#f3f4f6' },
+            'bg-gray-50': { backgroundColor: '#f9fafb' },
+            'border-black': { borderColor: '#000000' }
+          };
+
+          const elements = [clonedElement, ...clonedElement.querySelectorAll('*')];
+          
+          elements.forEach(el => {
+            let matchedColors = {};
+            for (const [className, styles] of Object.entries(classColorMap)) {
+              if (el.classList.contains(className)) {
+                Object.assign(matchedColors, styles);
+                el.classList.remove(className);
+              }
+            }
+            
+            let hasBorderClass = false;
+            el.classList.forEach(cls => {
+              if (cls.startsWith('border')) hasBorderClass = true;
+            });
+
+            if (!matchedColors.color && !el.style.color) el.style.color = '#1f2937'; 
+            if (hasBorderClass && !matchedColors.borderColor && !el.style.borderColor) el.style.borderColor = '#d1d5db'; 
+            if (!matchedColors.backgroundColor && !el.style.backgroundColor) el.style.backgroundColor = 'transparent';
+            
+            Object.assign(el.style, matchedColors);
+          });
+        }
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(clone).save().then(() => {
-      document.body.removeChild(clone);
-    });
+    html2pdf().set(opt).from(element).save();
   };
 
   return (
@@ -206,7 +200,7 @@ const AdminBilling = () => {
       </div>
 
       <div className="card w-full max-w-4xl mx-auto overflow-x-auto">
-        <div ref={invoiceRef} className="p-4 md:p-8 bg-white text-gray-800 w-full min-w-max md:min-w-0" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div ref={invoiceRef} id="invoice-capture" className="p-4 md:p-8 bg-white text-gray-800 w-full min-w-max md:min-w-0" style={{ fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
           <div className="text-center border-b pb-6 mb-6">
