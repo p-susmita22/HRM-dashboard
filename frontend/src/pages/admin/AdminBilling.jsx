@@ -43,6 +43,12 @@ const AdminBilling = () => {
     }));
   };
 
+  const preventNegative = (e) => {
+    if (e.key === '-' || e.key === 'e' || e.key === '+') {
+      e.preventDefault();
+    }
+  };
+
   const addProduct = () => {
     setProducts([...products, { id: Date.now(), name: '', rate: 0, gstPercent: 18 }]);
   };
@@ -224,10 +230,10 @@ const AdminBilling = () => {
                     <input type="text" value={p.name} onChange={(e) => handleProductChange(p.id, 'name', e.target.value)} className="w-full p-1 focus:outline-none" placeholder="Item Name" />
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <input type="number" min="0" value={p.rate === 0 ? '' : p.rate} onChange={(e) => handleProductChange(p.id, 'rate', e.target.value)} className="w-full p-1 focus:outline-none text-center" placeholder="0" />
+                    <input type="number" min="0" onKeyDown={preventNegative} value={p.rate === 0 ? '' : p.rate} onChange={(e) => handleProductChange(p.id, 'rate', e.target.value)} className="w-full p-1 focus:outline-none text-center" placeholder="0" />
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <input type="number" min="0" value={p.gstPercent} onChange={(e) => handleProductChange(p.id, 'gstPercent', e.target.value)} className="w-full p-1 focus:outline-none text-center" />
+                    <input type="number" min="0" onKeyDown={preventNegative} value={p.gstPercent} onChange={(e) => handleProductChange(p.id, 'gstPercent', e.target.value)} className="w-full p-1 focus:outline-none text-center" />
                   </td>
                   <td className="border border-gray-300 p-2 bg-gray-50">{p.gstAmount.toFixed(2)}</td>
                   <td className="border border-gray-300 p-2 bg-gray-50 font-medium">{p.amount.toFixed(2)}</td>
