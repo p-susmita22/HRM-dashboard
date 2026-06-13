@@ -138,6 +138,46 @@ const AdminBilling = () => {
       h.classList.add('w-1/2');
     });
 
+    // Strip Tailwind color classes and replace with explicit HEX inline styles
+    // because html2canvas crashes on 'oklch' color functions used by Tailwind v4.
+    const classColorMap = {
+      'bg-white': { backgroundColor: '#ffffff' },
+      'text-gray-800': { color: '#1f2937' },
+      'text-gray-600': { color: '#4b5563' },
+      'text-gray-500': { color: '#6b7280' },
+      'text-red-500': { color: '#ef4444' },
+      'border-gray-300': { borderColor: '#d1d5db' },
+      'border-gray-400': { borderColor: '#9ca3af' },
+      'bg-gray-100': { backgroundColor: '#f3f4f6' },
+      'bg-gray-50': { backgroundColor: '#f9fafb' },
+      'border-black': { borderColor: '#000000' }
+    };
+
+    const elements = [clone, ...clone.querySelectorAll('*')];
+    
+    elements.forEach(el => {
+      let matchedColors = {};
+      for (const [className, styles] of Object.entries(classColorMap)) {
+        if (el.classList.contains(className)) {
+          Object.assign(matchedColors, styles);
+          el.classList.remove(className);
+        }
+      }
+      
+      let hasBorderClass = false;
+      el.classList.forEach(cls => {
+        if (cls.startsWith('border')) hasBorderClass = true;
+      });
+
+      // Apply fallback hex colors to prevent ANY oklch inheritance
+      if (!matchedColors.color && !el.style.color) el.style.color = '#1f2937'; 
+      if (hasBorderClass && !matchedColors.borderColor && !el.style.borderColor) el.style.borderColor = '#d1d5db'; 
+      if (!matchedColors.backgroundColor && !el.style.backgroundColor) el.style.backgroundColor = 'transparent';
+      
+      // Apply the matched specific hex colors
+      Object.assign(el.style, matchedColors);
+    });
+
     document.body.appendChild(clone);
 
     const opt = {
