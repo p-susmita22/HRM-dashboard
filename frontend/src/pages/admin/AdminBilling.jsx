@@ -6,7 +6,6 @@ const AdminBilling = () => {
   const [invoiceData, setInvoiceData] = useState({
     invoiceNo: '',
     invoiceDate: new Date().toISOString().split('T')[0],
-    orderId: '',
     paymentMode: '',
     placeOfSupply: 'Odisha (21)',
     customerName: '',
@@ -66,10 +65,8 @@ const AdminBilling = () => {
   const igst = isOdisha ? 0 : totalGst;
 
   const subTotal = taxableAmount;
-  const discount = 0; // Keeping simple as requested
-  const shippingCharges = 0; // Keeping simple
   
-  const grandTotalExact = subTotal - discount + shippingCharges + totalGst;
+  const grandTotalExact = subTotal + totalGst;
   const grandTotal = Math.round(grandTotalExact);
   const roundOff = (grandTotal - grandTotalExact).toFixed(2);
 
@@ -89,6 +86,22 @@ const AdminBilling = () => {
       span.style.background = 'transparent';
       span.style.padding = '0';
       input.parentNode.replaceChild(span, input);
+    });
+
+    // Force desktop layout for PDF on mobile
+    clone.style.width = '800px';
+    clone.style.maxWidth = 'none';
+    
+    const grids = clone.querySelectorAll('.grid-cols-1');
+    grids.forEach(g => {
+      g.classList.remove('grid-cols-1');
+      g.classList.add('grid-cols-2');
+    });
+
+    const halves = clone.querySelectorAll('.md\\:w-1\\/2');
+    halves.forEach(h => {
+      h.classList.remove('w-full');
+      h.classList.add('w-1/2');
     });
 
     const opt = {
@@ -114,20 +127,20 @@ const AdminBilling = () => {
         </button>
       </div>
 
-      <div className="card max-w-4xl mx-auto overflow-x-auto">
-        <div ref={invoiceRef} className="p-8 bg-white min-w-[800px] text-gray-800" style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div className="card w-full max-w-4xl mx-auto overflow-x-auto">
+        <div ref={invoiceRef} className="p-4 md:p-8 bg-white text-gray-800 w-full min-w-max md:min-w-0" style={{ fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
           <div className="text-center border-b pb-6 mb-6">
-            <h1 className="text-3xl font-bold uppercase tracking-wider mb-2">TAX INVOICE</h1>
+            <h1 className="text-3xl font-bold uppercase tracking-wider mb-2">MONEY RECEIPT</h1>
             <h2 className="text-xl font-bold mb-1">MULTIMAART E-COMMERCE PVT. LTD.</h2>
             <p className="text-sm text-gray-600">Bhubaneswar, Odisha, India</p>
-            <p className="text-sm text-gray-600">Phone: +91 XXXXX XXXXX | Email: support@multimaart.com</p>
+            <p className="text-sm text-gray-600">Phone: +91 8658192230 | Email: info@multimaart.com</p>
             <p className="text-sm text-gray-600">Website: www.multimaart.com</p>
-            <p className="text-sm text-gray-600 mt-1"><span className="font-semibold">GSTIN:</span> __________________ | <span className="font-semibold">State:</span> Odisha (21)</p>
+            <p className="text-sm text-gray-600 mt-1"><span className="font-semibold">GSTIN:</span>21ACHFM1903F1ZT | <span className="font-semibold">State:</span> Odisha (02)</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Bill Details */}
             <div>
               <h3 className="font-bold text-lg mb-3 border-b pb-1">Bill Details</h3>
@@ -140,10 +153,6 @@ const AdminBilling = () => {
                   <tr>
                     <td className="py-1 font-semibold">Invoice Date</td>
                     <td className="py-1"><input type="date" name="invoiceDate" value={invoiceData.invoiceDate} onChange={handleInvoiceChange} className="border-b border-gray-300 focus:outline-none w-full" /></td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-semibold">Order ID</td>
-                    <td className="py-1"><input type="text" name="orderId" value={invoiceData.orderId} onChange={handleInvoiceChange} className="border-b border-gray-300 focus:outline-none w-full" /></td>
                   </tr>
                   <tr>
                     <td className="py-1 font-semibold">Payment Mode</td>
@@ -255,20 +264,12 @@ const AdminBilling = () => {
 
           {/* Amount Summary */}
           <div className="flex justify-end mb-8">
-            <div className="w-1/2">
+            <div className="w-full md:w-1/2">
               <table className="w-full text-sm">
                 <tbody>
                   <tr>
                     <td className="py-1 font-semibold text-right pr-4">Sub Total :</td>
                     <td className="py-1 w-32 font-medium">₹ {subTotal.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-semibold text-right pr-4">Discount :</td>
-                    <td className="py-1 w-32">₹ {discount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-semibold text-right pr-4">Shipping Charges :</td>
-                    <td className="py-1 w-32">₹ {shippingCharges.toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td className="py-1 font-semibold text-right pr-4">GST :</td>
