@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Trash2, Printer } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
+import { Plus, Trash2, Download } from 'lucide-react';
 
 const generateInvoiceNo = () => {
   const random = Math.floor(1000 + Math.random() * 9000);
@@ -98,62 +99,84 @@ const AdminBilling = () => {
   const roundOff = (grandTotal - grandTotalExact).toFixed(2);
 
   const generatePDF = () => {
-    window.print();
+    const element = invoiceRef.current;
+    
+    // We need to bypass the tailwind oklch crash in html2canvas.
+    // We do this by intercepting the cloned document before render.
+    const opt = {
+      margin: 10,
+      filename: `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: '#ffffff', // Prevent blank/black backgrounds
+        windowWidth: 800, // Force desktop width for rendering
+        onclone: (doc) => {
+          const clonedElement = doc.getElementById('invoice-capture');
+          if (!clonedElement) return;
+
+          // Make inputs look like plain text
+          const originalInputs = element.querySelectorAll('input, textarea');
+          const clonedInputs = clonedElement.querySelectorAll('input, textarea');
+          clonedInputs.forEach((clonedInput, index) => {
+            const span = doc.createElement('span');
+            span.textContent = originalInputs[index].value || ' ';
+            span.style.cssText = 'display:inline-block; width:100%; border-bottom:1px solid #d1d5db; padding:2px 0; font-family:sans-serif; color:#1f2937;';
+            clonedInput.parentNode.replaceChild(span, clonedInput);
+          });
+
+          // Override Tailwind colors to HEX so html2canvas doesn't crash on oklch()
+          const elements = [clonedElement, ...clonedElement.querySelectorAll('*')];
+          elements.forEach(el => {
+            const classList = el.className || '';
+            
+            // Text Colors
+            if (classList.includes('text-gray-800')) el.style.color = '#1f2937';
+            else if (classList.includes('text-gray-600')) el.style.color = '#4b5563';
+            else if (classList.includes('text-gray-500')) el.style.color = '#6b7280';
+            else if (classList.includes('text-red-500')) el.style.color = '#ef4444';
+            else if (!el.style.color) el.style.color = '#000000'; // fallback
+            
+            // Background Colors
+            if (classList.includes('bg-gray-100')) el.style.backgroundColor = '#f3f4f6';
+            else if (classList.includes('bg-gray-50')) el.style.backgroundColor = '#f9fafb';
+            
+            // Border Colors
+            if (classList.includes('border-gray-300')) el.style.borderColor = '#d1d5db';
+            else if (classList.includes('border-gray-400')) el.style.borderColor = '#9ca3af';
+            else if (classList.includes('border-black')) el.style.borderColor = '#000000';
+            else if (classList.includes('border')) el.style.borderColor = '#d1d5db'; // fallback
+            
+            // Strip tailwind color classes to prevent inherited oklch parsing
+            el.className = classList
+                .replace(/text-[a-z]+-\d+/g, '')
+                .replace(/bg-[a-z]+-\d+/g, '')
+                .replace(/border-[a-z]+-\d+/g, '')
+                .replace(/text-text-[a-z]+/g, '');
+          });
+        }
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
   };
 
   return (
     <div className="animate-fade-in pb-10">
-      <style>
-        {`
-          @media print {
-            body, html { height: auto !important; overflow: visible !important; background-color: white !important; }
-            .h-screen { height: auto !important; }
-            .overflow-hidden, .overflow-y-auto, .overflow-x-auto { overflow: visible !important; }
-            
-            /* Hide Sidebar and Topbar from layout */
-            .w-64, .h-\\[70px\\] { display: none !important; }
-            
-            /* Hide print:hidden elements */
-            .print\\:hidden { display: none !important; }
-            
-            /* Invoice layout overrides for perfect printing */
-            .card { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: 100% !important; padding: 0 !important; }
-            
-            /* Strip input borders so it looks like plain text */
-            input, textarea { 
-              border: none !important; 
-              background: transparent !important; 
-              appearance: none !important;
-              padding: 0 !important;
-              resize: none;
-              color: black !important;
-            }
-            
-            /* Ensure grid layouts print correctly */
-            .grid-cols-1 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-            
-            @page {
-              size: A4 portrait;
-              margin: 0; /* Hides browser headers and footers (URL, Title, etc.) */
-            }
-            body {
-              padding: 15mm !important; /* Restore margin inside the content area */
-            }
-          }
-        `}
-      </style>
-      <div className="flex justify-between items-center mb-6 print:hidden">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-text-dark">Generate Billing</h2>
-          <p className="text-text-light text-sm mt-1">Create and print/download tax invoices.</p>
+          <p className="text-text-light text-sm mt-1">Create and download tax invoices.</p>
         </div>
         <button onClick={generatePDF} className="btn btn-primary flex items-center gap-2">
-          <Printer size={18} /> Print / Save PDF
+          <Download size={18} /> Download PDF
         </button>
       </div>
 
       <div className="card w-full max-w-4xl mx-auto overflow-x-auto">
-        <div ref={invoiceRef} id="invoice-capture" className="p-4 md:p-8 bg-white text-gray-800 w-full min-w-max md:min-w-0" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div ref={invoiceRef} id="invoice-capture" className="p-4 md:p-8 bg-white text-gray-800 w-full min-w-[800px]" style={{ fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
           <div className="text-center border-b pb-6 mb-6">
