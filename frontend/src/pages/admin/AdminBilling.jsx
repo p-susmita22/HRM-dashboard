@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
-import html2pdf from 'html2pdf.js';
-import { Plus, Trash2, Download, Printer } from 'lucide-react';
+import { Plus, Trash2, Printer } from 'lucide-react';
 
 const generateInvoiceNo = () => {
   const random = Math.floor(1000 + Math.random() * 9000);
@@ -99,103 +98,54 @@ const AdminBilling = () => {
   const roundOff = (grandTotal - grandTotalExact).toFixed(2);
 
   const generatePDF = () => {
-    const element = invoiceRef.current;
-
-    const opt = {
-      margin: 10,
-      filename: `Invoice_${invoiceData.invoiceNo || 'New'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true,
-        onclone: (doc) => {
-          const clonedElement = doc.getElementById('invoice-capture');
-          if (!clonedElement) return;
-
-          // Replace inputs with spans
-          const originalInputs = element.querySelectorAll('input, textarea');
-          const clonedInputs = clonedElement.querySelectorAll('input, textarea');
-          
-          clonedInputs.forEach((clonedInput, index) => {
-            const originalInput = originalInputs[index];
-            const span = doc.createElement('span');
-            span.textContent = originalInput.value || ' ';
-            span.className = clonedInput.className;
-            span.style.border = 'none';
-            span.style.background = 'transparent';
-            span.style.padding = '0';
-            clonedInput.parentNode.replaceChild(span, clonedInput);
-          });
-
-          // Force desktop layout for PDF on mobile
-          clonedElement.style.width = '800px';
-          clonedElement.style.maxWidth = 'none';
-          
-          const grids = clonedElement.querySelectorAll('.grid-cols-1');
-          grids.forEach(g => {
-            g.classList.remove('grid-cols-1');
-            g.classList.add('grid-cols-2');
-          });
-
-          const halves = clonedElement.querySelectorAll('.md\\:w-1\\/2');
-          halves.forEach(h => {
-            h.classList.remove('w-full');
-            h.classList.add('w-1/2');
-          });
-
-          // Strip Tailwind oklch colors
-          const classColorMap = {
-            'bg-white': { backgroundColor: '#ffffff' },
-            'text-gray-800': { color: '#1f2937' },
-            'text-gray-600': { color: '#4b5563' },
-            'text-gray-500': { color: '#6b7280' },
-            'text-red-500': { color: '#ef4444' },
-            'border-gray-300': { borderColor: '#d1d5db' },
-            'border-gray-400': { borderColor: '#9ca3af' },
-            'bg-gray-100': { backgroundColor: '#f3f4f6' },
-            'bg-gray-50': { backgroundColor: '#f9fafb' },
-            'border-black': { borderColor: '#000000' }
-          };
-
-          const elements = [clonedElement, ...clonedElement.querySelectorAll('*')];
-          
-          elements.forEach(el => {
-            let matchedColors = {};
-            for (const [className, styles] of Object.entries(classColorMap)) {
-              if (el.classList.contains(className)) {
-                Object.assign(matchedColors, styles);
-                el.classList.remove(className);
-              }
-            }
-            
-            let hasBorderClass = false;
-            el.classList.forEach(cls => {
-              if (cls.startsWith('border')) hasBorderClass = true;
-            });
-
-            if (!matchedColors.color && !el.style.color) el.style.color = '#1f2937'; 
-            if (hasBorderClass && !matchedColors.borderColor && !el.style.borderColor) el.style.borderColor = '#d1d5db'; 
-            if (!matchedColors.backgroundColor && !el.style.backgroundColor) el.style.backgroundColor = 'transparent';
-            
-            Object.assign(el.style, matchedColors);
-          });
-        }
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save();
+    window.print();
   };
 
   return (
     <div className="animate-fade-in pb-10">
-      <div className="flex justify-between items-center mb-6">
+      <style>
+        {`
+          @media print {
+            body, html { height: auto !important; overflow: visible !important; background-color: white !important; }
+            .h-screen { height: auto !important; }
+            .overflow-hidden, .overflow-y-auto, .overflow-x-auto { overflow: visible !important; }
+            
+            /* Hide Sidebar and Topbar from layout */
+            .w-64, .h-\\[70px\\] { display: none !important; }
+            
+            /* Hide print:hidden elements */
+            .print\\:hidden { display: none !important; }
+            
+            /* Invoice layout overrides for perfect printing */
+            .card { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: 100% !important; padding: 0 !important; }
+            
+            /* Strip input borders so it looks like plain text */
+            input, textarea { 
+              border: none !important; 
+              background: transparent !important; 
+              appearance: none !important;
+              padding: 0 !important;
+              resize: none;
+              color: black !important;
+            }
+            
+            /* Ensure grid layouts print correctly */
+            .grid-cols-1 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            
+            @page {
+              margin: 15mm;
+              size: A4 portrait;
+            }
+          }
+        `}
+      </style>
+      <div className="flex justify-between items-center mb-6 print:hidden">
         <div>
           <h2 className="text-2xl font-bold text-text-dark">Generate Billing</h2>
-          <p className="text-text-light text-sm mt-1">Create and download tax invoices.</p>
+          <p className="text-text-light text-sm mt-1">Create and print/download tax invoices.</p>
         </div>
         <button onClick={generatePDF} className="btn btn-primary flex items-center gap-2">
-          <Download size={18} /> Download PDF
+          <Printer size={18} /> Print / Save PDF
         </button>
       </div>
 
