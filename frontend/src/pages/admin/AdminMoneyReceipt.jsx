@@ -27,20 +27,22 @@ const AdminMoneyReceipt = () => {
       <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white; position: relative;">
         
         <!-- Header Gradient -->
-        <div style="background: linear-gradient(to right, #e0f2fe, #3b82f6); padding: 20px; text-align: center; position: relative;">
+        <div style="background: linear-gradient(to right, #e0f2fe, #3b82f6); padding: 20px 40px; position: relative; display: flex; align-items: center; justify-content: space-between;">
           <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background: radial-gradient(circle, white 10%, transparent 80%);"></div>
-          <div style="position: relative; z-index: 10;">
-            <div style="background: white; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              <img src="${logo}" alt="Logo" style="width: 50px; height: 50px; object-fit: contain;" />
+          <div style="position: relative; z-index: 10; display: flex; align-items: center; width: 100%;">
+            <div style="background: white; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-right: 25px;">
+              <img src="${logo}" alt="Logo" style="width: 55px; height: 55px; object-fit: contain;" />
             </div>
-            <h1 style="margin: 0; font-size: 38px; color: #0284c7; font-style: italic; text-decoration: underline; text-decoration-color: #0284c7; text-decoration-thickness: 3px; letter-spacing: 1px;">Multimaart</h1>
-            <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold; color: #1e293b;">--------E-Commerce Platform--------</p>
+            <div style="text-align: left;">
+              <h1 style="margin: 0; font-size: 34px; color: #0284c7; font-style: italic; text-decoration: underline; text-decoration-color: #0284c7; text-decoration-thickness: 3px; letter-spacing: 1px;">Multimaart</h1>
+              <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold; color: #1e293b;">--------E-Commerce Platform--------</p>
+            </div>
           </div>
         </div>
 
-        <div style="padding: 30px 40px; padding-bottom: 120px;">
+        <div style="padding: 20px 40px 0 40px;">
           <!-- Title -->
-          <div style="text-align: center; margin-bottom: 40px;">
+          <div style="text-align: center; margin-bottom: 30px;">
             <h2 style="font-size: 22px; color: #1e40af; text-decoration: underline; display: inline-block; font-weight: bold;">MONEY RECEIPT</h2>
           </div>
 
@@ -115,9 +117,9 @@ const AdminMoneyReceipt = () => {
         </div>
 
         <!-- Footer Gradient -->
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to right, #60a5fa, #1e40af); padding: 20px 0; text-align: center; color: white;">
-          <p style="margin: 0; font-size: 16px;">Address: 34/35,Sai Homes,Benupur,</p>
-          <p style="margin: 5px 0 0 0; font-size: 16px;">Balianta,Bhubaneswar-752101</p>
+        <div style="background: linear-gradient(to right, #60a5fa, #1e40af); padding: 15px 0; text-align: center; color: white;">
+          <p style="margin: 0; font-size: 14px;">Address: 34/35,Sai Homes,Benupur,</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Balianta,Bhubaneswar-752101</p>
         </div>
       </div>
     `;
@@ -225,19 +227,21 @@ const AdminMoneyReceipt = () => {
                <div style={{ width: '800px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-100px' }} className="bg-white shadow-md relative">
                   
                   {/* PREVIEW HTML (Identical to PDF output) */}
-                  <div style={{ background: 'linear-gradient(to right, #e0f2fe, #3b82f6)', padding: '20px', textAlign: 'center', position: 'relative' }}>
+                  <div style={{ background: 'linear-gradient(to right, #e0f2fe, #3b82f6)', padding: '20px 40px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.1, background: 'radial-gradient(circle, white 10%, transparent 80%)' }}></div>
-                    <div style={{ position: 'relative', zIndex: 10 }}>
-                      <div style={{ background: 'white', width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 10px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                        <img src={logo} alt="Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                    <div style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <div style={{ background: 'white', width: '70px', height: '70px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginRight: '25px' }}>
+                        <img src={logo} alt="Logo" style={{ width: '55px', height: '55px', objectFit: 'contain' }} />
                       </div>
-                      <h1 style={{ margin: 0, fontSize: '38px', color: '#0284c7', fontStyle: 'italic', textDecoration: 'underline', textDecorationColor: '#0284c7', textDecorationThickness: '3px', letterSpacing: '1px' }}>Multimaart</h1>
-                      <p style={{ margin: '5px 0 0 0', fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>--------E-Commerce Platform--------</p>
+                      <div style={{ textAlign: 'left' }}>
+                        <h1 style={{ margin: 0, fontSize: '34px', color: '#0284c7', fontStyle: 'italic', textDecoration: 'underline', textDecorationColor: '#0284c7', textDecorationThickness: '3px', letterSpacing: '1px' }}>Multimaart</h1>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>--------E-Commerce Platform--------</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ padding: '30px 40px', paddingBottom: '120px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                  <div style={{ padding: '20px 40px 0 40px' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                       <h2 style={{ fontSize: '22px', color: '#1e40af', textDecoration: 'underline', display: 'inline-block', fontWeight: 'bold' }}>MONEY RECEIPT</h2>
                     </div>
 
@@ -307,9 +311,9 @@ const AdminMoneyReceipt = () => {
                     </div>
                   </div>
 
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', background: 'linear-gradient(to right, #60a5fa, #1e40af)', padding: '20px 0', textAlign: 'center', color: 'white' }}>
-                    <p style={{ margin: 0, fontSize: '16px' }}>Address: 34/35,Sai Homes,Benupur,</p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '16px' }}>Balianta,Bhubaneswar-752101</p>
+                  <div style={{ background: 'linear-gradient(to right, #60a5fa, #1e40af)', padding: '15px 0', textAlign: 'center', color: 'white' }}>
+                    <p style={{ margin: 0, fontSize: '14px' }}>Address: 34/35,Sai Homes,Benupur,</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Balianta,Bhubaneswar-752101</p>
                   </div>
 
                </div>
