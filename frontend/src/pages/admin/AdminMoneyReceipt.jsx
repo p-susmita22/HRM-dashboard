@@ -10,6 +10,7 @@ const AdminMoneyReceipt = () => {
     refNo: `MM-${Math.floor(1000 + Math.random() * 9000)}`,
     date: new Date().toISOString().split('T')[0],
     receivedFrom: '',
+    contactNumber: '',
     address: '',
     addressLine2: '',
     modeOfPayment: '',
@@ -57,6 +58,10 @@ const AdminMoneyReceipt = () => {
             <div style="display: flex; align-items: flex-end; margin-bottom: 10px;">
               <span style="white-space: nowrap; margin-right: 10px;">We Multimaart received from</span>
               <span style="border-bottom: 1px solid #000; flex-grow: 1;">${formData.receivedFrom || '&nbsp;'}</span>
+            </div>
+            <div style="display: flex; align-items: flex-end; margin-bottom: 10px;">
+              <span style="white-space: nowrap; margin-right: 10px;">Contact No.</span>
+              <span style="border-bottom: 1px solid #000; flex-grow: 1;">${formData.contactNumber || '&nbsp;'}</span>
             </div>
             <div style="display: flex; align-items: flex-end; margin-bottom: 10px;">
               <span style="white-space: nowrap; margin-right: 10px;">Address</span>
@@ -176,6 +181,11 @@ const AdminMoneyReceipt = () => {
                 <label className="block text-sm font-medium text-text-light mb-1">Received From</label>
                 <input type="text" name="receivedFrom" value={formData.receivedFrom} onChange={handleChange} className="input w-full" placeholder="Applicant Name" />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-light mb-1">Contact Number</label>
+                <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} className="input w-full" placeholder="Phone Number" />
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-text-light mb-1">Address Line 1</label>
@@ -254,6 +264,10 @@ const AdminMoneyReceipt = () => {
                       <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <span style={{ whiteSpace: 'nowrap', marginRight: '10px' }}>We Multimaart received from</span>
                         <span style={{ borderBottom: '1px solid #000', flexGrow: 1 }}>{formData.receivedFrom || '\u00A0'}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '10px' }}>
+                        <span style={{ whiteSpace: 'nowrap', marginRight: '10px' }}>Contact No.</span>
+                        <span style={{ borderBottom: '1px solid #000', flexGrow: 1 }}>{formData.contactNumber || '\u00A0'}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <span style={{ whiteSpace: 'nowrap', marginRight: '10px' }}>Address</span>
