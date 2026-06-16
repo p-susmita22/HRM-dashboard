@@ -723,7 +723,7 @@ export const deleteResignationRequest = async (req, res) => {
 // --- Admin Profile Settings ---
 export const getAdminProfile = async (req, res) => {
   try {
-    const admin = await Employee.findOne({ role: 'admin' }).select('-password');
+    const admin = await Employee.findById(req.user._id).select('-password');
     res.json(admin);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -733,8 +733,8 @@ export const getAdminProfile = async (req, res) => {
 export const updateAdminProfile = async (req, res) => {
   try {
     const { fullName, email, phoneNumber } = req.body;
-    const admin = await Employee.findOneAndUpdate(
-      { role: 'admin' },
+    const admin = await Employee.findByIdAndUpdate(
+      req.user._id,
       { fullName, email, phoneNumber },
       { new: true }
     ).select('-password');
@@ -747,7 +747,7 @@ export const updateAdminProfile = async (req, res) => {
 export const changeAdminPassword = async (req, res) => {
   try {
     const { newPassword } = req.body;
-    const admin = await Employee.findOne({ role: 'admin' });
+    const admin = await Employee.findById(req.user._id);
     
     admin.password = newPassword;
     await admin.save();
@@ -759,7 +759,7 @@ export const changeAdminPassword = async (req, res) => {
 
 export const logoutOtherDevices = async (req, res) => {
   try {
-    const admin = await Employee.findOne({ role: 'admin' });
+    const admin = await Employee.findById(req.user._id);
     // Keep only the most recent login activity
     if (admin.loginActivity && admin.loginActivity.length > 0) {
       admin.loginActivity = [admin.loginActivity[admin.loginActivity.length - 1]];
