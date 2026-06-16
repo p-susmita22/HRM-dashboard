@@ -9,6 +9,8 @@ const AdminAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('today');
   const [filterEmployee, setFilterEmployee] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   const [remoteRequests, setRemoteRequests] = useState([]);
 
   const [showHolidayModal, setShowHolidayModal] = useState(false);
@@ -159,7 +161,23 @@ const AdminAttendance = () => {
     }
   };
 
+  const uniqueDepartments = [...new Set(employees.map(e => e.department).filter(Boolean))];
+
   const pendingRecords = attendanceRecords.filter(r => r.adminStatus === 'Pending');
+
+  const filteredPending = pendingRecords.filter(record => {
+     const matchName = filterEmployee === '' || record.employee?.fullName?.toLowerCase().includes(filterEmployee.toLowerCase());
+     const matchDept = filterDepartment === '' || record.employee?.department === filterDepartment;
+     const matchDate = filterDate === '' || new Date(record.date).toISOString().split('T')[0] === filterDate;
+     return matchName && matchDept && matchDate;
+  });
+
+  const filteredRemote = remoteRequests.filter(record => {
+     const matchName = filterEmployee === '' || record.employee?.fullName?.toLowerCase().includes(filterEmployee.toLowerCase());
+     const matchDept = filterDepartment === '' || record.employee?.department === filterDepartment;
+     const matchDate = filterDate === '' || new Date(record.date).toISOString().split('T')[0] === filterDate;
+     return matchName && matchDept && matchDate;
+  });
 
   // Group Attendance by Date
   const activeEmployees = employees.filter(emp => emp.role === 'employee' && emp.isActive);
@@ -177,7 +195,9 @@ const AdminAttendance = () => {
     .map(d => new Date(d))
     .sort((a, b) => b - a);
 
-  const groupedRecordsByDate = sortedDates.map(date => {
+  const groupedRecordsByDate = sortedDates
+    .filter(date => filterDate === '' || date.toISOString().split('T')[0] === filterDate)
+    .map(date => {
       const recordsForDate = activeEmployees.map(emp => {
           const record = attendanceRecords.find(r => {
               if (r.status === 'Holiday') return false;
@@ -188,7 +208,8 @@ const AdminAttendance = () => {
           return { employee: emp, record: record || null };
       })
       .filter(item => item.record !== null && item.record.punchIn) // Must have punched in
-      .filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()));
+      .filter(item => filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase()))
+      .filter(item => filterDepartment === '' || item.employee.department === filterDepartment);
       
       return { date, records: recordsForDate };
   }).filter(group => group.records.length > 0); // Only keep dates that have at least one present employee
@@ -381,15 +402,15 @@ const AdminAttendance = () => {
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('pending')}
         >
-          Pending Approvals ({pendingRecords.length})
+          Pending Approvals ({filteredPending.length})
         </button>
         <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors relative ${activeTab === 'remote' ? 'border-orange-500 text-orange-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('remote')}
         >
           Remote Requests
-          {remoteRequests.length > 0 && (
-            <span className="ml-1.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{remoteRequests.length}</span>
+          {filteredRemote.length > 0 && (
+            <span className="ml-1.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{filteredRemote.length}</span>
           )}
         </button>
         <button 
@@ -398,6 +419,39 @@ const AdminAttendance = () => {
         >
           Official Holidays
         </button>
+      </div>
+
+      <div className="flex gap-4 mb-6 px-2 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            placeholder="Filter by Employee Name..." 
+            className="form-control w-full"
+            value={filterEmployee}
+            onChange={(e) => setFilterEmployee(e.target.value)}
+          />
+        </div>
+        <div className="w-48">
+          <select 
+            className="form-control w-full"
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {uniqueDepartments.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+        <div className="w-48">
+          <input 
+            type="date" 
+            className="form-control w-full"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            title="Filter by Date"
+          />
+        </div>
       </div>
 
       {activeTab === 'pending' && (
@@ -419,10 +473,10 @@ const AdminAttendance = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {pendingRecords.length === 0 ? (
+                {filteredPending.length === 0 ? (
                   <tr><td colSpan="5" className="p-8 text-center text-text-light">No pending requests.</td></tr>
                 ) : (
-                  pendingRecords.map(record => (
+                  filteredPending.map(record => (
                     <tr key={record._id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
                       <td className="p-4">
@@ -491,10 +545,10 @@ const AdminAttendance = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {remoteRequests.length === 0 ? (
+                {filteredRemote.length === 0 ? (
                   <tr><td colSpan="4" className="p-8 text-center text-text-light">No remote punch-in requests pending.</td></tr>
                 ) : (
-                  remoteRequests.map(record => (
+                  filteredRemote.map(record => (
                     <tr key={record._id} className="hover:bg-orange-50/30">
                       <td className="p-4">
                         <p className="text-sm font-medium text-text-dark">{formatDate(record.date)}</p>
@@ -539,13 +593,6 @@ const AdminAttendance = () => {
             <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
               <CalendarDays size={20} className="text-primary" /> Daily Attendance
             </h3>
-            <input 
-              type="text" 
-              placeholder="Filter by Employee Name..." 
-              className="form-control text-sm py-2 w-64"
-              value={filterEmployee}
-              onChange={(e) => setFilterEmployee(e.target.value)}
-            />
           </div>
           
           {groupedRecordsByDate.map((group) => (

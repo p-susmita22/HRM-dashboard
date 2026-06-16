@@ -7,6 +7,9 @@ const AdminEmployees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [filterName, setFilterName] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showPayslipModal, setShowPayslipModal] = useState(false);
@@ -168,6 +171,14 @@ const AdminEmployees = () => {
     }
   };
 
+  const uniqueDepartments = [...new Set(employees.map(e => e.department).filter(Boolean))];
+
+  const filteredEmployees = employees.filter(emp => {
+    const matchName = filterName === '' || emp.fullName.toLowerCase().includes(filterName.toLowerCase());
+    const matchDept = filterDepartment === '' || emp.department === filterDepartment;
+    return matchName && matchDept;
+  });
+
   return (
     <div className="animate-fade-in pb-10 relative">
       <div className="mb-6">
@@ -182,6 +193,30 @@ const AdminEmployees = () => {
             Employee Database
           </h3>
           <button onClick={openAddModal} className="btn btn-primary text-sm shadow-sm py-2 px-4">+ Add New Employee</button>
+        </div>
+        
+        <div className="flex gap-4 mb-6 px-2 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <input 
+              type="text" 
+              placeholder="Filter by Employee Name..." 
+              className="form-control w-full"
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+            />
+          </div>
+          <div className="w-64">
+            <select 
+              className="form-control w-full"
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {uniqueDepartments.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
         </div>
         
         <div className="overflow-x-auto min-h-[300px]">
@@ -202,12 +237,12 @@ const AdminEmployees = () => {
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-text-light">Loading employee data...</td>
                 </tr>
-              ) : employees.length === 0 ? (
+              ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-text-light">No employees found. Click "Add New Employee" to register one.</td>
+                  <td colSpan="6" className="p-8 text-center text-text-light">No employees match your filters.</td>
                 </tr>
               ) : (
-                employees.map(emp => (
+                filteredEmployees.map(emp => (
                   <tr key={emp._id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <p className="text-sm font-medium text-text-dark">{emp.employeeId}</p>

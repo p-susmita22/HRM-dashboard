@@ -31,6 +31,9 @@ const AdminEmployeeHistory = () => {
   const [historyTab, setHistoryTab] = useState({});
   const [loadingHistory, setLoadingHistory] = useState({});
 
+  const [filterName, setFilterName] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+
   const fetchArchived = async () => {
     try {
       setLoading(true);
@@ -108,6 +111,30 @@ const AdminEmployeeHistory = () => {
         </div>
       </div>
 
+      <div className="flex gap-4 mb-6 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            placeholder="Filter by Employee Name..." 
+            className="form-control w-full"
+            value={filterName}
+            onChange={(e) => setFilterName(e.target.value)}
+          />
+        </div>
+        <div className="w-64">
+          <select 
+            className="form-control w-full"
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {[...new Set(archived.map(e => e.department).filter(Boolean))].map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {loading ? (
         <div className="text-center py-16 text-text-light">Loading history...</div>
       ) : archived.length === 0 ? (
@@ -118,7 +145,11 @@ const AdminEmployeeHistory = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {archived.map(emp => {
+          {archived.filter(emp => {
+            const matchName = filterName === '' || emp.fullName?.toLowerCase().includes(filterName.toLowerCase());
+            const matchDept = filterDepartment === '' || emp.department === filterDepartment;
+            return matchName && matchDept;
+          }).map(emp => {
             const isExpanded = expandedId === emp._id;
             const data = historyData[emp._id];
             const tab = historyTab[emp._id] || 'attendance';

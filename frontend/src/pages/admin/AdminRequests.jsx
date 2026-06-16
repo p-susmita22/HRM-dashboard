@@ -10,6 +10,10 @@ const AdminRequests = () => {
   const [resignations, setResignations] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [filterEmployee, setFilterEmployee] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+
   const fetchRequests = async () => {
     setLoading(true);
     try {
@@ -64,6 +68,36 @@ const AdminRequests = () => {
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString();
 
+  const allRequests = [...leaves, ...regularizations, ...resignations];
+  const uniqueDepartments = [...new Set(allRequests.map(r => r.employee?.department).filter(Boolean))];
+
+  const filterRequest = (req) => {
+    const matchName = filterEmployee === '' || req.employee?.fullName?.toLowerCase().includes(filterEmployee.toLowerCase());
+    const matchDept = filterDepartment === '' || req.employee?.department === filterDepartment;
+    
+    // For date matching, check if the request has dates array or fromDate/resignationDate
+    let matchDate = true;
+    if (filterDate) {
+      if (req.dates && req.dates.length > 0) {
+        matchDate = req.dates.some(d => new Date(d).toISOString().split('T')[0] === filterDate);
+      } else if (req.fromDate) {
+        matchDate = new Date(req.fromDate).toISOString().split('T')[0] === filterDate;
+      } else if (req.resignationDate) {
+        matchDate = new Date(req.resignationDate).toISOString().split('T')[0] === filterDate;
+      } else if (req.createdAt) {
+        matchDate = new Date(req.createdAt).toISOString().split('T')[0] === filterDate;
+      } else {
+        matchDate = false;
+      }
+    }
+    
+    return matchName && matchDept && matchDate;
+  };
+
+  const filteredLeaves = leaves.filter(filterRequest);
+  const filteredRegularizations = regularizations.filter(filterRequest);
+  const filteredResignations = resignations.filter(filterRequest);
+
   return (
     <div className="animate-fade-in pb-10">
       <div className="mb-6">
@@ -90,6 +124,39 @@ const AdminRequests = () => {
         >
           <FileText size={16} /> Resignation Requests
         </button>
+      </div>
+
+      <div className="flex gap-4 mb-6 px-2 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            placeholder="Filter by Employee Name..." 
+            className="form-control w-full"
+            value={filterEmployee}
+            onChange={(e) => setFilterEmployee(e.target.value)}
+          />
+        </div>
+        <div className="w-48">
+          <select 
+            className="form-control w-full"
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {uniqueDepartments.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+        <div className="w-48">
+          <input 
+            type="date" 
+            className="form-control w-full"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            title="Filter by Date"
+          />
+        </div>
       </div>
 
       <div className="card shadow-md border-none overflow-hidden">
@@ -129,7 +196,7 @@ const AdminRequests = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {activeTab === 'leave' && leaves.map(req => (
+                {activeTab === 'leave' && filteredLeaves.map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
@@ -170,7 +237,7 @@ const AdminRequests = () => {
                   </tr>
                 ))}
 
-                {activeTab === 'regularization' && regularizations.map(req => (
+                {activeTab === 'regularization' && filteredRegularizations.map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
@@ -216,7 +283,7 @@ const AdminRequests = () => {
                   </tr>
                 ))}
 
-                {activeTab === 'resignation' && resignations.map(req => (
+                {activeTab === 'resignation' && filteredResignations.map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
@@ -244,10 +311,10 @@ const AdminRequests = () => {
                   </tr>
                 ))}
 
-                {((activeTab === 'leave' && leaves.length === 0) || 
-                  (activeTab === 'regularization' && regularizations.length === 0) || 
-                  (activeTab === 'resignation' && resignations.length === 0)) && (
-                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No {activeTab} requests found.</td></tr>
+                {((activeTab === 'leave' && filteredLeaves.length === 0) || 
+                  (activeTab === 'regularization' && filteredRegularizations.length === 0) || 
+                  (activeTab === 'resignation' && filteredResignations.length === 0)) && (
+                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
                 )}
               </tbody>
             </table>
