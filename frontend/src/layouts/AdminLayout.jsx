@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut, User } from 'lucide-react';
 import axios from 'axios';
 import logo from '../assets/multimaart-logo.png';
 
@@ -94,6 +94,18 @@ const AdminLayout = () => {
   const [adminName, setAdminName] = useState('Super Admin');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [counts, setCounts] = useState({ attendanceCount: 0, requestsCount: 0, notificationsCount: 0 });
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -154,9 +166,37 @@ const AdminLayout = () => {
             </button>
             <div className="text-lg md:text-xl font-semibold text-text-dark">Admin Portal</div>
           </div>
-          <div className="flex items-center font-medium gap-2 md:gap-3">
-            <span className="hidden sm:inline">{adminName}</span>
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">{initial}</div>
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              className="flex items-center font-medium gap-2 md:gap-3 hover:bg-gray-50 py-1 px-2 rounded-lg transition-colors"
+            >
+              <span className="hidden sm:inline text-text-dark">{adminName}</span>
+              <div className="w-8 h-8 md:w-9 md:h-9 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
+                {initial}
+              </div>
+            </button>
+            
+            {profileDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50">
+                <Link 
+                  to="/admin/profile" 
+                  onClick={() => setProfileDropdownOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-text-dark hover:bg-gray-50 transition-colors"
+                >
+                  <User size={16} className="text-gray-500" />
+                  <span className="text-sm font-medium">Profile</span>
+                </Link>
+                <div className="border-t border-gray-100"></div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-status-absent hover:bg-red-50 transition-colors text-left"
+                >
+                  <LogOut size={16} />
+                  <span className="text-sm font-medium">Log Out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex-1 p-4 md:p-8 overflow-y-auto">

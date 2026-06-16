@@ -11,6 +11,7 @@ import AdminEmployees from './pages/admin/AdminEmployees';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminRequests from './pages/admin/AdminRequests';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminProfile from './pages/admin/AdminProfile';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminBilling from './pages/admin/AdminBilling';
 import AdminMoneyReceipt from './pages/admin/AdminMoneyReceipt';
@@ -301,6 +302,7 @@ function App() {
             <Route path="money-receipt" element={<AdminMoneyReceipt />} />
             <Route path="employee-history" element={<AdminEmployeeHistory />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="*" element={<div className="p-8 text-center text-xl text-text-light">Admin Page Not Found</div>} />
           </Route>
           
