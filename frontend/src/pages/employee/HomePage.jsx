@@ -225,7 +225,7 @@ const HomePage = () => {
     });
 
     if (record && record.adminStatus === 'Approved') {
-        if (record.status === 'Holiday') return 'bg-yellow-400 text-white shadow-md font-bold border-2 border-yellow-500';
+        if (record.status === 'Holiday') return 'bg-[#1E3A8A] text-white shadow-md font-bold border-2 border-[#1E3A8A]';
         if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-absent text-white shadow-md font-bold';
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
@@ -456,7 +456,7 @@ const HomePage = () => {
                   <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Official Holidays
+                  <div className="w-4 h-4 rounded-full bg-[#1E3A8A] shadow-sm"></div> Official Holidays
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day (1st Half Absent)
