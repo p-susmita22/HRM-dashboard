@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, sendPayslip, updatePayslip } from '../controllers/adminController.js';
+import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
 import { 
   getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
@@ -24,6 +24,12 @@ router.put('/employees/:id/lock', toggleLockEmployee);
 router.post('/employees/:id/offer-letter', uploadOfferLetter);
 router.post('/employees/:id/payslip', sendPayslip);
 router.put('/employees/:id/payslip/:payslipId', updatePayslip);
+
+// Employee History (Archived)
+router.get('/employees-history', getArchivedEmployees);
+router.put('/employees/:id/restore', restoreEmployee);
+router.delete('/employees/:id/permanent', permanentlyDeleteEmployee);
+router.get('/employees/:id/history', getEmployeeHistory);
 
 // Attendance Routes
 router.get('/attendance', getAllAttendance);

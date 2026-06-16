@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X, Receipt } from 'lucide-react';
+import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X, Receipt, History } from 'lucide-react';
 import axios from 'axios';
 
 const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
@@ -39,6 +39,9 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
           </NavLink>
           <NavLink to="/admin/employees" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Users size={20} /> Employees
+          </NavLink>
+          <NavLink to="/admin/employee-history" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <History size={20} /> Employee History
           </NavLink>
           <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Calendar size={20} /> Attendance

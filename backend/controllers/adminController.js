@@ -2,7 +2,7 @@ import Employee from '../models/Employee.js';
 
 export const getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find({ role: 'employee' }).sort({ createdAt: -1 });
+    const employees = await Employee.find({ role: 'employee', isArchived: { $ne: true } }).sort({ createdAt: -1 });
     res.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);
@@ -73,20 +73,78 @@ export const deleteEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
-    await Employee.findByIdAndDelete(req.params.id);
+    // Soft-delete: archive instead of permanently removing
+    employee.isArchived = true;
+    employee.archivedAt = new Date();
+    employee.isActive = false;
+    await employee.save();
     
-    // Cleanup related records
+    res.json({ message: 'Employee moved to history successfully' });
+  } catch (error) {
+    console.error('Error archiving employee:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const getArchivedEmployees = async (req, res) => {
+  try {
+    const employees = await Employee.find({ isArchived: true }).select('-password').sort({ archivedAt: -1 });
+    res.json(employees);
+  } catch (error) {
+    console.error('Error fetching archived employees:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const restoreEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    employee.isArchived = false;
+    employee.archivedAt = undefined;
+    employee.isActive = true;
+    await employee.save();
+    res.json({ message: 'Employee restored successfully' });
+  } catch (error) {
+    console.error('Error restoring employee:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const permanentlyDeleteEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    
+    await Employee.findByIdAndDelete(req.params.id);
     await Attendance.deleteMany({ employee: req.params.id });
     await Leave.deleteMany({ employee: req.params.id });
     await Regularization.deleteMany({ employee: req.params.id });
     await Resignation.deleteMany({ employee: req.params.id });
     
-    res.json({ message: 'Employee removed successfully' });
+    res.json({ message: 'Employee permanently deleted' });
   } catch (error) {
-    console.error('Error deleting employee:', error);
+    console.error('Error permanently deleting employee:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+export const getEmployeeHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [attendance, leaves, regularizations, resignations] = await Promise.all([
+      Attendance.find({ employee: id }).sort({ date: -1 }),
+      Leave.find({ employee: id }).sort({ createdAt: -1 }),
+      Regularization.find({ employee: id }).sort({ createdAt: -1 }),
+      Resignation.find({ employee: id }).sort({ createdAt: -1 }),
+    ]);
+    res.json({ attendance, leaves, regularizations, resignations });
+  } catch (error) {
+    console.error('Error fetching employee history:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 export const editEmployee = async (req, res) => {
   try {
     const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password } = req.body;

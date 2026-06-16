@@ -21,6 +21,8 @@ const employeeSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   consecutiveAbsents: { type: Number, default: 0 },
   isLocked: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false },
+  archivedAt: { type: Date },
   loginActivity: [{
     device: String,
     ip: String,

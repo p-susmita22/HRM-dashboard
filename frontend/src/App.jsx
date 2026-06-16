@@ -14,6 +14,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminBilling from './pages/admin/AdminBilling';
 import AdminMoneyReceipt from './pages/admin/AdminMoneyReceipt';
+import AdminEmployeeHistory from './pages/admin/AdminEmployeeHistory';
 import EmployeeMessages from './pages/employee/EmployeeMessages';
 import './index.css';
 import axios from 'axios';
@@ -283,6 +284,7 @@ function App() {
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="billing" element={<AdminBilling />} />
             <Route path="money-receipt" element={<AdminMoneyReceipt />} />
+            <Route path="employee-history" element={<AdminEmployeeHistory />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="*" element={<div className="p-8 text-center text-xl text-text-light">Admin Page Not Found</div>} />
           </Route>
