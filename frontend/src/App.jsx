@@ -34,6 +34,27 @@ axios.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('role');
+      sessionStorage.removeItem('employeeObjId');
+      
+      const isLoginRoute = window.location.pathname.includes('/login');
+      if (!isLoginRoute) {
+        if (window.location.pathname.startsWith('/admin')) {
+          window.location.href = '/admin/login';
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 const EmployeeLogin = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
