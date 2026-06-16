@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CalendarDays, Clock, CheckCircle, XCircle, Edit, Download, Calendar as CalIcon, History } from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle, XCircle, Edit, Download, Calendar as CalIcon, History, Trash2 } from 'lucide-react';
 
 const AdminAttendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
@@ -450,10 +450,15 @@ const AdminAttendance = () => {
                               </button>
                             </>
                           ) : (
-                            <span className="text-xs text-orange-500 font-medium italic mr-2">Waiting for Punch Out...</span>
+                            <>
+                              <span className="text-xs text-orange-500 font-medium italic mr-2">Waiting for Punch Out...</span>
+                              <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1" title="Mark as Absent">
+                                <XCircle size={12} /> Reject
+                              </button>
+                            </>
                           )}
-                          <button onClick={() => handleDeleteAttendance(record._id)} className="text-red-500 hover:text-red-700 p-1 rounded transition-colors" title="Delete Record">
-                            <XCircle size={18} />
+                          <button onClick={() => handleDeleteAttendance(record._id)} className="btn py-1 px-3 bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 text-xs flex items-center gap-1 transition-colors" title="Delete Record">
+                            <Trash2 size={12} /> Delete
                           </button>
                         </div>
                       </td>
