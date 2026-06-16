@@ -7,6 +7,7 @@ import logo from '../../assets/multimaart-logo.png';
 const HomePage = () => {
   const [punchedIn, setPunchedIn] = useState(false);
   const [punchTime, setPunchTime] = useState(null);
+  const [punchInLocation, setPunchInLocation] = useState(null);
   const [punchOutTime, setPunchOutTime] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -29,6 +30,7 @@ const HomePage = () => {
           if (attendanceRes.data.punchIn) {
             setPunchedIn(true);
             setPunchTime(new Date(attendanceRes.data.punchIn));
+            setPunchInLocation(attendanceRes.data.punchInLocation);
           }
           if (attendanceRes.data.punchOut) {
             setPunchedIn(false);
@@ -114,12 +116,40 @@ const HomePage = () => {
   }, [monthlyData, currentDate, punchedIn]);
 
   const handlePunchIn = async () => {
-    try {
-      const res = await axios.post('/api/employee/punch-in');
-      setPunchedIn(true);
-      setPunchTime(new Date(res.data.punchIn));
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to punch in');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          let address = "";
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            if (data && data.display_name) {
+              address = data.display_name;
+            }
+          } catch (e) {
+            console.error('Reverse geocoding failed', e);
+          }
+
+          const locationData = {
+            lat: latitude,
+            lng: longitude,
+            address: address
+          };
+
+          const res = await axios.post('/api/employee/punch-in', { location: locationData });
+          setPunchedIn(true);
+          setPunchTime(new Date(res.data.punchIn));
+          setPunchInLocation(res.data.punchInLocation);
+        } catch (error) {
+          alert(error.response?.data?.message || 'Failed to punch in');
+        }
+      }, (error) => {
+        alert("Please allow location access to punch in.");
+      });
+    } else {
+      alert("Geolocation is not supported by your browser.");
     }
   };
 
@@ -306,14 +336,19 @@ const HomePage = () => {
 
       <div className="p-5 max-w-6xl mx-auto mt-4">
         {punchedIn && (
-          <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-6 p-3 flex justify-between items-center max-w-lg mx-auto bg-green-50/30">
+          <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-6 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto bg-green-50/30 gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-status-present animate-pulse"></div>
               <span className="text-sm font-semibold text-text-dark">Current Working Status</span>
             </div>
-            <div className="text-right">
-              <span className="text-status-present font-bold text-sm mr-2">{format(new Date(), 'hh:mm a')}</span>
-              <span className="text-xs text-text-light">(In at {format(punchTime, 'hh:mm a')})</span>
+            <div className="text-left sm:text-right">
+              <div className="text-status-present font-bold text-sm mb-1">{format(new Date(), 'hh:mm a')} <span className="text-xs text-text-light font-normal">(In at {format(punchTime, 'hh:mm a')})</span></div>
+              {punchInLocation && punchInLocation.lat && (
+                <div className="text-[10px] sm:text-xs text-gray-500 max-w-sm">
+                  <span className="font-semibold">Location:</span> {punchInLocation.address || `${punchInLocation.lat.toFixed(4)}, ${punchInLocation.lng.toFixed(4)}`}
+                  <a href={`https://maps.google.com/?q=${punchInLocation.lat},${punchInLocation.lng}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline ml-1">(View Map)</a>
+                </div>
+              )}
             </div>
           </div>
         )}

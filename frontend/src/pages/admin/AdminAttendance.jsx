@@ -395,7 +395,14 @@ const AdminAttendance = () => {
                         <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
                         <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
                       </td>
-                      <td className="p-4 text-sm text-text-dark">{formatTime(record.punchIn)}</td>
+                      <td className="p-4">
+                        <p className="text-sm text-text-dark">{formatTime(record.punchIn)}</p>
+                        {record.punchInLocation && record.punchInLocation.lat && (
+                          <a href={`https://maps.google.com/?q=${record.punchInLocation.lat},${record.punchInLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline block mt-0.5 truncate max-w-[150px]" title={record.punchInLocation.address || 'View on Map'}>
+                            📍 {record.punchInLocation.address ? record.punchInLocation.address.split(',')[0] : 'Map'}
+                          </a>
+                        )}
+                      </td>
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end items-center gap-2">
@@ -467,7 +474,14 @@ const AdminAttendance = () => {
                               <td className="p-4">
                                 <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
                               </td>
-                              <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</td>
+                              <td className="p-4">
+                                <p className="text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</p>
+                                {item.record?.punchInLocation && item.record.punchInLocation.lat && (
+                                  <a href={`https://maps.google.com/?q=${item.record.punchInLocation.lat},${item.record.punchInLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline block mt-0.5 truncate max-w-[150px]" title={item.record.punchInLocation.address || 'View on Map'}>
+                                    📍 {item.record.punchInLocation.address ? item.record.punchInLocation.address.split(',')[0] : 'Map'}
+                                  </a>
+                                )}
+                              </td>
                               <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
                               <td className="p-4">{item.record?.punchIn ? getStatusBadge('Present') : getStatusBadge('Absent')}</td>
                               <td className="p-4 text-right">

@@ -5,6 +5,16 @@ const attendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   punchIn: { type: Date },
   punchOut: { type: Date },
+  punchInLocation: {
+    lat: Number,
+    lng: Number,
+    address: String
+  },
+  punchOutLocation: {
+    lat: Number,
+    lng: Number,
+    address: String
+  },
   status: { 
     type: String, 
     enum: ['Pending', 'Present', 'Absent', 'Half Day', 'Holiday', 'Leave Approved'],
