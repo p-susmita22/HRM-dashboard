@@ -11,7 +11,9 @@ const AdminAttendance = () => {
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   const [remoteRequests, setRemoteRequests] = useState([]);
+  const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [historyModalEmployee, setHistoryModalEmployee] = useState(null);
@@ -252,6 +254,90 @@ const AdminAttendance = () => {
     historyRecords = [...regularRecords, ...leaveBlocks].sort((a, b) => b.sortDate - a.sortDate);
   }
 
+  // Monthly Summary Calculation
+  const getMonthlySummary = () => {
+    if (!summaryMonth) return [];
+    
+    const [year, month] = summaryMonth.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    // Get holidays for this month
+    const monthHolidays = new Set();
+    attendanceRecords.forEach(r => {
+      if (r.status === 'Holiday') {
+        const d = new Date(r.date);
+        if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+          monthHolidays.add(d.toDateString());
+        }
+      }
+    });
+
+    const officialHolidaysCount = monthHolidays.size;
+    const totalWorkingDays = daysInMonth - officialHolidaysCount;
+
+    const summaryData = activeEmployees.map(emp => {
+      let present = 0;
+      let absent = 0;
+      let onLeave = 0;
+      let halfDays = 0;
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dateStr = date.toDateString();
+        
+        // Exclude official holidays from working days
+        if (monthHolidays.has(dateStr)) continue;
+
+        const isOnLeave = leaves.some(l => {
+          if (l.employee?._id !== emp._id || l.status !== 'Approved') return false;
+          if (l.dates && l.dates.length > 0) return l.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+          const start = new Date(l.fromDate).setHours(0,0,0,0);
+          const end = new Date(l.toDate).setHours(23,59,59,999);
+          const dTime = date.getTime();
+          return dTime >= start && dTime <= end;
+        });
+
+        if (isOnLeave) {
+          onLeave++;
+          continue;
+        }
+
+        const record = attendanceRecords.find(r => 
+          r.employee?._id === emp._id && 
+          new Date(r.date).toDateString() === dateStr &&
+          r.status !== 'Holiday' && r.adminStatus === 'Approved'
+        );
+
+        if (record) {
+          if (record.status === 'Present') present++;
+          else if (record.status === 'Half Day') halfDays++;
+          else if (record.status === 'Absent') absent++;
+        } else {
+           if (date < today) {
+               absent++;
+           }
+        }
+      }
+      
+      return {
+        employee: emp,
+        present,
+        absent,
+        halfDays,
+        onLeave,
+        totalWorkingDays
+      };
+    });
+
+    return summaryData.filter(item => 
+      (filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase())) &&
+      (filterDepartment === '' || item.employee.department === filterDepartment)
+    );
+  };
+
   const handleIndividualReportDownload = (emp) => {
     const today = new Date();
     const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -419,6 +505,12 @@ const AdminAttendance = () => {
         >
           Official Holidays
         </button>
+        <button 
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'monthly' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('monthly')}
+        >
+          Monthly Summary
+        </button>
       </div>
 
       <div className="flex gap-4 mb-6 px-2 flex-wrap">
@@ -444,13 +536,23 @@ const AdminAttendance = () => {
           </select>
         </div>
         <div className="w-48">
-          <input 
-            type="date" 
-            className="form-control w-full"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            title="Filter by Date"
-          />
+          {activeTab === 'monthly' ? (
+            <input 
+              type="month" 
+              className="form-control w-full"
+              value={summaryMonth}
+              onChange={(e) => setSummaryMonth(e.target.value)}
+              title="Filter by Month"
+            />
+          ) : (
+            <input 
+              type="date" 
+              className="form-control w-full"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              title="Filter by Date"
+            />
+          )}
         </div>
       </div>
 
@@ -701,6 +803,51 @@ const AdminAttendance = () => {
                           </button>
                         </div>
                       </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'monthly' && (
+        <div className="card shadow-md border-none overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
+               <CalendarDays size={20} className="text-primary" /> Monthly Attendance Summary
+            </h3>
+          </div>
+          <p className="text-sm text-text-light mb-4">Shows calculation for Total Working Days (Total days in month - Official Holidays). Sundays are included in Working Days.</p>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Total Working Days</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Present</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Absent</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Half Day</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Leave</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {getMonthlySummary().length === 0 ? (
+                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No data found for this month.</td></tr>
+                ) : (
+                  getMonthlySummary().map((row, i) => (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="p-4">
+                        <p className="text-sm font-semibold text-text-dark">{row.employee.fullName}</p>
+                        <p className="text-xs text-text-light">{row.employee.employeeId} · {row.employee.department}</p>
+                      </td>
+                      <td className="p-4 text-center font-bold text-text-dark">{row.totalWorkingDays}</td>
+                      <td className="p-4 text-center text-green-600 font-semibold">{row.present}</td>
+                      <td className="p-4 text-center text-red-600 font-semibold">{row.absent}</td>
+                      <td className="p-4 text-center text-orange-500 font-semibold">{row.halfDays}</td>
+                      <td className="p-4 text-center text-yellow-600 font-semibold">{row.onLeave}</td>
                     </tr>
                   ))
                 )}
