@@ -217,7 +217,7 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (isOnLeave) return 'bg-status-absent text-white shadow-md font-bold';
+    if (isOnLeave) return 'bg-yellow-400 text-white shadow-md font-bold';
 
     const record = monthlyData.attendances.find(a => {
         const aDate = new Date(a.date);
@@ -226,7 +226,7 @@ const HomePage = () => {
 
     if (record && record.adminStatus === 'Approved') {
         if (record.status === 'Holiday') return 'bg-[#1E3A8A] text-white shadow-md font-bold border-2 border-[#1E3A8A]';
-        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-status-absent text-white shadow-md font-bold';
+        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-yellow-400 text-white shadow-md font-bold';
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
         if (record.status === 'Half Day') {
             if (record.halfDayType === 'First Half Absent') {
@@ -450,7 +450,10 @@ const HomePage = () => {
                   <div className="w-4 h-4 rounded-full bg-status-present shadow-sm"></div> Full Day
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent / Leave
+                  <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Leave
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays
