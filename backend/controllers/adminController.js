@@ -147,7 +147,7 @@ export const getEmployeeHistory = async (req, res) => {
 
   export const editEmployee = async (req, res) => {
     try {
-      const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password, isActive } = req.body;
+      const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password, isActive, joiningDate } = req.body;
       
       const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
       
@@ -166,6 +166,8 @@ export const getEmployeeHistory = async (req, res) => {
       employee.designation = designation;
       employee.region = region;
       employee.zone = zone;
+      
+      if (joiningDate) employee.joiningDate = new Date(joiningDate);
       
       if (isActive !== undefined) {
         employee.isActive = isActive;

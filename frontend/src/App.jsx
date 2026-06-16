@@ -160,8 +160,6 @@ const EmployeeLogin = ({ onLogin }) => {
 };
 
 const AdminLogin = ({ onLogin }) => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -172,22 +170,7 @@ const AdminLogin = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
     try {
-      if (isSignUp) {
-        // Register the new admin
-        await axios.post('/api/auth/register-admin', {
-          fullName, email, password
-        });
-        
-        // Show success alert and switch back to Login page
-        setIsLoading(false);
-        alert('Admin account created successfully! Please log in with your new credentials.');
-        setIsSignUp(false);
-        setPassword(''); // Clear password for security
-        return; // Stop here, do not log in automatically
-      }
-      
       // Regular Login Flow
       const response = await axios.post('/api/auth/login', {
         email, password
@@ -205,7 +188,7 @@ const AdminLogin = ({ onLogin }) => {
       onLogin(response.data.role); // should be 'admin'   
     } catch (err) {
       setIsLoading(false);
-      setError(err.response?.data?.message || `${isSignUp ? 'Signup' : 'Login'} failed. Please check your details.`);
+      setError(err.response?.data?.message || 'Login failed. Please check your details.');
     }
   };
 
@@ -214,26 +197,13 @@ const AdminLogin = ({ onLogin }) => {
       <div className="card w-full max-w-md">
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">🛡️</div>
-          <h2 className="text-2xl font-bold text-primary-dark">{isSignUp ? 'Admin Sign Up' : 'Admin Login'}</h2>
-          <p className="text-sm text-text-light mt-1">{isSignUp ? 'Create a new admin account' : 'Sign in to manage your workforce'}</p>
+          <h2 className="text-2xl font-bold text-primary-dark">Admin Login</h2>
+          <p className="text-sm text-text-light mt-1">Sign in to manage your workforce</p>
         </div>
         
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-100">{error}</div>}
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <div>
-              <label className="block text-sm font-semibold text-text-dark mb-1">Full Name</label>
-              <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Enter your full name" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required={isSignUp}
-              />
-            </div>
-          )}
           <div>
             <label className="block text-sm font-semibold text-text-dark mb-1">Admin Email ID</label>
             <input 
@@ -255,8 +225,6 @@ const AdminLogin = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
-                pattern={isSignUp ? "^(?=.*[!@#$%^&*])(?=.*\\d)[A-Z].{5,9}$" : undefined}
-                title={isSignUp ? "Password must be 6-10 characters long, start with a capital letter, and include at least one number and one special character" : undefined}
               />
               <button 
                 type="button" 
@@ -269,18 +237,18 @@ const AdminLogin = ({ onLogin }) => {
           </div>
           
           <button type="submit" className="btn btn-primary w-full py-2.5 mt-2">
-            {isSignUp ? 'Create Account' : 'Login as Admin'}
+            Login as Admin
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          <span className="text-text-light">{isSignUp ? 'Already have an account?' : 'New admin?'}</span>{' '}
+        <div className="mt-6 text-center text-sm border-t border-gray-100 pt-4">
+          <span className="text-text-light">Employee Login?</span>{' '}
           <button 
             type="button"
-            onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+            onClick={() => window.location.href = '/login'}
             className="text-primary font-semibold hover:underline"
           >
-            {isSignUp ? 'Sign In' : 'Sign Up'}
+            Click here
           </button>
         </div>
       </div>

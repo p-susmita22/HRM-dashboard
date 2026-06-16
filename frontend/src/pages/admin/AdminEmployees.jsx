@@ -23,7 +23,7 @@ const AdminEmployees = () => {
   const [uploadingFor, setUploadingFor] = useState(null);
 
   const [formData, setFormData] = useState({
-    firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: ''
+    firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: ''
   });
 
   const fetchDashboardData = async () => {
@@ -61,7 +61,7 @@ const AdminEmployees = () => {
         alert('Employee added successfully!');
       }
       setShowAddModal(false);
-      setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '' });
+      setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: '' });
       setIsEditing(false);
       setSelectedEmployee(null);
       fetchDashboardData();
@@ -163,6 +163,7 @@ const AdminEmployees = () => {
       designation: emp.designation || '',
       region: emp.region || '',
       zone: emp.zone || '',
+      joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toISOString().split('T')[0] : '',
       isActive: emp.isActive !== undefined ? emp.isActive : true
     });
     setIsEditing(true);
@@ -173,7 +174,7 @@ const AdminEmployees = () => {
   const openAddModal = () => {
     setIsEditing(false);
     setSelectedEmployee(null);
-    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', isActive: true });
+    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: '', isActive: true });
     setShowAddModal(true);
   };
 
@@ -439,6 +440,10 @@ const AdminEmployees = () => {
                   <label className="block text-sm font-medium text-text-dark mb-1">Zone</label>
                   <input type="text" className="form-control w-full" value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})} required />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-dark mb-1">Joining Date</label>
+                  <input type="date" className="form-control w-full" value={formData.joiningDate} onChange={e => setFormData({...formData, joiningDate: e.target.value})} required />
+                </div>
                 {isEditing && (
                   <div>
                     <label className="block text-sm font-medium text-text-dark mb-1">Account Status</label>
@@ -499,6 +504,10 @@ const AdminEmployees = () => {
                 <div>
                   <p className="text-xs text-text-light mb-1">Last name</p>
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Joining Date</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedEmployee.joiningDate ? new Date(selectedEmployee.joiningDate).toLocaleDateString() : '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-text-light mb-1">Gender</p>
