@@ -39,11 +39,13 @@ const EmployeeLogin = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [lockedMsg, setLockedMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLockedMsg('');
+    setIsLoading(true);
     
     try {
       const response = await axios.post('/api/auth/login', {
@@ -58,6 +60,7 @@ const EmployeeLogin = ({ onLogin }) => {
       onLogin(response.data.role); // should be 'employee'
       
     } catch (err) {
+      setIsLoading(false);
       if (err.response?.status === 403) {
         setLockedMsg(err.response.data.message);
       } else {
@@ -123,6 +126,13 @@ const EmployeeLogin = ({ onLogin }) => {
           <button type="submit" className="btn btn-primary w-full mt-2">Login as Employee</button>
         </form>
       </div>
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-xl font-bold text-text-dark animate-pulse">Logging you in...</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -134,10 +144,12 @@ const AdminLogin = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
       if (isSignUp) {
@@ -147,6 +159,7 @@ const AdminLogin = ({ onLogin }) => {
         });
         
         // Show success alert and switch back to Login page
+        setIsLoading(false);
         alert('Admin account created successfully! Please log in with your new credentials.');
         setIsSignUp(false);
         setPassword(''); // Clear password for security
@@ -159,6 +172,7 @@ const AdminLogin = ({ onLogin }) => {
       });
       
       if (response.data.role !== 'admin') {
+        setIsLoading(false);
         setError('Access denied. You do not have admin privileges.');
         return;
       }
@@ -168,6 +182,7 @@ const AdminLogin = ({ onLogin }) => {
       sessionStorage.setItem('employeeObjId', response.data._id);
       onLogin(response.data.role); // should be 'admin'   
     } catch (err) {
+      setIsLoading(false);
       setError(err.response?.data?.message || `${isSignUp ? 'Signup' : 'Login'} failed. Please check your details.`);
     }
   };

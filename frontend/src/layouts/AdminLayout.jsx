@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X, Receipt, History } from 'lucide-react';
 import axios from 'axios';
+import logo from '../assets/multimaart-logo.png';
 
 const AdminSidebar = ({ onLogout, isOpen, setIsOpen, counts }) => {
   const location = useLocation();
@@ -25,9 +26,8 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen, counts }) => {
       
       <div className={`fixed md:relative w-64 bg-white shadow-sm flex flex-col z-50 h-full border-r border-gray-100 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-5 flex items-center justify-between border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">M</div>
-            <h2 className="text-base font-semibold text-primary-dark">Multimaart Admin</h2>
+          <div className="flex items-center">
+            <img src={logo} alt="Multimaart Logo" className="h-10 object-contain" />
           </div>
           <button className="md:hidden text-gray-500" onClick={() => setIsOpen(false)}>
             <X size={20} />

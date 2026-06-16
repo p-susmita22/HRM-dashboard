@@ -10,6 +10,7 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [hrPolicyFile, setHrPolicyFile] = useState(null);
   const [currentHrPolicy, setCurrentHrPolicy] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -92,6 +93,7 @@ const AdminSettings = () => {
     const formData = new FormData();
     formData.append('document', hrPolicyFile);
     
+    setIsUploading(true);
     try {
       await axios.post('/api/admin/hr-policies', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -101,6 +103,8 @@ const AdminSettings = () => {
       fetchHrPolicies();
     } catch (error) {
       alert('Failed to upload HR Policies.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -249,7 +253,16 @@ const AdminSettings = () => {
                 <p className="text-xs text-text-light mt-1">This will be visible to all employees in their profile.</p>
               </div>
               <div className="pt-2 flex justify-end">
-                <button type="submit" className="btn btn-primary px-6">Upload HR Policies</button>
+                <button type="submit" className="btn btn-primary px-6" disabled={isUploading}>
+                  {isUploading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Uploading...
+                    </span>
+                  ) : (
+                    'Upload HR Policies'
+                  )}
+                </button>
               </div>
             </form>
 

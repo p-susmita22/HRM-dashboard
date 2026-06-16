@@ -210,6 +210,16 @@ const AdminEmployees = () => {
         <p className="text-text-light text-sm mt-1">View, add, and remove employees from the system.</p>
       </div>
 
+      {uploadingFor && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 animate-fade-in">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-lg font-bold text-text-dark">Uploading Document...</p>
+            <p className="text-sm text-text-light">Please wait while the file is being processed.</p>
+          </div>
+        </div>
+      )}
+
       <div className="card shadow-lg border-none overflow-visible">
         <div className="flex justify-between items-center mb-6 px-2">
           <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
