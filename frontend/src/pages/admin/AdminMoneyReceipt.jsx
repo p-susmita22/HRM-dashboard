@@ -1,11 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import { Download, FileText } from 'lucide-react';
+import axios from 'axios';
+import { Download, FileText, History, Edit, Trash2, PlusCircle } from 'lucide-react';
 import logo from '../../assets/multimaart-logo.png';
 
 const AdminMoneyReceipt = () => {
   const receiptRef = useRef(null);
   
+  const defaultDeclaration = 'We hereby acknowledge that a sum of ₹20,000/- (Rupees Twenty Thousand Only) has been received from the above-mentioned applicant as part payment towards the Multimaart Franchise Fee of ₹50,000/- plus applicable GST of ₹9,000/-. This amount is received against the franchise registration process and shall be adjusted against the total franchise fee payable. The applicant confirms that all information provided is true and correct.';
+
   const [formData, setFormData] = useState({
     refNo: `MM-${Math.floor(1000 + Math.random() * 9000)}`,
     date: new Date().toISOString().split('T')[0],
@@ -17,14 +20,77 @@ const AdminMoneyReceipt = () => {
     amountWords: 'Rupees Twenty Thousand Only',
     modeOfPayment: '',
     transactionId: '',
-    declaration: 'We hereby acknowledge that a sum of ₹20,000/- (Rupees Twenty Thousand Only) has been received from the above-mentioned applicant as part payment towards the Multimaart Franchise Fee of ₹50,000/- plus applicable GST of ₹9,000/-. This amount is received against the franchise registration process and shall be adjusted against the total franchise fee payable. The applicant confirms that all information provided is true and correct.'
+    declaration: defaultDeclaration
   });
+
+  const [activeTab, setActiveTab] = useState('form');
+  const [receipts, setReceipts] = useState([]);
+
+  const fetchReceipts = async () => {
+    try {
+      const res = await axios.get('/api/admin/receipts');
+      setReceipts(res.data);
+    } catch (error) {
+      console.error('Failed to fetch receipts', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceipts();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const generatePDF = () => {
+  const resetForm = () => {
+    setFormData({
+      refNo: `MM-${Math.floor(1000 + Math.random() * 9000)}`,
+      date: new Date().toISOString().split('T')[0],
+      receivedFrom: '',
+      contactNumber: '',
+      address: '',
+      addressLine2: '',
+      amountNumber: '20,000',
+      amountWords: 'Rupees Twenty Thousand Only',
+      modeOfPayment: '',
+      transactionId: '',
+      declaration: defaultDeclaration
+    });
+    setActiveTab('form');
+  };
+
+  const handleEdit = (receipt) => {
+    setFormData({
+      ...receipt,
+      date: new Date(receipt.date).toISOString().split('T')[0]
+    });
+    setActiveTab('form');
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this receipt?')) {
+      try {
+        await axios.delete(`/api/admin/receipts/${id}`);
+        fetchReceipts();
+      } catch (error) {
+        alert('Failed to delete receipt');
+      }
+    }
+  };
+
+  const generatePDF = async () => {
+    try {
+      // Save or update receipt in DB
+      const res = await axios.post('/api/admin/receipts', formData);
+      if (!formData._id) {
+        setFormData({ ...formData, _id: res.data._id });
+      }
+      fetchReceipts();
+    } catch (error) {
+      console.error('Failed to save receipt', error);
+    }
+
     // Generate pure HTML string with inline styles for precise PDF generation
     const htmlContent = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; background: white; position: relative;">
@@ -155,18 +221,81 @@ const AdminMoneyReceipt = () => {
           <h2 className="text-2xl font-bold text-text-dark">Franchise Money Receipt</h2>
           <p className="text-text-light text-sm mt-1">Generate official franchise fee receipts.</p>
         </div>
-        <button onClick={generatePDF} className="btn btn-primary flex items-center gap-2">
-          <Download size={18} /> Download Receipt PDF
-        </button>
+        <div className="flex gap-3">
+          <button 
+            className={`btn ${activeTab === 'form' ? 'btn-primary' : 'bg-gray-100 text-text-dark'} flex items-center gap-2`}
+            onClick={() => setActiveTab('form')}
+          >
+            <PlusCircle size={18} /> Receipt Editor
+          </button>
+          <button 
+            className={`btn ${activeTab === 'history' ? 'btn-primary' : 'bg-gray-100 text-text-dark'} flex items-center gap-2`}
+            onClick={() => setActiveTab('history')}
+          >
+            <History size={18} /> History
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Inputs */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="card p-5">
-            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-              <FileText size={18} className="text-primary" /> Receipt Details
-            </h3>
+      {activeTab === 'history' ? (
+        <div className="card shadow-md p-0 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-lg text-text-dark">Generated Receipts</h3>
+            <button onClick={resetForm} className="btn btn-primary btn-sm flex items-center gap-1">
+              <PlusCircle size={14} /> Create New
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Ref No</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Received From</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Amount</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {receipts.length === 0 ? (
+                  <tr><td colSpan="5" className="p-8 text-center text-text-light">No receipts generated yet.</td></tr>
+                ) : (
+                  receipts.map(receipt => (
+                    <tr key={receipt._id} className="hover:bg-gray-50">
+                      <td className="p-4 text-sm text-text-dark">{new Date(receipt.date).toLocaleDateString('en-GB')}</td>
+                      <td className="p-4 text-sm font-medium text-text-dark">{receipt.refNo}</td>
+                      <td className="p-4 text-sm text-text-dark">{receipt.receivedFrom}</td>
+                      <td className="p-4 text-sm font-semibold text-primary">₹ {receipt.amountNumber}/-</td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleEdit(receipt)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Edit/View">
+                            <Edit size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(receipt._id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Form Inputs */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="card p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <FileText size={18} className="text-primary" /> Receipt Details
+                </h3>
+                {formData._id && (
+                  <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded font-medium">Editing</span>
+                )}
+              </div>
             
             <div className="space-y-4">
               <div>
@@ -241,12 +370,15 @@ const AdminMoneyReceipt = () => {
           </div>
         </div>
 
-        {/* Live Preview */}
-        <div className="lg:col-span-2">
-          <div className="card p-0 overflow-hidden sticky top-6 shadow-xl border border-gray-200">
-            <div className="bg-gray-100 p-3 border-b border-gray-200 text-center font-medium text-gray-600 flex justify-between items-center">
-              <span>PDF Live Preview</span>
-            </div>
+          {/* Live Preview */}
+          <div className="lg:col-span-2">
+            <div className="card p-0 overflow-hidden sticky top-6 shadow-xl border border-gray-200">
+              <div className="bg-gray-100 p-3 border-b border-gray-200 text-center font-medium text-gray-600 flex justify-between items-center">
+                <span>PDF Live Preview</span>
+                <button onClick={generatePDF} className="btn btn-primary py-1.5 px-3 text-sm flex items-center gap-2">
+                  <Download size={16} /> {formData._id ? 'Update & Download' : 'Save & Download'}
+                </button>
+              </div>
             
             <div className="overflow-x-auto p-4 bg-gray-50 flex justify-center">
                <div style={{ width: '800px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-100px' }} className="bg-white shadow-md relative">
@@ -349,7 +481,7 @@ const AdminMoneyReceipt = () => {
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

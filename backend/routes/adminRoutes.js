@@ -9,6 +9,7 @@ import {
 import {
   getAdminProfile, updateAdminProfile, changeAdminPassword, logoutOtherDevices
 } from '../controllers/adminController.js';
+import { getAllReceipts, saveReceipt, deleteReceipt } from '../controllers/adminController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -48,6 +49,11 @@ router.put('/resignations/:id/status', updateResignationStatus);
 router.delete('/resignations/:id', deleteResignationRequest);
 
 // Profile Settings Routes
+
+// Money Receipts
+router.get('/receipts', getAllReceipts);
+router.post('/receipts', saveReceipt);
+router.delete('/receipts/:id', deleteReceipt);
 
 router.get('/profile', getAdminProfile);
 router.put('/profile', updateAdminProfile);

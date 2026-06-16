@@ -567,3 +567,44 @@ export const logoutOtherDevices = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// --- Money Receipts ---
+import MoneyReceipt from '../models/MoneyReceipt.js';
+
+export const getAllReceipts = async (req, res) => {
+  try {
+    const receipts = await MoneyReceipt.find().sort({ createdAt: -1 });
+    res.json(receipts);
+  } catch (error) {
+    console.error('Error fetching receipts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const saveReceipt = async (req, res) => {
+  try {
+    // If it has an _id, it means we are editing an existing receipt
+    if (req.body._id) {
+      const receipt = await MoneyReceipt.findByIdAndUpdate(req.body._id, req.body, { new: true });
+      return res.json(receipt);
+    }
+    
+    // Otherwise create a new one
+    const receipt = new MoneyReceipt(req.body);
+    await receipt.save();
+    res.status(201).json(receipt);
+  } catch (error) {
+    console.error('Error saving receipt:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteReceipt = async (req, res) => {
+  try {
+    await MoneyReceipt.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Receipt deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting receipt:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
