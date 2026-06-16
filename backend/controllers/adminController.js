@@ -74,6 +74,13 @@ export const deleteEmployee = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
     await Employee.findByIdAndDelete(req.params.id);
+    
+    // Cleanup related records
+    await Attendance.deleteMany({ employee: req.params.id });
+    await Leave.deleteMany({ employee: req.params.id });
+    await Regularization.deleteMany({ employee: req.params.id });
+    await Resignation.deleteMany({ employee: req.params.id });
+    
     res.json({ message: 'Employee removed successfully' });
   } catch (error) {
     console.error('Error deleting employee:', error);
@@ -234,6 +241,16 @@ export const rejectAttendance = async (req, res) => {
     res.json(updatedRecord);
   } catch (error) {
     console.error('Error rejecting attendance:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const deleteAttendance = async (req, res) => {
+  try {
+    await Attendance.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Attendance record deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting attendance:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

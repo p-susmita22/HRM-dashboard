@@ -62,6 +62,18 @@ const AdminAttendance = () => {
     }
   };
 
+  const handleDeleteAttendance = async (id) => {
+    if (window.confirm('Are you sure you want to permanently delete this pending request?')) {
+      try {
+        await axios.delete(`/api/admin/attendance/${id}`);
+        fetchData();
+        alert('Attendance record deleted!');
+      } catch (error) {
+        alert('Failed to delete attendance');
+      }
+    }
+  };
+
   const handleHolidaySubmit = async (e) => {
     e.preventDefault();
     try {
@@ -386,18 +398,23 @@ const AdminAttendance = () => {
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchIn)}</td>
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
                       <td className="p-4 text-right">
-                        {record.punchOut ? (
-                          <div className="flex justify-end gap-2">
-                            <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
-                              <XCircle size={12} /> Reject
-                            </button>
-                            <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
-                              <CheckCircle size={12} /> Accept
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-orange-500 font-medium italic">Waiting for Punch Out...</span>
-                        )}
+                        <div className="flex justify-end items-center gap-2">
+                          {record.punchOut ? (
+                            <>
+                              <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                                <XCircle size={12} /> Reject
+                              </button>
+                              <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
+                                <CheckCircle size={12} /> Accept
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-orange-500 font-medium italic mr-2">Waiting for Punch Out...</span>
+                          )}
+                          <button onClick={() => handleDeleteAttendance(record._id)} className="text-red-500 hover:text-red-700 p-1 rounded transition-colors" title="Delete Record">
+                            <XCircle size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
