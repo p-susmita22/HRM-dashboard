@@ -350,6 +350,7 @@ const AdminMoneyReceipt = () => {
                 <label className="block text-sm font-medium text-text-light mb-1">Transaction ID</label>
                 <input type="text" name="transactionId" value={formData.transactionId} onChange={handleChange} className="input w-full" placeholder="Transaction Ref No." />
               </div>
+              </div>
             </div>
           </div>
 
