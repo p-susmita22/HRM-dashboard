@@ -8,6 +8,7 @@ const HomePage = () => {
   const [punchedIn, setPunchedIn] = useState(false);
   const [punchTime, setPunchTime] = useState(null);
   const [punchInLocation, setPunchInLocation] = useState(null);
+  const [remoteRequestSent, setRemoteRequestSent] = useState(false);
   const [punchOutTime, setPunchOutTime] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -31,6 +32,10 @@ const HomePage = () => {
             setPunchedIn(true);
             setPunchTime(new Date(attendanceRes.data.punchIn));
             setPunchInLocation(attendanceRes.data.punchInLocation);
+          }
+          if (attendanceRes.data.isRemote && attendanceRes.data.remoteStatus === 'Pending') {
+            setRemoteRequestSent(true);
+            setPunchedIn(false);
           }
           if (attendanceRes.data.punchOut) {
             setPunchedIn(false);
@@ -115,42 +120,62 @@ const HomePage = () => {
     setSummary({ present, absent, halfDays, onLeave, holidays });
   }, [monthlyData, currentDate, punchedIn]);
 
+  // ---- Office Geofencing ----
+  const OFFICE_LAT = 20.28567438118417;
+  const OFFICE_LNG = 85.90030307523656;
+  const OFFICE_RADIUS_METERS = 150;
+
+  const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
+    const R = 6371000;
+    const toRad = (v) => (v * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+
   const handlePunchIn = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
+    if (!navigator.geolocation) {
+      return alert('Geolocation is not supported by your browser.');
+    }
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
+        const isRemote = distance > OFFICE_RADIUS_METERS;
+
+        let address = '';
         try {
-          const { latitude, longitude } = position.coords;
-          
-          let address = "";
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-            const data = await res.json();
-            if (data && data.display_name) {
-              address = data.display_name;
-            }
-          } catch (e) {
-            console.error('Reverse geocoding failed', e);
-          }
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const geoData = await geoRes.json();
+          if (geoData?.display_name) address = geoData.display_name;
+        } catch (e) { console.error('Geocoding failed', e); }
 
-          const locationData = {
-            lat: latitude,
-            lng: longitude,
-            address: address
-          };
+        const locationData = { lat: latitude, lng: longitude, address };
 
-          const res = await axios.post('/api/employee/punch-in', { location: locationData });
+        if (isRemote) {
+          const confirmRemote = window.confirm(
+            `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-in request will be sent to admin for approval. Your punch-in will only be recorded after approval.\n\nProceed?`
+          );
+          if (!confirmRemote) return;
+        }
+
+        const res = await axios.post('/api/employee/punch-in', { location: locationData, isRemote });
+
+        if (isRemote) {
+          setRemoteRequestSent(true);
+          alert('Remote punch-in request sent! Your attendance will be marked after admin approval.');
+        } else {
           setPunchedIn(true);
           setPunchTime(new Date(res.data.punchIn));
           setPunchInLocation(res.data.punchInLocation);
-        } catch (error) {
-          alert(error.response?.data?.message || 'Failed to punch in');
         }
-      }, (error) => {
-        alert("Please allow location access to punch in.");
-      });
-    } else {
-      alert("Geolocation is not supported by your browser.");
-    }
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to punch in');
+      }
+    }, () => {
+      alert('Please allow location access to punch in.');
+    });
   };
 
   const handlePunchOut = async () => {
@@ -350,6 +375,17 @@ const HomePage = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Remote punch request pending banner */}
+        {remoteRequestSent && !punchedIn && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg shadow-sm mb-6 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></div>
+              <span className="text-sm font-semibold text-orange-800">Remote Punch-In Request Sent</span>
+            </div>
+            <p className="text-xs text-orange-600 max-w-xs">Your request is pending admin approval. Attendance will be marked once approved.</p>
           </div>
         )}
 

@@ -7,8 +7,9 @@ const AdminAttendance = () => {
   const [employees, setEmployees] = useState([]);
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('today'); // 'pending', 'today', 'holidays'
+  const [activeTab, setActiveTab] = useState('today');
   const [filterEmployee, setFilterEmployee] = useState('');
+  const [remoteRequests, setRemoteRequests] = useState([]);
 
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [historyModalEmployee, setHistoryModalEmployee] = useState(null);
@@ -21,14 +22,16 @@ const AdminAttendance = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [attRes, empRes, leavesRes] = await Promise.all([
+      const [attRes, empRes, leavesRes, remoteRes] = await Promise.all([
         axios.get('/api/admin/attendance'),
         axios.get('/api/admin/employees'),
-        axios.get('/api/admin/leaves')
+        axios.get('/api/admin/leaves'),
+        axios.get('/api/admin/attendance/remote-requests')
       ]);
       setAttendanceRecords(attRes.data);
       setEmployees(empRes.data);
       setLeaves(leavesRes.data);
+      setRemoteRequests(remoteRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -70,6 +73,28 @@ const AdminAttendance = () => {
         alert('Attendance record deleted!');
       } catch (error) {
         alert('Failed to delete attendance');
+      }
+    }
+  };
+
+  const handleRemoteApprove = async (id) => {
+    try {
+      await axios.put(`/api/admin/attendance/${id}/remote-approve`);
+      fetchData();
+      alert('Remote punch-in approved!');
+    } catch (error) {
+      alert('Failed to approve remote punch-in');
+    }
+  };
+
+  const handleRemoteReject = async (id) => {
+    if (window.confirm('Reject this remote punch-in request?')) {
+      try {
+        await axios.put(`/api/admin/attendance/${id}/remote-reject`);
+        fetchData();
+        alert('Remote punch-in rejected.');
+      } catch (error) {
+        alert('Failed to reject remote punch-in');
       }
     }
   };
@@ -359,6 +384,15 @@ const AdminAttendance = () => {
           Pending Approvals ({pendingRecords.length})
         </button>
         <button 
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors relative ${activeTab === 'remote' ? 'border-orange-500 text-orange-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('remote')}
+        >
+          Remote Requests
+          {remoteRequests.length > 0 && (
+            <span className="ml-1.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{remoteRequests.length}</span>
+          )}
+        </button>
+        <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'holidays' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('holidays')}
         >
@@ -420,6 +454,68 @@ const AdminAttendance = () => {
                           )}
                           <button onClick={() => handleDeleteAttendance(record._id)} className="text-red-500 hover:text-red-700 p-1 rounded transition-colors" title="Delete Record">
                             <XCircle size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'remote' && (
+        <div className="card shadow-md border-none overflow-hidden">
+          <div className="p-5 border-b border-orange-100 bg-orange-50/40 flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
+            <div>
+              <h3 className="text-lg font-bold text-orange-800">Remote Punch-In Requests</h3>
+              <p className="text-sm text-orange-600 mt-0.5">Employees outside office premises — approve to mark their attendance.</p>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Date & Time</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Location</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {remoteRequests.length === 0 ? (
+                  <tr><td colSpan="4" className="p-8 text-center text-text-light">No remote punch-in requests pending.</td></tr>
+                ) : (
+                  remoteRequests.map(record => (
+                    <tr key={record._id} className="hover:bg-orange-50/30">
+                      <td className="p-4">
+                        <p className="text-sm font-medium text-text-dark">{formatDate(record.date)}</p>
+                        <p className="text-xs text-text-light">{formatTime(record.punchIn)}</p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
+                        <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
+                      </td>
+                      <td className="p-4">
+                        {record.punchInLocation?.lat ? (
+                          <div>
+                            <p className="text-xs text-gray-600 truncate max-w-[180px]">{record.punchInLocation.address?.split(',')[0] || 'Unknown location'}</p>
+                            <a href={`https://maps.google.com/?q=${record.punchInLocation.lat},${record.punchInLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5">
+                              📍 View on Map
+                            </a>
+                          </div>
+                        ) : <span className="text-xs text-gray-400">No location data</span>}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleRemoteReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                            <XCircle size={12} /> Reject
+                          </button>
+                          <button onClick={() => handleRemoteApprove(record._id)} className="btn py-1 px-3 bg-green-600 text-white hover:bg-green-700 text-xs flex items-center gap-1">
+                            <CheckCircle size={12} /> Approve
                           </button>
                         </div>
                       </td>

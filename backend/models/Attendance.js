@@ -31,7 +31,13 @@ const attendanceSchema = new mongoose.Schema({
     default: 'None'
   },
   totalHours: { type: Number, default: 0 },
-  holidayName: { type: String }
+  holidayName: { type: String },
+  isRemote: { type: Boolean, default: false },
+  remoteStatus: {
+    type: String,
+    enum: ['None', 'Pending', 'Approved', 'Rejected'],
+    default: 'None'
+  }
 }, { timestamps: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);

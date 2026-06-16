@@ -55,7 +55,7 @@ export const getTodayAttendance = async (req, res) => {
 
 export const punchIn = async (req, res) => {
   try {
-    const { location } = req.body;
+    const { location, isRemote } = req.body;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -73,7 +73,9 @@ export const punchIn = async (req, res) => {
       date: new Date(),
       punchIn: new Date(),
       punchInLocation: location || null,
-      status: 'Present'
+      status: 'Present',
+      isRemote: isRemote || false,
+      remoteStatus: isRemote ? 'Pending' : 'None'
     });
     
     await attendance.save();

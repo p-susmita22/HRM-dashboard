@@ -255,6 +255,51 @@ export const deleteAttendance = async (req, res) => {
   }
 };
 
+export const getRemotePunchRequests = async (req, res) => {
+  try {
+    const records = await Attendance.find({ isRemote: true, remoteStatus: 'Pending' })
+      .populate('employee', 'fullName employeeId department')
+      .sort({ createdAt: -1 });
+    res.json(records);
+  } catch (error) {
+    console.error('Error fetching remote punch requests:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const approveRemotePunch = async (req, res) => {
+  try {
+    const record = await Attendance.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Record not found' });
+    record.remoteStatus = 'Approved';
+    record.adminStatus = 'Approved';
+    await record.save();
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    res.json(updated);
+  } catch (error) {
+    console.error('Error approving remote punch:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const rejectRemotePunch = async (req, res) => {
+  try {
+    const record = await Attendance.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Record not found' });
+    record.remoteStatus = 'Rejected';
+    record.status = 'Absent';
+    record.adminStatus = 'Rejected';
+    await record.save();
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    res.json(updated);
+  } catch (error) {
+    console.error('Error rejecting remote punch:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+
+
 export const markHoliday = async (req, res) => {
   try {
     const { date, reason } = req.body;
