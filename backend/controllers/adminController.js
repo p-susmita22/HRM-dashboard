@@ -458,6 +458,27 @@ export const deleteHoliday = async (req, res) => {
 import Leave from '../models/Leave.js';
 import Regularization from '../models/Regularization.js';
 import Resignation from '../models/Resignation.js';
+import Message from '../models/Message.js';
+
+export const getSidebarCounts = async (req, res) => {
+  try {
+    const attendancePending = await Attendance.countDocuments({ adminStatus: 'Pending' });
+    const remotePending = await Attendance.countDocuments({ isRemote: true, remoteStatus: 'Pending' });
+    const leavesPending = await Leave.countDocuments({ status: 'Pending' });
+    const regularizationsPending = await Regularization.countDocuments({ status: 'Pending' });
+    const resignationsPending = await Resignation.countDocuments({ status: 'Pending' });
+    const unreadMessages = await Message.countDocuments({ receiver: 'admin', isRead: false });
+
+    res.json({
+      attendanceCount: attendancePending + remotePending,
+      requestsCount: leavesPending + regularizationsPending + resignationsPending,
+      notificationsCount: unreadMessages
+    });
+  } catch (error) {
+    console.error('Error fetching sidebar counts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 export const getLeaveRequests = async (req, res) => {
   try {

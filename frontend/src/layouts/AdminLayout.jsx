@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Users, Calendar, FileText, Settings, Bell, LayoutDashboard, Menu, X, Receipt, History } from 'lucide-react';
 import axios from 'axios';
 
-const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
+const AdminSidebar = ({ onLogout, isOpen, setIsOpen, counts }) => {
   const location = useLocation();
 
   // Close sidebar on mobile when route changes
@@ -43,14 +43,29 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
           <NavLink to="/admin/employee-history" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <History size={20} /> Employee History
           </NavLink>
-          <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-            <Calendar size={20} /> Attendance
+          <NavLink to="/admin/attendance" className={({isActive}) => `px-5 py-3 flex items-center justify-between font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <div className="flex items-center gap-3">
+              <Calendar size={20} /> Attendance
+            </div>
+            {counts.attendanceCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{counts.attendanceCount}</span>
+            )}
           </NavLink>
-          <NavLink to="/admin/requests" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-            <FileText size={20} /> Requests
+          <NavLink to="/admin/requests" className={({isActive}) => `px-5 py-3 flex items-center justify-between font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <div className="flex items-center gap-3">
+              <FileText size={20} /> Requests
+            </div>
+            {counts.requestsCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{counts.requestsCount}</span>
+            )}
           </NavLink>
-          <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
-            <Bell size={20} /> Notifications
+          <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center justify-between font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
+            <div className="flex items-center gap-3">
+              <Bell size={20} /> Notifications
+            </div>
+            {counts.notificationsCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{counts.notificationsCount}</span>
+            )}
           </NavLink>
           <NavLink to="/admin/billing" className={({isActive}) => `px-5 py-3 flex items-center gap-3 font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <Receipt size={20} /> Generate Billing
@@ -78,6 +93,7 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen }) => {
 const AdminLayout = () => {
   const [adminName, setAdminName] = useState('Super Admin');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [counts, setCounts] = useState({ attendanceCount: 0, requestsCount: 0, notificationsCount: 0 });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -90,7 +106,21 @@ const AdminLayout = () => {
         console.error('Failed to fetch admin name');
       }
     };
+    
+    const fetchCounts = async () => {
+      try {
+        const res = await axios.get('/api/admin/sidebar-counts');
+        setCounts(res.data);
+      } catch (error) {
+        console.error('Failed to fetch sidebar counts');
+      }
+    };
+
     fetchProfile();
+    fetchCounts();
+    
+    // Set up polling for counts every 30 seconds
+    const countInterval = setInterval(fetchCounts, 30000);
 
     const handleProfileUpdate = (e) => {
       if (e.detail && e.detail.fullName) {
@@ -99,7 +129,10 @@ const AdminLayout = () => {
     };
 
     window.addEventListener('adminProfileUpdated', handleProfileUpdate);
-    return () => window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+      clearInterval(countInterval);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -112,7 +145,7 @@ const AdminLayout = () => {
 
   return (
     <div className="flex h-screen bg-bg-gray overflow-hidden">
-      <AdminSidebar onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <AdminSidebar onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} counts={counts} />
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <div className="h-[70px] bg-white shadow-sm flex justify-between items-center px-4 md:px-8 z-30 border-b border-gray-100">
           <div className="flex items-center gap-3">

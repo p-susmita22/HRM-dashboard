@@ -1,8 +1,7 @@
 import express from 'express';
 import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
-import { 
-  getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
+import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
   getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest,
   getResignationRequests, updateResignationStatus, deleteResignationRequest
 } from '../controllers/adminController.js';
@@ -15,6 +14,8 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.use(protect, admin);
+
+router.get('/sidebar-counts', getSidebarCounts);
 
 router.get('/employees', getAllEmployees);
 router.post('/employees', addEmployee);
