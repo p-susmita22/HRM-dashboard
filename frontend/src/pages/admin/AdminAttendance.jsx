@@ -11,7 +11,6 @@ const AdminAttendance = () => {
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDate, setFilterDate] = useState('');
-  const [filterDate, setFilterDate] = useState('');
   const [remoteRequests, setRemoteRequests] = useState([]);
   const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
 
