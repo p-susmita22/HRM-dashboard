@@ -346,15 +346,15 @@ const AdminEmployees = () => {
 
       {/* Add/Edit Employee Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90dvh]">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">{isEditing ? 'Edit Employee' : 'Add New Employee'}</h2>
               <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleAddEmployee} className="p-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleAddEmployee} className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">First name</label>
@@ -440,16 +440,16 @@ const AdminEmployees = () => {
 
       {/* View Details Modal */}
       {showViewModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90dvh]">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">Employee Details</h2>
               <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto custom-scrollbar">
-              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+            <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+              <div className="flex items-center gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-100">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl border border-primary/20">
                   {selectedEmployee.fullName.charAt(0)}
                 </div>
@@ -459,7 +459,7 @@ const AdminEmployees = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
                 <div>
                   <p className="text-xs text-text-light mb-1">First name</p>
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.firstName}</p>
@@ -517,7 +517,7 @@ const AdminEmployees = () => {
               <div className="mt-8">
                 <h4 className="text-sm font-bold text-text-dark border-b border-gray-100 pb-2 mb-4">Documents</h4>
                 {selectedEmployee.documents && selectedEmployee.documents.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedEmployee.documents.map((doc, idx) => (
                       <div key={idx} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg bg-gray-50">
                         <div className="flex items-center gap-2">

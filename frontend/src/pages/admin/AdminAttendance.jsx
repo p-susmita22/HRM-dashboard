@@ -712,9 +712,9 @@ const AdminAttendance = () => {
 
       {/* History Modal */}
       {historyModalEmployee && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[95dvh] sm:max-h-[90dvh] flex flex-col">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
                     <History size={20} className="text-primary" /> Attendance History
@@ -734,7 +734,7 @@ const AdminAttendance = () => {
               </div>
             </div>
             
-            <div className="p-6 overflow-y-auto">
+            <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
                 <div className="overflow-x-auto border border-gray-100 rounded-lg">
                     <table className="w-full text-left border-collapse">
                         <thead>

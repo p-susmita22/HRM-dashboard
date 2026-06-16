@@ -142,7 +142,7 @@ const ProfilePage = () => {
       {activeTab === 'personal' && (
         <div className="card">
           <h3 className="mb-5 border-b border-gray-100 pb-2.5 text-lg font-semibold">Personal Details</h3>
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             <div>
               <p className="text-xs text-text-light mb-0.5">First name</p>
               <p className="font-medium text-sm text-text-dark">{employeeData?.firstName || '-'}</p>
