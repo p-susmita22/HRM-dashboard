@@ -4,24 +4,30 @@ import { MessageSquare, Send, Check } from 'lucide-react';
 
 const AdminNotifications = () => {
   const [messages, setMessages] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const messagesEndRef = useRef(null);
 
-  const fetchMessages = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get('/api/messages/admin');
-      setMessages(res.data);
+      setLoading(true);
+      const [msgRes, empRes] = await Promise.all([
+        axios.get('/api/messages/admin'),
+        axios.get('/api/admin/employees')
+      ]);
+      setMessages(msgRes.data);
+      setEmployees(empRes.data);
     } catch (error) {
-      console.error('Failed to fetch messages', error);
+      console.error('Failed to fetch data', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMessages();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -33,7 +39,7 @@ const AdminNotifications = () => {
     // Mark as read
     try {
       await axios.put(`/api/messages/admin/read/${empId}`);
-      fetchMessages(); // refresh read status
+      fetchData(); // refresh read status
     } catch(err) {}
   };
 
@@ -45,33 +51,48 @@ const AdminNotifications = () => {
         content: replyContent
       });
       setReplyContent('');
-      fetchMessages();
+      fetchData();
     } catch (error) {
       alert('Failed to send reply');
     }
   };
 
-  // Group messages by employee
-  const groupedMessages = messages.reduce((acc, msg) => {
-    if (!msg.employee) return acc;
-    const empId = msg.employee._id;
-    if (!acc[empId]) {
-      acc[empId] = {
-        employee: msg.employee,
-        messages: [],
-        unreadCount: 0,
-        lastMessage: msg
-      };
-    }
-    acc[empId].messages.push(msg);
-    acc[empId].lastMessage = msg;
-    if (msg.sender === 'employee' && !msg.isRead) {
-      acc[empId].unreadCount += 1;
-    }
+  // Initialize with all employees
+  const groupedMessages = employees.reduce((acc, emp) => {
+    acc[emp._id] = {
+      employee: emp,
+      messages: [],
+      unreadCount: 0,
+      lastMessage: null
+    };
     return acc;
   }, {});
 
-  const threads = Object.values(groupedMessages).sort((a, b) => new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt));
+  // Populate with messages
+  messages.forEach(msg => {
+    if (!msg.employee) return;
+    const empId = msg.employee._id || msg.employee;
+    if (groupedMessages[empId]) {
+      groupedMessages[empId].messages.push(msg);
+      groupedMessages[empId].lastMessage = msg;
+      if (msg.sender === 'employee' && !msg.isRead) {
+        groupedMessages[empId].unreadCount += 1;
+      }
+    }
+  });
+
+  const threads = Object.values(groupedMessages).sort((a, b) => {
+    // Both have messages, sort by last message date
+    if (a.lastMessage && b.lastMessage) {
+      return new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt);
+    }
+    // Only 'a' has a message, put 'a' first
+    if (a.lastMessage && !b.lastMessage) return -1;
+    // Only 'b' has a message, put 'b' first
+    if (!a.lastMessage && b.lastMessage) return 1;
+    // Neither has messages, sort alphabetically by name
+    return a.employee.fullName.localeCompare(b.employee.fullName);
+  });
 
   return (
     <div className="animate-fade-in pb-10 h-full flex flex-col">
@@ -85,13 +106,13 @@ const AdminNotifications = () => {
         {/* Thread List */}
         <div className="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-100 font-semibold flex items-center gap-2 text-text-dark">
-            <MessageSquare size={18} /> Active Conversations
+            <MessageSquare size={18} /> Employee Messages
           </div>
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="p-8 text-center text-text-light text-sm">Loading...</div>
             ) : threads.length === 0 ? (
-              <div className="p-8 text-center text-text-light text-sm">No messages yet.</div>
+              <div className="p-8 text-center text-text-light text-sm">No employees found.</div>
             ) : (
               threads.map(thread => (
                 <div 
@@ -105,8 +126,14 @@ const AdminNotifications = () => {
                       <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{thread.unreadCount} New</span>
                     )}
                   </div>
-                  <p className="text-xs text-text-light truncate pr-4">{thread.lastMessage.content}</p>
-                  <p className="text-[10px] text-gray-400 mt-2">{new Date(thread.lastMessage.createdAt).toLocaleString()}</p>
+                  {thread.lastMessage ? (
+                    <>
+                      <p className="text-xs text-text-light truncate pr-4">{thread.lastMessage.content}</p>
+                      <p className="text-[10px] text-gray-400 mt-2">{new Date(thread.lastMessage.createdAt).toLocaleString()}</p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-text-light italic">No messages yet</p>
+                  )}
                 </div>
               ))
             )}
