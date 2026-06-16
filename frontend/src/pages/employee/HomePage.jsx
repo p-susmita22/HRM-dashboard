@@ -14,7 +14,7 @@ const HomePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [employeeData, setEmployeeData] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
-  const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, holidays: 0 });
+  const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, sundays: 0, officialHolidays: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,14 +69,15 @@ const HomePage = () => {
     let absent = 0;
     let halfDays = 0;
     let onLeave = 0;
-    let holidays = 0;
+    let sundays = 0;
+    let officialHolidays = 0;
 
     const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
     const realToday = new Date();
 
     days.forEach(date => {
       if (date.getDay() === 0) {
-        holidays++;
+        sundays++;
         return;
       }
       
@@ -104,7 +105,7 @@ const HomePage = () => {
         if (record.status === 'Present') present++;
         else if (record.status === 'Half Day') halfDays++;
         else if (record.status === 'Absent') absent++;
-        else if (record.status === 'Holiday') holidays++;
+        else if (record.status === 'Holiday') officialHolidays++;
         else if (record.status === 'Leave Approved') onLeave++;
       } else {
         const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
@@ -117,7 +118,7 @@ const HomePage = () => {
       }
     });
 
-    setSummary({ present, absent, halfDays, onLeave, holidays });
+    setSummary({ present, absent, halfDays, onLeave, sundays, officialHolidays });
   }, [monthlyData, currentDate, punchedIn]);
 
   // ---- Office Geofencing ----
@@ -526,9 +527,16 @@ const HomePage = () => {
               
               <div className="flex justify-between items-center p-3 bg-[#1E3A8A]/5 rounded-lg border border-[#1E3A8A]/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#1E3A8A]"></div> Holidays (Off Days)
+                  <div className="w-3 h-3 rounded-full bg-[#1E3A8A]"></div> Official Holidays
                 </span>
-                <span className="font-bold text-lg text-[#1E3A8A]">{summary.holidays}</span>
+                <span className="font-bold text-lg text-[#1E3A8A]">{summary.officialHolidays}</span>
+              </div>
+
+              <div className="flex justify-between items-center p-3 bg-status-holiday/5 rounded-lg border border-status-holiday/20">
+                <span className="font-medium text-text-dark flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-status-holiday"></div> Sundays (Off Days)
+                </span>
+                <span className="font-bold text-lg text-status-holiday">{summary.sundays}</span>
               </div>
             </div>
             
