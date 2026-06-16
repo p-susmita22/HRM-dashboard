@@ -13,6 +13,8 @@ const AdminMoneyReceipt = () => {
     contactNumber: '',
     address: '',
     addressLine2: '',
+    amountNumber: '20,000',
+    amountWords: 'Rupees Twenty Thousand Only',
     modeOfPayment: '',
     transactionId: '',
     declaration: 'We hereby acknowledge that a sum of ₹20,000/- (Rupees Twenty Thousand Only) has been received from the above-mentioned applicant as part payment towards the Multimaart Franchise Fee of ₹50,000/- plus applicable GST of ₹9,000/-. This amount is received against the franchise registration process and shall be adjusted against the total franchise fee payable. The applicant confirms that all information provided is true and correct.'
@@ -74,7 +76,7 @@ const AdminMoneyReceipt = () => {
 
           <!-- Amount Info -->
           <div style="margin-bottom: 30px; font-size: 16px; line-height: 1.8;">
-            <p style="margin: 0;">the sum of Rupees Twenty Thousand Only <span style="color: #1e40af; font-weight: bold;">(₹ 20,000/-)</span></p>
+            <p style="margin: 0;">the sum of ${formData.amountWords || '&nbsp;'} <span style="color: #1e40af; font-weight: bold;">(₹ ${formData.amountNumber || '&nbsp;'}/-)</span></p>
             <p style="margin: 0;">against Franchise Fee <span style="color: #1e40af; font-weight: bold;">(₹ 50,000 + ₹ 9,000 GST)</span>.</p>
           </div>
 
@@ -82,7 +84,7 @@ const AdminMoneyReceipt = () => {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 16px;">
             <tr>
               <td style="width: 40%; background-color: #1e6bc6; color: white; padding: 10px; text-align: center; border: 1px solid #1e6bc6; font-weight: bold;">Amount Received</td>
-              <td style="width: 60%; padding: 10px; text-align: center; border: 1px solid #64748b; font-weight: bold;">₹ 20,000/-</td>
+              <td style="width: 60%; padding: 10px; text-align: center; border: 1px solid #64748b; font-weight: bold;">₹ ${formData.amountNumber || '&nbsp;'}/-</td>
             </tr>
           </table>
 
@@ -196,6 +198,19 @@ const AdminMoneyReceipt = () => {
                 <label className="block text-sm font-medium text-text-light mb-1">Address Line 2</label>
                 <input type="text" name="addressLine2" value={formData.addressLine2} onChange={handleChange} className="input w-full" placeholder="City, State, ZIP" />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-light mb-1">Amount (Numbers)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-500 font-medium">₹</span>
+                  <input type="text" name="amountNumber" value={formData.amountNumber} onChange={handleChange} className="input w-full pl-8" placeholder="20,000" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-light mb-1">Amount (Words)</label>
+                <input type="text" name="amountWords" value={formData.amountWords} onChange={handleChange} className="input w-full" placeholder="Rupees Twenty Thousand Only" />
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-text-light mb-1">Mode of Payment</label>
@@ -279,7 +294,7 @@ const AdminMoneyReceipt = () => {
                     </div>
 
                     <div style={{ marginBottom: '30px', fontSize: '16px', lineHeight: 1.8 }}>
-                      <p style={{ margin: 0 }}>the sum of Rupees Twenty Thousand Only <span style={{ color: '#1e40af', fontWeight: 'bold' }}>(₹ 20,000/-)</span></p>
+                      <p style={{ margin: 0 }}>the sum of {formData.amountWords || '\u00A0'} <span style={{ color: '#1e40af', fontWeight: 'bold' }}>(₹ {formData.amountNumber || '\u00A0'}/-)</span></p>
                       <p style={{ margin: 0 }}>against Franchise Fee <span style={{ color: '#1e40af', fontWeight: 'bold' }}>(₹ 50,000 + ₹ 9,000 GST)</span>.</p>
                     </div>
 
@@ -287,7 +302,7 @@ const AdminMoneyReceipt = () => {
                       <tbody>
                         <tr>
                           <td style={{ width: '40%', backgroundColor: '#1e6bc6', color: 'white', padding: '10px', textAlign: 'center', border: '1px solid #1e6bc6', fontWeight: 'bold' }}>Amount Received</td>
-                          <td style={{ width: '60%', padding: '10px', textAlign: 'center', border: '1px solid #64748b', fontWeight: 'bold' }}>₹ 20,000/-</td>
+                          <td style={{ width: '60%', padding: '10px', textAlign: 'center', border: '1px solid #64748b', fontWeight: 'bold' }}>₹ {formData.amountNumber || '\u00A0'}/-</td>
                         </tr>
                       </tbody>
                     </table>
