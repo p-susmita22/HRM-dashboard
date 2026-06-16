@@ -26,8 +26,9 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen, counts }) => {
       
       <div className={`fixed md:relative w-64 bg-white shadow-sm flex flex-col z-50 h-full border-r border-gray-100 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-5 flex items-center justify-between border-b border-gray-100">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <img src={logo} alt="Multimaart Logo" className="h-10 object-contain" />
+            <h2 className="text-lg font-extrabold text-primary-dark tracking-wide">Multimaart <span className="text-primary">HR</span></h2>
           </div>
           <button className="md:hidden text-gray-500" onClick={() => setIsOpen(false)}>
             <X size={20} />
