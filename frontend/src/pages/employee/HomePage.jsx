@@ -477,7 +477,20 @@ const HomePage = () => {
 
           {/* Right Side: Monthly Summary */}
           <div className="card shadow-lg border-t-4 border-accent !mb-0 h-fit">
-            <h3 className="mb-4 text-lg font-bold text-text-dark border-b border-gray-100 pb-3">Monthly Details</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+              <h3 className="text-lg font-bold text-text-dark">Monthly Details</h3>
+              <input 
+                type="month" 
+                className="form-control text-sm py-1.5 px-3 bg-white border border-gray-200 rounded-md text-text-dark focus:border-primary focus:ring-1 focus:ring-primary shadow-sm"
+                value={format(currentDate, 'yyyy-MM')}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [y, m] = e.target.value.split('-');
+                    setCurrentDate(new Date(y, m - 1, 1));
+                  }
+                }}
+              />
+            </div>
             <h4 className="text-text-light mb-5 font-medium text-sm">
               {format(currentDate, 'MMMM yyyy')} Summary
             </h4>
@@ -504,18 +517,18 @@ const HomePage = () => {
                 <span className="font-bold text-lg text-yellow-600">{summary.halfDays}</span>
               </div>
               
-              <div className="flex justify-between items-center p-3 bg-red-500/5 rounded-lg border border-red-500/20">
+              <div className="flex justify-between items-center p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div> On Leave
+                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div> On Leave
                 </span>
-                <span className="font-bold text-lg text-red-500">{summary.onLeave}</span>
+                <span className="font-bold text-lg text-yellow-600">{summary.onLeave}</span>
               </div>
               
-              <div className="flex justify-between items-center p-3 bg-status-holiday/5 rounded-lg border border-status-holiday/20">
+              <div className="flex justify-between items-center p-3 bg-[#1E3A8A]/5 rounded-lg border border-[#1E3A8A]/20">
                 <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-holiday"></div> Holidays (Off Days)
+                  <div className="w-3 h-3 rounded-full bg-[#1E3A8A]"></div> Holidays (Off Days)
                 </span>
-                <span className="font-bold text-lg text-status-holiday">{summary.holidays}</span>
+                <span className="font-bold text-lg text-[#1E3A8A]">{summary.holidays}</span>
               </div>
             </div>
             
