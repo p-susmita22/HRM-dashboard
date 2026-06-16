@@ -2,7 +2,7 @@ import Employee from '../models/Employee.js';
 
 export const getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find({ role: 'employee', isArchived: { $ne: true } }).sort({ createdAt: -1 });
+    const employees = await Employee.find({ role: 'employee', isArchived: { $ne: true } }).sort({ createdAt: 1 });
     res.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);
