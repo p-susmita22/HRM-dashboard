@@ -145,32 +145,36 @@ export const getEmployeeHistory = async (req, res) => {
   }
 };
 
-export const editEmployee = async (req, res) => {
-  try {
-    const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password } = req.body;
-    
-    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
-    
-    const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ message: 'Employee not found' });
-    
-    if (employeeId) employee.employeeId = employeeId;
-    employee.firstName = firstName;
-    employee.middleName = middleName;
-    employee.lastName = lastName;
-    employee.fullName = fullName;
-    employee.gender = gender;
-    employee.email = email;
-    employee.phoneNumber = phoneNumber;
-    employee.department = department;
-    employee.designation = designation;
-    employee.region = region;
-    employee.zone = zone;
-    
-    if (password && password.trim() !== '') {
-      employee.password = password;
-      employee.plainPassword = password;
-    }
+  export const editEmployee = async (req, res) => {
+    try {
+      const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password, isActive } = req.body;
+      
+      const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+      
+      const employee = await Employee.findById(req.params.id);
+      if (!employee) return res.status(404).json({ message: 'Employee not found' });
+      
+      if (employeeId) employee.employeeId = employeeId;
+      employee.firstName = firstName;
+      employee.middleName = middleName;
+      employee.lastName = lastName;
+      employee.fullName = fullName;
+      employee.gender = gender;
+      employee.email = email;
+      employee.phoneNumber = phoneNumber;
+      employee.department = department;
+      employee.designation = designation;
+      employee.region = region;
+      employee.zone = zone;
+      
+      if (isActive !== undefined) {
+        employee.isActive = isActive;
+      }
+      
+      if (password && password.trim() !== '') {
+        employee.password = password;
+        employee.plainPassword = password;
+      }
     
     await employee.save();
     

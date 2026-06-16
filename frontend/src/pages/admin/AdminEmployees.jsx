@@ -162,7 +162,8 @@ const AdminEmployees = () => {
       department: emp.department || '',
       designation: emp.designation || '',
       region: emp.region || '',
-      zone: emp.zone || ''
+      zone: emp.zone || '',
+      isActive: emp.isActive !== undefined ? emp.isActive : true
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -172,7 +173,7 @@ const AdminEmployees = () => {
   const openAddModal = () => {
     setIsEditing(false);
     setSelectedEmployee(null);
-    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '' });
+    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', isActive: true });
     setShowAddModal(true);
   };
 
@@ -428,6 +429,23 @@ const AdminEmployees = () => {
                   <label className="block text-sm font-medium text-text-dark mb-1">Zone</label>
                   <input type="text" className="form-control w-full" value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})} required />
                 </div>
+                {isEditing && (
+                  <div>
+                    <label className="block text-sm font-medium text-text-dark mb-1">Account Status</label>
+                    <select 
+                      className="form-control w-full font-semibold"
+                      value={formData.isActive ? "true" : "false"}
+                      onChange={e => setFormData({...formData, isActive: e.target.value === "true"})}
+                      style={{
+                        color: formData.isActive ? '#10B981' : '#EF4444',
+                        backgroundColor: formData.isActive ? '#ECFDF5' : '#FEF2F2'
+                      }}
+                    >
+                      <option value="true" className="text-green-600 bg-white">Active (Can Login)</option>
+                      <option value="false" className="text-red-600 bg-white">Inactive (Login Disabled)</option>
+                    </select>
+                  </div>
+                )}
               </div>
               <div className="mt-8 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowAddModal(false)} className="btn bg-gray-100 text-text-dark hover:bg-gray-200">Cancel</button>
