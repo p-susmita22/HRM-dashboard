@@ -120,6 +120,28 @@ const AdminEmployees = () => {
     }
   };
 
+  const handleDeleteEmployeeDocument = async (empId, docId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    try {
+      await axios.delete(`/api/admin/employees/${empId}/documents/${docId}`);
+      // Update selectedEmployee locally so UI updates
+      setSelectedEmployee(prev => ({
+        ...prev,
+        documents: prev.documents.filter(d => d._id !== docId)
+      }));
+      // Update employees list locally so next time modal opens it is correct
+      setEmployees(prev => prev.map(emp => {
+        if (emp._id === empId) {
+          return { ...emp, documents: emp.documents.filter(d => d._id !== docId) };
+        }
+        return emp;
+      }));
+      alert('Document deleted successfully!');
+    } catch (error) {
+      alert('Failed to delete document.');
+    }
+  };
+
   const openViewModal = (emp) => {
     setSelectedEmployee(emp);
     setShowViewModal(true);
@@ -515,6 +537,13 @@ const AdminEmployees = () => {
                             title="Download"
                           >
                             <Download size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteEmployeeDocument(selectedEmployee._id, doc._id)}
+                            className="btn p-1.5 bg-white border border-status-absent hover:bg-status-absent hover:text-white text-status-absent shadow-sm transition-colors" 
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </div>

@@ -9,6 +9,7 @@ const AdminSettings = () => {
   const [loginActivity, setLoginActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hrPolicyFile, setHrPolicyFile] = useState(null);
+  const [currentHrPolicy, setCurrentHrPolicy] = useState(null);
 
   const fetchProfile = async () => {
     try {
@@ -26,8 +27,18 @@ const AdminSettings = () => {
     }
   };
 
+  const fetchHrPolicies = async () => {
+    try {
+      const res = await axios.get('/api/admin/hr-policies');
+      setCurrentHrPolicy(res.data);
+    } catch (error) {
+      console.error('Error fetching HR Policies', error);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchHrPolicies();
   }, []);
 
   const handleProfileUpdate = async (e) => {
@@ -87,8 +98,20 @@ const AdminSettings = () => {
       });
       alert('HR Policies uploaded successfully!');
       setHrPolicyFile(null);
+      fetchHrPolicies();
     } catch (error) {
       alert('Failed to upload HR Policies.');
+    }
+  };
+
+  const handleDeleteHrPolicy = async () => {
+    if (!window.confirm('Are you sure you want to delete the HR Policies document?')) return;
+    try {
+      await axios.delete('/api/admin/hr-policies');
+      setCurrentHrPolicy(null);
+      alert('HR Policies deleted successfully!');
+    } catch (error) {
+      alert('Failed to delete HR Policies.');
     }
   };
 
@@ -216,7 +239,7 @@ const AdminSettings = () => {
             </div>
             <form onSubmit={handleHrPolicyUpload} className="space-y-4">
               <div>
-                <label className="block mb-1.5 font-medium text-sm text-text-dark">Update HR Policies</label>
+                <label className="block mb-1.5 font-medium text-sm text-text-dark">Upload New HR Policies</label>
                 <input 
                   type="file" 
                   className="form-control" 
@@ -229,6 +252,29 @@ const AdminSettings = () => {
                 <button type="submit" className="btn btn-primary px-6">Upload HR Policies</button>
               </div>
             </form>
+
+            {currentHrPolicy && (
+              <div className="mt-6 border-t border-gray-100 pt-4">
+                <h4 className="text-sm font-semibold text-text-dark mb-3">Current Document</h4>
+                <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Activity size={16} className="text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-text-dark">{currentHrPolicy.docType}</p>
+                      <p className="text-[10px] text-text-light">{currentHrPolicy.fileName}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href={`${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${currentHrPolicy.url}`} target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors text-xs">
+                      View
+                    </a>
+                    <button onClick={handleDeleteHrPolicy} className="btn p-1.5 bg-white border border-status-absent text-status-absent hover:bg-status-absent hover:text-white shadow-sm transition-colors text-xs">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>

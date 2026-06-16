@@ -222,6 +222,24 @@ export const uploadHRPolicies = async (req, res) => {
   }
 };
 
+export const getHRPolicies = async (req, res) => {
+  try {
+    const companyDoc = await CompanyDocument.findOne({ docType: 'HR Policies' });
+    res.json(companyDoc);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const deleteHRPolicies = async (req, res) => {
+  try {
+    await CompanyDocument.findOneAndDelete({ docType: 'HR Policies' });
+    res.json({ message: 'HR Policies deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 export const uploadOfferLetter = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
@@ -244,6 +262,21 @@ export const uploadOfferLetter = async (req, res) => {
     res.json({ message: 'Offer letter uploaded successfully', document: { docType, url, fileName } });
   } catch (error) {
     console.error('Error uploading offer letter:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const deleteEmployeeDocument = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    employee.documents = employee.documents.filter(doc => doc._id.toString() !== req.params.docId);
+    await employee.save();
+
+    res.json({ message: 'Document deleted successfully', documents: employee.documents });
+  } catch (error) {
+    console.error('Error deleting employee document:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

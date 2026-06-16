@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, uploadHRPolicies, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
+import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, deleteEmployeeDocument, uploadHRPolicies, getHRPolicies, deleteHRPolicies, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
 import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
   getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest,
@@ -35,7 +35,10 @@ router.delete('/employees/:id', deleteEmployee);
 router.put('/employees/:id', editEmployee);
 router.put('/employees/:id/lock', toggleLockEmployee);
 router.post('/employees/:id/offer-letter', upload.single('offerLetter'), uploadOfferLetter);
+router.delete('/employees/:id/documents/:docId', deleteEmployeeDocument);
 router.post('/hr-policies', upload.single('document'), uploadHRPolicies);
+router.get('/hr-policies', getHRPolicies);
+router.delete('/hr-policies', deleteHRPolicies);
 router.post('/employees/:id/payslip', sendPayslip);
 router.put('/employees/:id/payslip/:payslipId', updatePayslip);
 
