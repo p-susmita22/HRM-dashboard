@@ -9,6 +9,7 @@ import {
 const AdminDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [remoteRequests, setRemoteRequests] = useState([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -22,15 +23,17 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [empRes, leavesRes, regRes, resRes, attendanceRes] = await Promise.all([
+      const [empRes, leavesRes, regRes, resRes, attendanceRes, remoteRes] = await Promise.all([
         axios.get('/api/admin/employees'),
         axios.get('/api/admin/leaves'),
         axios.get('/api/admin/regularizations'),
         axios.get('/api/admin/resignations'),
-        axios.get('/api/admin/attendance')
+        axios.get('/api/admin/attendance'),
+        axios.get('/api/admin/attendance/remote-requests')
       ]);
       setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
       setAttendanceRecords(Array.isArray(attendanceRes.data) ? attendanceRes.data : []);
+      setRemoteRequests(Array.isArray(remoteRes.data) ? remoteRes.data : []);
       
       const leavesCount = Array.isArray(leavesRes.data) ? leavesRes.data.length : 0;
       const regCount = Array.isArray(regRes.data) ? regRes.data.length : 0;
@@ -222,10 +225,40 @@ const AdminDashboard = () => {
       </div>
 
       <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Recent Activities</h3>
-        <div className="text-text-light text-sm py-4 text-center">
-          No recent activities found. Navigate to the Employees tab to manage your workforce.
-        </div>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Clock size={20} className="text-orange-500" /> Recent Activities (Remote Punch-ins)
+        </h3>
+        {remoteRequests.length > 0 ? (
+          <div className="space-y-4">
+            {remoteRequests.slice(0, 5).map(req => (
+              <div key={req._id} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-100 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName} <span className="text-xs font-normal text-text-light">({req.employee?.employeeId})</span></p>
+                    <p className="text-xs text-text-light mt-0.5">Requested to punch in from outside the office</p>
+                    {req.punchInLocation && (
+                       <p className="text-[10px] text-gray-500 mt-1 max-w-md truncate">📍 {req.punchInLocation.address || 'Unknown location'}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-medium text-text-dark">{new Date(req.punchIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <Link to="/admin/attendance" className="text-xs text-blue-600 hover:underline mt-1 inline-block">Review Request</Link>
+                </div>
+              </div>
+            ))}
+            {remoteRequests.length > 5 && (
+              <div className="text-center mt-2">
+                <Link to="/admin/attendance" className="text-sm text-primary hover:underline">View all {remoteRequests.length} requests</Link>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-text-light text-sm py-4 text-center">
+            No recent remote punch-in requests found.
+          </div>
+        )}
       </div>
     </div>
   );
