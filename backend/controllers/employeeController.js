@@ -11,6 +11,17 @@ export const getProfile = async (req, res) => {
   }
 };
 
+import CompanyDocument from '../models/CompanyDocument.js';
+
+export const getCompanyDocuments = async (req, res) => {
+  try {
+    const docs = await CompanyDocument.find();
+    res.json(docs);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 export const uploadDocument = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });

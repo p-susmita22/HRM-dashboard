@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { getProfile, uploadDocument, getTodayAttendance, punchIn, punchOut, applyLeave, getMyLeaves, deleteLeave, applyRegularization, getMyRegularizations, deleteRegularization, getMonthlyAttendance } from '../controllers/employeeController.js';
+import { getProfile, uploadDocument, getCompanyDocuments, getTodayAttendance, punchIn, punchOut, applyLeave, getMyLeaves, deleteLeave, applyRegularization, getMyRegularizations, deleteRegularization, getMonthlyAttendance } from '../controllers/employeeController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -21,6 +21,7 @@ router.use(protect);
 
 router.get('/profile', getProfile);
 router.post('/upload-doc', upload.single('document'), uploadDocument);
+router.get('/company-documents', getCompanyDocuments);
 
 router.get('/attendance/today', getTodayAttendance);
 router.get('/attendance/monthly', getMonthlyAttendance);

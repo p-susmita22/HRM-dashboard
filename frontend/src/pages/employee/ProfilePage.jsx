@@ -9,6 +9,7 @@ const ProfilePage = () => {
   const [showQualifications, setShowQualifications] = useState(false);
   const [qualifications, setQualifications] = useState([]);
   const [employeeData, setEmployeeData] = useState(null);
+  const [companyDocs, setCompanyDocs] = useState([]);
   const [uploadingDocType, setUploadingDocType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [toastMessage, setToastMessage] = useState({ text: '', type: '' });
@@ -28,8 +29,18 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchCompanyDocs = async () => {
+    try {
+      const res = await axios.get('/api/employee/company-documents');
+      setCompanyDocs(res.data);
+    } catch (err) {
+      console.error('Error fetching company docs', err);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchCompanyDocs();
   }, []);
 
   const handleUploadClick = (docType) => {
@@ -322,22 +333,39 @@ const ProfilePage = () => {
             <div className="card !mb-0 border-t-4 border-gray-300">
               <h3 className="mb-4 text-lg font-semibold border-b border-gray-100 pb-2">Company Documents</h3>
               <div className="flex flex-col gap-2.5">
-                {['Offer Letter', 'HR Policies'].map(doc => (
-                  <div key={doc} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-gray-50">
-                    <div className="flex items-center gap-2.5">
-                      <FileText size={20} className="text-text-light flex-shrink-0" />
-                      <span className="text-sm font-medium text-text-dark">{doc}</span>
+                {['Offer Letter', 'HR Policies'].map(doc => {
+                  let docUrl = null;
+                  if (doc === 'Offer Letter') {
+                    const existing = getDoc('Offer Letter');
+                    if (existing) docUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${existing.url}`;
+                  } else if (doc === 'HR Policies') {
+                    const existing = companyDocs.find(d => d.docType === 'HR Policies');
+                    if (existing) docUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://hrm-dashboard-ln9m.onrender.com'}${existing.url}`;
+                  }
+                  
+                  return (
+                    <div key={doc} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-2.5">
+                        <FileText size={20} className={docUrl ? "text-primary flex-shrink-0" : "text-text-light flex-shrink-0"} />
+                        <span className="text-sm font-medium text-text-dark">{doc}</span>
+                      </div>
+                      <div className="flex gap-1.5">
+                        {docUrl ? (
+                          <>
+                            <a href={docUrl} target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Preview">
+                              <Eye size={16} />
+                            </a>
+                            <a href={docUrl} download target="_blank" rel="noreferrer" className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Download">
+                              <Download size={16} />
+                            </a>
+                          </>
+                        ) : (
+                          <span className="text-xs text-text-light italic bg-white px-2 py-1 border border-gray-100 rounded">Not available</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-1.5">
-                      <button className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Preview">
-                        <Eye size={16} />
-                      </button>
-                      <button className="btn p-1.5 bg-white border border-gray-200 hover:border-primary hover:text-primary shadow-sm transition-colors" title="Download">
-                        <Download size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             

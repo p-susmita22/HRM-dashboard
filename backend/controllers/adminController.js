@@ -196,10 +196,52 @@ export const toggleLockEmployee = async (req, res) => {
   }
 };
 
+import CompanyDocument from '../models/CompanyDocument.js';
+
+export const uploadHRPolicies = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    const docType = 'HR Policies';
+    const url = `/uploads/${req.file.filename}`;
+    const fileName = req.file.originalname;
+
+    let companyDoc = await CompanyDocument.findOne({ docType });
+    if (companyDoc) {
+      companyDoc.url = url;
+      companyDoc.fileName = fileName;
+    } else {
+      companyDoc = new CompanyDocument({ docType, url, fileName });
+    }
+
+    await companyDoc.save();
+    res.json({ message: 'HR Policies uploaded successfully', document: companyDoc });
+  } catch (error) {
+    console.error('Error uploading HR Policies:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 export const uploadOfferLetter = async (req, res) => {
   try {
-    // Basic mock implementation for file upload
-    res.json({ message: 'Offer letter uploaded successfully' });
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    const docType = 'Offer Letter';
+    const url = `/uploads/${req.file.filename}`;
+    const fileName = req.file.originalname;
+
+    const existingDocIndex = employee.documents.findIndex(d => d.docType === docType);
+    if (existingDocIndex >= 0) {
+      employee.documents[existingDocIndex] = { docType, url, fileName };
+    } else {
+      employee.documents.push({ docType, url, fileName });
+    }
+
+    await employee.save();
+    res.json({ message: 'Offer letter uploaded successfully', document: { docType, url, fileName } });
   } catch (error) {
     console.error('Error uploading offer letter:', error);
     res.status(500).json({ message: 'Server Error' });

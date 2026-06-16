@@ -8,6 +8,7 @@ const AdminSettings = () => {
   const [passwords, setPasswords] = useState({ newPassword: '', confirmPassword: '' });
   const [loginActivity, setLoginActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hrPolicyFile, setHrPolicyFile] = useState(null);
 
   const fetchProfile = async () => {
     try {
@@ -70,6 +71,24 @@ const AdminSettings = () => {
       } catch (error) {
         alert('Failed to log out of other devices.');
       }
+    }
+  };
+
+  const handleHrPolicyUpload = async (e) => {
+    e.preventDefault();
+    if (!hrPolicyFile) return alert('Please select a file to upload');
+    
+    const formData = new FormData();
+    formData.append('document', hrPolicyFile);
+    
+    try {
+      await axios.post('/api/admin/hr-policies', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert('HR Policies uploaded successfully!');
+      setHrPolicyFile(null);
+    } catch (error) {
+      alert('Failed to upload HR Policies.');
     }
   };
 
@@ -185,6 +204,29 @@ const AdminSettings = () => {
               </div>
               <div className="pt-2 flex justify-end">
                 <button type="submit" className="btn btn-primary px-6">Update Password</button>
+              </div>
+            </form>
+          </div>
+
+          {/* Company Documents Upload */}
+          <div className="card shadow-sm">
+            <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+              <Activity className="text-primary" size={20} />
+              <h3 className="font-semibold text-lg text-text-dark">Company Documents</h3>
+            </div>
+            <form onSubmit={handleHrPolicyUpload} className="space-y-4">
+              <div>
+                <label className="block mb-1.5 font-medium text-sm text-text-dark">Update HR Policies</label>
+                <input 
+                  type="file" 
+                  className="form-control" 
+                  onChange={(e) => setHrPolicyFile(e.target.files[0])}
+                  required 
+                />
+                <p className="text-xs text-text-light mt-1">This will be visible to all employees in their profile.</p>
+              </div>
+              <div className="pt-2 flex justify-end">
+                <button type="submit" className="btn btn-primary px-6">Upload HR Policies</button>
               </div>
             </form>
           </div>

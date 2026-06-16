@@ -108,8 +108,9 @@ const AdminEmployees = () => {
     formData.append('offerLetter', file);
     
     try {
-      // In a real app, this would post to your backend.
-      // await axios.post(`/api/admin/employees/${uploadingFor}/offer-letter`, formData);
+      await axios.post(`/api/admin/employees/${uploadingFor}/offer-letter`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       alert(`Successfully uploaded ${file.name} as offer letter!`);
     } catch (err) {
       alert('Failed to upload file');

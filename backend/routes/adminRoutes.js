@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
+import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, uploadHRPolicies, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
 import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
   getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest,
@@ -10,6 +10,18 @@ import {
 } from '../controllers/adminController.js';
 import { getAllReceipts, saveReceipt, deleteReceipt } from '../controllers/adminController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import multer from 'multer';
+import path from 'path';
+
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename(req, file, cb) {
+    cb(null, `admin-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -22,7 +34,8 @@ router.post('/employees', addEmployee);
 router.delete('/employees/:id', deleteEmployee);
 router.put('/employees/:id', editEmployee);
 router.put('/employees/:id/lock', toggleLockEmployee);
-router.post('/employees/:id/offer-letter', uploadOfferLetter);
+router.post('/employees/:id/offer-letter', upload.single('offerLetter'), uploadOfferLetter);
+router.post('/hr-policies', upload.single('document'), uploadHRPolicies);
 router.post('/employees/:id/payslip', sendPayslip);
 router.put('/employees/:id/payslip/:payslipId', updatePayslip);
 
