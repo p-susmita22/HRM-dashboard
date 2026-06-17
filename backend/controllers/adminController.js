@@ -547,7 +547,7 @@ export const getSidebarCounts = async (req, res) => {
     const leavesPending = await Leave.countDocuments({ status: 'Pending' });
     const regularizationsPending = await Regularization.countDocuments({ status: 'Pending' });
     const resignationsPending = await Resignation.countDocuments({ status: 'Pending' });
-    const unreadMessages = await Message.countDocuments({ receiver: 'admin', isRead: false });
+    const unreadMessages = await Message.countDocuments({ sender: 'employee', isRead: false });
 
     res.json({
       attendanceCount: attendancePending + remotePending,
@@ -799,6 +799,21 @@ export const saveReceipt = async (req, res) => {
     res.status(201).json(receipt);
   } catch (error) {
     console.error('Error saving receipt:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteDailyReport = async (req, res) => {
+  try {
+    const record = await Attendance.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Record not found' });
+    
+    record.dailyReport = null;
+    await record.save();
+    
+    res.json({ message: 'Report deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting report:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

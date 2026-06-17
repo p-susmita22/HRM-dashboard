@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { MessageSquare, Send, Check, FileText } from 'lucide-react';
+import { MessageSquare, Send, Check, FileText, Trash2 } from 'lucide-react';
 
 const AdminNotifications = () => {
   const [messages, setMessages] = useState([]);
@@ -61,6 +61,16 @@ const AdminNotifications = () => {
       fetchData();
     } catch (error) {
       alert('Failed to send reply');
+    }
+  };
+
+  const handleDeleteReport = async (recordId) => {
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    try {
+      await axios.delete(`/api/admin/attendance/${recordId}/report`);
+      fetchData();
+    } catch(err) {
+      alert('Failed to delete report');
     }
   };
 
@@ -234,16 +244,23 @@ const AdminNotifications = () => {
                     return (
                       <div className="max-w-3xl mx-auto">
                         <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-bold text-indigo-900 text-lg">Daily Summary</h4>
-                          <span className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200 flex items-center gap-1">
-                            <Check size={14} /> Submitted
-                          </span>
+                          <div>
+                            <h4 className="font-bold text-indigo-900 text-lg">Daily Summary</h4>
+                            <div className="text-xs text-indigo-600 mt-1">
+                              {new Date(record.updatedAt || record.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200 flex items-center gap-1">
+                              <Check size={14} /> Submitted
+                            </span>
+                            <button onClick={() => handleDeleteReport(record._id)} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors flex items-center justify-center" title="Delete Report">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                         <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed shadow-sm">
                           {record.dailyReport}
-                        </div>
-                        <div className="text-right text-xs text-gray-400 mt-4">
-                          Submitted on: {new Date(record.updatedAt || record.createdAt).toLocaleString()}
                         </div>
                       </div>
                     );
