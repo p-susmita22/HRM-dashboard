@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { MessageSquare, Send, Check, FileText, Trash2 } from 'lucide-react';
+import { MessageSquare, Send, Check, FileText, Trash2, History } from 'lucide-react';
 
 const AdminNotifications = () => {
   const [messages, setMessages] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
+  const [allAttendance, setAllAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'report'
@@ -26,6 +27,7 @@ const AdminNotifications = () => {
       const todayString = new Date().toDateString();
       const todaysAttendances = attRes.data.filter(a => new Date(a.date).toDateString() === todayString);
       setTodayAttendance(todaysAttendances);
+      setAllAttendance(attRes.data);
     } catch (error) {
       console.error('Failed to fetch data', error);
     } finally {
@@ -192,6 +194,12 @@ const AdminNotifications = () => {
                   >
                     <FileText size={16} /> Today's Report
                   </button>
+                  <button 
+                    className={`py-3 px-2 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'all_reports' ? 'border-purple-500 text-purple-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
+                    onClick={() => setActiveTab('all_reports')}
+                  >
+                    <History size={16} /> All Reports
+                  </button>
                 </div>
               </div>
               
@@ -262,6 +270,40 @@ const AdminNotifications = () => {
                         <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed shadow-sm">
                           {record.dailyReport}
                         </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {activeTab === 'all_reports' && (
+                <div className="flex-1 overflow-y-auto p-6 bg-purple-50/20">
+                  {(() => {
+                    const employeeReports = allAttendance.filter(a => 
+                      (a.employee?._id || a.employee) === selectedEmployee.id && a.dailyReport
+                    ).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    if (employeeReports.length === 0) {
+                      return <div className="text-center text-gray-400 text-sm mt-10">No historical reports found for this employee.</div>;
+                    }
+
+                    return (
+                      <div className="max-w-3xl mx-auto space-y-6">
+                        {employeeReports.map(record => (
+                          <div key={record._id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                            <div className="flex justify-between items-center mb-4">
+                              <div>
+                                <h4 className="font-bold text-purple-900 text-lg">Report: {new Date(record.date).toLocaleDateString()}</h4>
+                                <div className="text-xs text-purple-600 mt-1">
+                                  Submitted: {new Date(record.updatedAt || record.createdAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                              {record.dailyReport}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     );
                   })()}
