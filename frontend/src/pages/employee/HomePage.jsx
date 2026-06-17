@@ -124,7 +124,7 @@ const HomePage = () => {
   // ---- Office Geofencing ----
   const OFFICE_LAT = 20.28567438118417;
   const OFFICE_LNG = 85.90030307523656;
-  const OFFICE_RADIUS_METERS = 150;
+  const OFFICE_RADIUS_METERS = 500;
 
   const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
     const R = 6371000;

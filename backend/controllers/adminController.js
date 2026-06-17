@@ -411,7 +411,6 @@ export const approveRemotePunch = async (req, res) => {
     const record = await Attendance.findById(req.params.id);
     if (!record) return res.status(404).json({ message: 'Record not found' });
     record.remoteStatus = 'Approved';
-    record.adminStatus = 'Approved';
     await record.save();
     const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
     res.json(updated);
