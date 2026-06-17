@@ -114,6 +114,10 @@ export const punchOut = async (req, res) => {
       return res.status(400).json({ message: 'Already punched out today' });
     }
     
+    if (!attendance.dailyReport) {
+      return res.status(400).json({ message: 'You must submit your daily report before punching out.' });
+    }
+    
     attendance.punchOut = new Date();
     
     // Calculate total hours
@@ -302,6 +306,34 @@ export const getMyResignation = async (req, res) => {
   try {
     const resignation = await Resignation.findOne({ employee: req.user._id }).sort({ createdAt: -1 });
     res.json(resignation);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const submitDailyReport = async (req, res) => {
+  try {
+    const { reportContent } = req.body;
+    if (!reportContent || reportContent.trim().split(/\s+/).length < 50) {
+      return res.status(400).json({ message: 'Report must be at least 50 words.' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let attendance = await Attendance.findOne({
+      employee: req.user._id,
+      date: { $gte: today }
+    });
+
+    if (!attendance || !attendance.punchIn) {
+      return res.status(400).json({ message: 'Must be punched in to submit a report.' });
+    }
+
+    attendance.dailyReport = reportContent;
+    await attendance.save();
+
+    res.json({ message: 'Daily report submitted successfully', attendance });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

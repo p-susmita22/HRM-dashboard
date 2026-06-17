@@ -37,7 +37,8 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     enum: ['None', 'Pending', 'Approved', 'Rejected'],
     default: 'None'
-  }
+  },
+  dailyReport: { type: String, default: null }
 }, { timestamps: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
