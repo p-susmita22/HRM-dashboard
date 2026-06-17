@@ -338,3 +338,26 @@ export const submitDailyReport = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const deleteDailyReport = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let attendance = await Attendance.findOne({
+      employee: req.user._id,
+      date: { $gte: today }
+    });
+
+    if (!attendance) {
+      return res.status(404).json({ message: 'No attendance record found for today.' });
+    }
+
+    attendance.dailyReport = null;
+    await attendance.save();
+
+    res.json({ message: 'Daily report deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

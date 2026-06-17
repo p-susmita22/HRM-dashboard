@@ -172,23 +172,47 @@ const EmployeeMessages = () => {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={reportStatus === 'submitted' || wordCount < 50}
-              className={`w-full py-3 rounded-lg font-bold shadow-md transition-all flex justify-center items-center gap-2 ${
-                reportStatus === 'submitted'
-                  ? 'bg-green-100 text-green-700 cursor-not-allowed'
-                  : wordCount < 50
+            {reportStatus === 'submitted' ? (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setReportStatus('pending')}
+                  className="flex-1 py-3 rounded-lg font-bold shadow-md transition-all flex justify-center items-center gap-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                >
+                  Edit Report
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if(!window.confirm("Are you sure you want to delete this report?")) return;
+                    try {
+                      await axios.delete('/api/employee/daily-report');
+                      setReportContent('');
+                      setWordCount(0);
+                      setReportStatus('pending');
+                      alert('Daily report deleted successfully.');
+                    } catch (error) {
+                      alert('Failed to delete report.');
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-lg font-bold shadow-md transition-all flex justify-center items-center gap-2 bg-red-100 text-red-600 hover:bg-red-200"
+                >
+                  Delete Report
+                </button>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={wordCount < 50}
+                className={`w-full py-3 rounded-lg font-bold shadow-md transition-all flex justify-center items-center gap-2 ${
+                  wordCount < 50
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg'
-              }`}
-            >
-              {reportStatus === 'submitted' ? (
-                <>Report Locked & Submitted</>
-              ) : (
-                <>Submit Daily Report</>
-              )}
-            </button>
+                }`}
+              >
+                Submit Daily Report
+              </button>
+            )}
           </form>
         </div>
       </div>
