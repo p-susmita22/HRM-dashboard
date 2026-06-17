@@ -8,6 +8,7 @@ const AdminNotifications = () => {
   const [todayAttendance, setTodayAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'report'
   const [replyContent, setReplyContent] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -38,10 +39,11 @@ const AdminNotifications = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedEmployee, messages]);
+  }, [selectedEmployee, messages, activeTab]);
 
   const handleSelectEmployee = async (empId, empName) => {
     setSelectedEmployee({ id: empId, name: empName });
+    setActiveTab('chat');
     try {
       await axios.put(`/api/messages/admin/read/${empId}`);
       fetchData();
@@ -62,12 +64,14 @@ const AdminNotifications = () => {
     }
   };
 
-  const groupedMessages = employees.reduce((acc, emp) => {
+  const groupedData = employees.reduce((acc, emp) => {
+    const record = todayAttendance.find(a => (a.employee?._id || a.employee) === emp._id);
     acc[emp._id] = {
       employee: emp,
       messages: [],
       unreadCount: 0,
-      lastMessage: null
+      lastMessage: null,
+      hasReport: record?.dailyReport ? true : false
     };
     return acc;
   }, {});
@@ -75,16 +79,23 @@ const AdminNotifications = () => {
   messages.forEach(msg => {
     if (!msg.employee) return;
     const empId = msg.employee._id || msg.employee;
-    if (groupedMessages[empId]) {
-      groupedMessages[empId].messages.push(msg);
-      groupedMessages[empId].lastMessage = msg;
+    if (groupedData[empId]) {
+      groupedData[empId].messages.push(msg);
+      groupedData[empId].lastMessage = msg;
       if (msg.sender === 'employee' && !msg.isRead) {
-        groupedMessages[empId].unreadCount += 1;
+        groupedData[empId].unreadCount += 1;
       }
     }
   });
 
-  const threads = Object.values(groupedMessages).sort((a, b) => {
+  const threads = Object.values(groupedData).sort((a, b) => {
+    // Sort logic: prioritize unread messages, then hasReport, then recent messages
+    if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+    if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+    
+    if (a.hasReport && !b.hasReport) return -1;
+    if (!a.hasReport && b.hasReport) return 1;
+
     if (a.lastMessage && b.lastMessage) {
       return new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt);
     }
@@ -103,9 +114,9 @@ const AdminNotifications = () => {
       <div className="flex-1 flex gap-6 overflow-hidden h-[calc(100vh-200px)]">
         
         {/* Thread List */}
-        <div className="w-1/4 min-w-[250px] bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-gray-100 font-semibold flex items-center gap-2 text-text-dark">
-            <MessageSquare size={18} /> Employee List
+        <div className="w-1/3 max-w-[320px] bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+          <div className="p-4 border-b border-gray-100 font-semibold flex items-center gap-2 text-text-dark bg-gray-50/50">
+            <MessageSquare size={18} className="text-primary" /> Employee List
           </div>
           <div className="flex-1 overflow-y-auto">
             {loading ? (
@@ -121,9 +132,16 @@ const AdminNotifications = () => {
                 >
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-semibold text-sm text-text-dark">{thread.employee.fullName}</h4>
-                    {thread.unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{thread.unreadCount} New</span>
-                    )}
+                    <div className="flex gap-1">
+                      {thread.hasReport && (
+                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1" title="Report Submitted">
+                          <FileText size={10} /> Report
+                        </span>
+                      )}
+                      {thread.unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{thread.unreadCount} New</span>
+                      )}
+                    </div>
                   </div>
                   {thread.lastMessage ? (
                     <>
@@ -139,87 +157,102 @@ const AdminNotifications = () => {
           </div>
         </div>
 
-        {/* Right Area: Chat & Report Split */}
-        <div className="flex-1 flex gap-4 overflow-hidden">
+        {/* Right Area: Tabs */}
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
           {selectedEmployee ? (
             <>
-              {/* Chat Area */}
-              <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              {/* Header with Tabs */}
+              <div className="border-b border-gray-100">
+                <div className="p-4 bg-gray-50/50 flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-text-dark">{selectedEmployee.name}</h3>
-                    <p className="text-xs text-text-light">Employee Support Chat</p>
+                    <p className="text-xs text-text-light">Employee Support & Reports</p>
                   </div>
                 </div>
-                
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-bg-gray/30">
-                  {groupedMessages[selectedEmployee.id]?.messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] p-3 text-sm rounded-2xl ${msg.sender === 'admin' ? 'bg-primary text-white rounded-br-sm' : 'bg-white border border-gray-200 text-text-dark rounded-bl-sm shadow-sm'}`}>
-                        {msg.content}
-                        <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${msg.sender === 'admin' ? 'text-primary-light/80' : 'text-gray-400'}`}>
-                          {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          {msg.sender === 'admin' && (
-                            <Check size={12} className={msg.isRead ? 'text-white' : 'opacity-50'} />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                <div className="p-4 border-t border-gray-100 bg-white">
-                  <form onSubmit={handleReply} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      className="form-control flex-1 rounded-full px-5 py-2.5 text-sm"
-                      placeholder={`Reply to ${selectedEmployee.name}...`}
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                    />
-                    <button type="submit" disabled={!replyContent.trim()} className="w-11 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark transition-colors disabled:opacity-50">
-                      <Send size={16} className="-ml-0.5" />
-                    </button>
-                  </form>
+                <div className="flex px-4 gap-4 bg-white">
+                  <button 
+                    className={`py-3 px-2 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
+                    onClick={() => setActiveTab('chat')}
+                  >
+                    <MessageSquare size={16} /> Chat
+                  </button>
+                  <button 
+                    className={`py-3 px-2 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'report' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
+                    onClick={() => setActiveTab('report')}
+                  >
+                    <FileText size={16} /> Today's Report
+                  </button>
                 </div>
               </div>
+              
+              {activeTab === 'chat' && (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-bg-gray/30">
+                    {groupedData[selectedEmployee.id]?.messages.map((msg, i) => (
+                      <div key={i} className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-3 text-sm rounded-2xl ${msg.sender === 'admin' ? 'bg-primary text-white rounded-br-sm' : 'bg-white border border-gray-200 text-text-dark rounded-bl-sm shadow-sm'}`}>
+                          {msg.content}
+                          <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${msg.sender === 'admin' ? 'text-primary-light/80' : 'text-gray-400'}`}>
+                            {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {msg.sender === 'admin' && (
+                              <Check size={12} className={msg.isRead ? 'text-white' : 'opacity-50'} />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
 
-              {/* Daily Report Area */}
-              <div className="w-1/3 min-w-[280px] bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-indigo-100 bg-indigo-50/50 flex items-center gap-2">
-                  <FileText size={18} className="text-indigo-600" />
-                  <div>
-                    <h3 className="font-semibold text-indigo-900">Today's Report</h3>
-                    <p className="text-xs text-indigo-700">{new Date().toLocaleDateString()}</p>
+                  <div className="p-4 border-t border-gray-100 bg-white">
+                    <form onSubmit={handleReply} className="flex gap-2">
+                      <input 
+                        type="text" 
+                        className="form-control flex-1 rounded-full px-5 py-2.5 text-sm"
+                        placeholder={`Reply to ${selectedEmployee.name}...`}
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                      />
+                      <button type="submit" disabled={!replyContent.trim()} className="w-11 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark transition-colors disabled:opacity-50">
+                        <Send size={16} className="-ml-0.5" />
+                      </button>
+                    </form>
                   </div>
                 </div>
-                
-                <div className="flex-1 overflow-y-auto p-5 bg-gray-50/50">
+              )}
+
+              {activeTab === 'report' && (
+                <div className="flex-1 overflow-y-auto p-6 bg-indigo-50/20">
                   {(() => {
                     const record = todayAttendance.find(a => (a.employee?._id || a.employee) === selectedEmployee.id);
                     if (!record) {
                       return <div className="text-center text-gray-400 text-sm mt-10">No attendance record found for today.</div>;
                     }
                     if (!record.dailyReport) {
-                      return <div className="text-center text-orange-500 text-sm mt-10 p-4 border border-orange-200 bg-orange-50 rounded-lg">Report not submitted yet. Employee must submit it before punching out.</div>;
+                      return <div className="text-center text-orange-500 text-sm mt-10 p-6 border border-orange-200 bg-orange-50 rounded-xl max-w-md mx-auto"><strong>Report Pending</strong><br/>Employee has not submitted their daily report yet. They must submit it before punching out.</div>;
                     }
                     return (
-                      <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">Submitted</span>
+                      <div className="max-w-3xl mx-auto">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold text-indigo-900 text-lg">Daily Summary</h4>
+                          <span className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full border border-green-200 flex items-center gap-1">
+                            <Check size={14} /> Submitted
+                          </span>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed shadow-sm">
+                        <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed shadow-sm">
                           {record.dailyReport}
+                        </div>
+                        <div className="text-right text-xs text-gray-400 mt-4">
+                          Submitted on: {new Date(record.updatedAt || record.createdAt).toLocaleString()}
                         </div>
                       </div>
                     );
                   })()}
                 </div>
-              </div>
+              )}
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-text-light bg-white rounded-xl border border-gray-100">
+            <div className="flex-1 flex flex-col items-center justify-center text-text-light">
               <MessageSquare size={48} className="mb-4 opacity-20" />
               <p>Select a conversation to view messages & reports</p>
             </div>
