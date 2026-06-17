@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut, User } from 'lucide-react';
+import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut, User, FileText } from 'lucide-react';
 import axios from 'axios';
 import logo from '../assets/multimaart-logo.png';
 
@@ -62,7 +62,7 @@ const AdminSidebar = ({ onLogout, isOpen, setIsOpen, counts }) => {
           </NavLink>
           <NavLink to="/admin/notifications" className={({isActive}) => `px-5 py-3 flex items-center justify-between font-medium transition-all border-l-4 ${isActive ? 'bg-accent text-primary border-primary' : 'text-text-light border-transparent hover:bg-bg-gray hover:text-primary'}`}>
             <div className="flex items-center gap-3">
-              <BellRing size={20} /> Notifications
+              <FileText size={20} /> Daily Reports
             </div>
             {counts.notificationsCount > 0 && (
               <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{counts.notificationsCount}</span>

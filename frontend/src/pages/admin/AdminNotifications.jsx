@@ -119,7 +119,7 @@ const AdminNotifications = () => {
   return (
     <div className="animate-fade-in pb-10 h-full flex flex-col">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-text-dark">Notifications & Messages</h2>
+        <h2 className="text-2xl font-bold text-text-dark">Daily Reports & Messages</h2>
         <p className="text-text-light text-sm mt-1">Respond to employee queries and check their daily reports.</p>
       </div>
 
@@ -279,8 +279,11 @@ const AdminNotifications = () => {
               {activeTab === 'all_reports' && (
                 <div className="flex-1 overflow-y-auto p-6 bg-purple-50/20">
                   {(() => {
+                    const todayString = new Date().toDateString();
                     const employeeReports = allAttendance.filter(a => 
-                      (a.employee?._id || a.employee) === selectedEmployee.id && a.dailyReport
+                      (a.employee?._id || a.employee) === selectedEmployee.id && 
+                      a.dailyReport && 
+                      new Date(a.date).toDateString() !== todayString
                     ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
                     if (employeeReports.length === 0) {
