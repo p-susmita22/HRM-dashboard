@@ -363,72 +363,74 @@ const AdminRequests = () => {
       </div>
 
       {isModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] relative z-[10000] border border-gray-100 animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
               <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
                 <FileText size={20} className="text-primary" /> {selectedRequest.requestType} Request Details
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1.5 transition-colors">
                 <XCircle size={20} />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <div className="mb-5">
-                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Employee</h4>
+            <div className="p-6 overflow-y-auto bg-white">
+              <div className="mb-5 bg-blue-50/50 p-4 rounded-lg border border-blue-100/50">
+                <h4 className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-1">Employee Info</h4>
                 <p className="text-base font-bold text-text-dark">{selectedRequest.employee?.fullName}</p>
-                <p className="text-sm text-text-light">{selectedRequest.employee?.employeeId} - {selectedRequest.employee?.department}</p>
+                <p className="text-sm text-text-light">{selectedRequest.employee?.employeeId} &bull; {selectedRequest.employee?.department}</p>
               </div>
               
               {selectedRequest.requestType === 'Leave' && (
                 <div className="mb-5">
-                  <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Leave Type</h4>
-                  <p className="text-sm text-text-dark">{selectedRequest.leaveType}</p>
+                  <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-1">Leave Type</h4>
+                  <p className="text-sm font-medium text-text-dark bg-gray-50 inline-block px-3 py-1.5 rounded border border-gray-100">{selectedRequest.leaveType}</p>
                 </div>
               )}
               
               <div className="mb-5">
-                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-2">Requested Dates</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Requested Dates</h4>
+                <div className="flex flex-wrap gap-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
                   {selectedRequest.dates && selectedRequest.dates.length > 0 ? (
                     selectedRequest.dates.map((d, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
+                      <span key={i} className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
                         {formatDate(d)}
                       </span>
                     ))
                   ) : selectedRequest.resignationDate ? (
-                    <span className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
+                    <span className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
                       {formatDate(selectedRequest.resignationDate)}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
-                      {formatDate(selectedRequest.fromDate)} - {formatDate(selectedRequest.toDate)}
+                    <span className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
+                      {formatDate(selectedRequest.fromDate)} &rarr; {formatDate(selectedRequest.toDate)}
                     </span>
                   )}
                 </div>
               </div>
               
               <div className="mb-5">
-                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Reason</h4>
-                <p className="text-sm text-text-dark bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">{selectedRequest.reason}</p>
+                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Reason</h4>
+                <div className="text-sm text-text-dark bg-gray-50 p-4 rounded-lg border border-gray-100 whitespace-pre-wrap leading-relaxed min-h-[80px]">
+                  {selectedRequest.reason || <span className="text-gray-400 italic">No reason provided.</span>}
+                </div>
               </div>
               
               <div>
-                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Status</h4>
-                <span className={`px-2.5 py-1 rounded-md text-xs font-bold inline-block ${
-                  selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' : 
-                  selectedRequest.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Current Status</h4>
+                <span className={`px-3 py-1.5 rounded-md text-xs font-bold inline-block border ${
+                  selectedRequest.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' : 
+                  selectedRequest.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200'
                 }`}>
                   {selectedRequest.status}
                 </span>
               </div>
             </div>
             
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50">
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="btn bg-gray-100 text-text-dark hover:bg-gray-200"
+                className="btn bg-white border border-gray-300 text-text-dark hover:bg-gray-100 px-6"
               >
                 Close
               </button>
