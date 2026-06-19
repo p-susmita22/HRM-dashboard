@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Eye } from 'lucide-react';
 
@@ -362,7 +363,7 @@ const AdminRequests = () => {
         </div>
       </div>
 
-      {isModalOpen && selectedRequest && (
+      {isModalOpen && selectedRequest && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 p-4" onClick={() => setIsModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-[10000] border border-gray-100 animate-fade-in" onClick={e => e.stopPropagation()}>
             <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
@@ -425,7 +426,8 @@ const AdminRequests = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
