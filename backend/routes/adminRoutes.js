@@ -1,8 +1,8 @@
 import express from 'express';
 import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, deleteEmployeeDocument, uploadHRPolicies, getHRPolicies, deleteHRPolicies, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
 import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
-import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest,
-  getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest,
+import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest, removeDateFromLeave,
+  getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest, removeDateFromRegularization,
   getResignationRequests, updateResignationStatus, deleteResignationRequest
 } from '../controllers/adminController.js';
 import {
@@ -69,10 +69,12 @@ router.put('/attendance/:id/remote-reject', rejectRemotePunch);
 
 router.get('/leaves', getLeaveRequests);
 router.put('/leaves/:id/status', updateLeaveStatus);
+router.put('/leaves/:id/remove-date', removeDateFromLeave);
 router.delete('/leaves/:id', deleteLeaveRequest);
 
 router.get('/regularizations', getRegularizationRequests);
 router.put('/regularizations/:id/status', updateRegularizationStatus);
+router.put('/regularizations/:id/remove-date', removeDateFromRegularization);
 router.delete('/regularizations/:id', deleteRegularizationRequest);
 
 router.get('/resignations', getResignationRequests);

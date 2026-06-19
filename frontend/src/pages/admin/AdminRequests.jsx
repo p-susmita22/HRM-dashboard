@@ -58,6 +58,17 @@ const AdminRequests = () => {
     }
   };
 
+  const removeDate = async (type, id, dateToRemove) => {
+    if (window.confirm(`Are you sure you want to remove this date (${formatDate(dateToRemove)})?`)) {
+      try {
+        await axios.put(`/api/admin/${type}/${id}/remove-date`, { date: dateToRemove });
+        fetchRequests();
+      } catch (error) {
+        alert('Failed to remove date');
+      }
+    }
+  };
+
   const sendPdf = () => {
     alert('Request details sent as a PDF to the employee!');
   };
@@ -226,8 +237,11 @@ const AdminRequests = () => {
                       {req.dates && req.dates.length > 0 ? (
                         <div className="flex flex-wrap gap-1 max-w-[200px]">
                           {req.dates.map((d, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold inline-block border border-primary/20">
+                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold inline-flex items-center gap-1 border border-primary/20">
                               {formatDate(d)}
+                              <button onClick={() => removeDate('leaves', req._id, d)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
+                                <XCircle size={10} />
+                              </button>
                             </span>
                           ))}
                         </div>
@@ -263,14 +277,17 @@ const AdminRequests = () => {
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
                     </td>
                     <td className="p-4">
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 max-w-[250px]">
                         {req.dates && req.dates.length > 0 ? (
                           req.dates.map((dateStr, idx) => {
                             const d = new Date(dateStr);
                             const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
                             return (
-                              <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
+                              <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap inline-flex items-center gap-1">
                                 {formatted}
+                                <button onClick={() => removeDate('regularizations', req._id, dateStr)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
+                                  <XCircle size={12} />
+                                </button>
                               </span>
                             );
                           })

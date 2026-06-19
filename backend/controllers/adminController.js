@@ -621,6 +621,20 @@ export const updateLeaveStatus = async (req, res) => {
   }
 };
 
+export const removeDateFromLeave = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    
+    leave.dates = leave.dates.filter(d => new Date(d).toISOString() !== new Date(req.body.date).toISOString());
+    await leave.save();
+    
+    res.json({ message: 'Date removed successfully', leave });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getRegularizationRequests = async (req, res) => {
   try {
     const regularizations = await Regularization.find().populate('employee', 'fullName employeeId department').sort({ createdAt: -1 });
@@ -673,6 +687,20 @@ export const updateRegularizationStatus = async (req, res) => {
     }
 
     res.json(reg);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const removeDateFromRegularization = async (req, res) => {
+  try {
+    const reg = await Regularization.findById(req.params.id);
+    if (!reg) return res.status(404).json({ message: 'Regularization not found' });
+    
+    reg.dates = reg.dates.filter(d => new Date(d).toISOString() !== new Date(req.body.date).toISOString());
+    await reg.save();
+    
+    res.json({ message: 'Date removed successfully', reg });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
