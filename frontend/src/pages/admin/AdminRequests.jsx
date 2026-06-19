@@ -363,77 +363,66 @@ const AdminRequests = () => {
       </div>
 
       {isModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] relative z-[10000] border border-gray-100 animate-slide-up" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
-              <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
-                <FileText size={20} className="text-primary" /> {selectedRequest.requestType} Request Details
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 p-4" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-[10000] border border-gray-100 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-sm font-bold text-text-dark flex items-center gap-1.5">
+                <FileText size={16} className="text-primary" /> {selectedRequest.requestType} Request
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1.5 transition-colors">
-                <XCircle size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
+                <XCircle size={18} />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto bg-white">
-              <div className="mb-5 bg-blue-50/50 p-4 rounded-lg border border-blue-100/50">
-                <h4 className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-1">Employee Info</h4>
-                <p className="text-base font-bold text-text-dark">{selectedRequest.employee?.fullName}</p>
-                <p className="text-sm text-text-light">{selectedRequest.employee?.employeeId} &bull; {selectedRequest.employee?.department}</p>
+            <div className="p-4 bg-white">
+              <div className="mb-3">
+                <p className="text-sm font-bold text-text-dark">{selectedRequest.employee?.fullName}</p>
+                <p className="text-xs text-text-light">{selectedRequest.employee?.employeeId} &bull; {selectedRequest.employee?.department}</p>
               </div>
               
               {selectedRequest.requestType === 'Leave' && (
-                <div className="mb-5">
-                  <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-1">Leave Type</h4>
-                  <p className="text-sm font-medium text-text-dark bg-gray-50 inline-block px-3 py-1.5 rounded border border-gray-100">{selectedRequest.leaveType}</p>
+                <div className="mb-3">
+                  <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Leave Type</p>
+                  <p className="text-sm font-medium text-text-dark">{selectedRequest.leaveType}</p>
                 </div>
               )}
               
-              <div className="mb-5">
-                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Requested Dates</h4>
-                <div className="flex flex-wrap gap-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="mb-3">
+                <p className="text-xs text-text-light uppercase tracking-wider mb-1">Dates</p>
+                <div className="flex flex-wrap gap-1">
                   {selectedRequest.dates && selectedRequest.dates.length > 0 ? (
                     selectedRequest.dates.map((d, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
+                      <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-semibold border border-blue-100">
                         {formatDate(d)}
                       </span>
                     ))
                   ) : selectedRequest.resignationDate ? (
-                    <span className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-semibold border border-blue-100">
                       {formatDate(selectedRequest.resignationDate)}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 bg-white text-primary-dark rounded shadow-sm text-xs font-bold border border-primary/20">
-                      {formatDate(selectedRequest.fromDate)} &rarr; {formatDate(selectedRequest.toDate)}
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-semibold border border-blue-100">
+                      {formatDate(selectedRequest.fromDate)} to {formatDate(selectedRequest.toDate)}
                     </span>
                   )}
                 </div>
               </div>
               
-              <div className="mb-5">
-                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Reason</h4>
-                <div className="text-sm text-text-dark bg-gray-50 p-4 rounded-lg border border-gray-100 whitespace-pre-wrap leading-relaxed min-h-[80px]">
-                  {selectedRequest.reason || <span className="text-gray-400 italic">No reason provided.</span>}
-                </div>
+              <div className="mb-3">
+                <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Reason</p>
+                <p className="text-sm text-text-dark bg-gray-50 p-2 rounded border border-gray-100">
+                  {selectedRequest.reason || <span className="text-gray-400 italic">No reason.</span>}
+                </p>
               </div>
               
-              <div>
-                <h4 className="text-[11px] font-bold text-text-light uppercase tracking-wider mb-2">Current Status</h4>
-                <span className={`px-3 py-1.5 rounded-md text-xs font-bold inline-block border ${
-                  selectedRequest.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' : 
-                  selectedRequest.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200'
+              <div className="flex justify-between items-center mt-4">
+                <span className={`px-2 py-1 rounded text-[10px] font-bold ${
+                  selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' : 
+                  selectedRequest.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
                 }`}>
                   {selectedRequest.status}
                 </span>
               </div>
-            </div>
-            
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50">
-              <button 
-                onClick={() => setIsModalOpen(false)} 
-                className="btn bg-white border border-gray-300 text-text-dark hover:bg-gray-100 px-6"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
