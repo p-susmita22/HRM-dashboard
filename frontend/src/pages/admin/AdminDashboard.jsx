@@ -235,38 +235,6 @@ const AdminDashboard = () => {
         <p className="text-text-light text-sm mt-1">Overview of your workforce and operations.</p>
       </div>
 
-      <div className="flex gap-4 mb-6 px-2 flex-wrap">
-        <div className="flex-1 min-w-[200px]">
-          <input 
-            type="text" 
-            placeholder="Filter by Employee Name..." 
-            className="form-control w-full"
-            value={filterEmployee}
-            onChange={(e) => setFilterEmployee(e.target.value)}
-          />
-        </div>
-        <div className="w-48">
-          <select 
-            className="form-control w-full"
-            value={filterDepartment}
-            onChange={(e) => setFilterDepartment(e.target.value)}
-          >
-            <option value="">All Departments</option>
-            {[...new Set(employees.map(e => e.department).filter(Boolean))].map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-        </div>
-        <div className="w-48">
-          <input 
-            type="month" 
-            className="form-control w-full"
-            value={summaryMonth}
-            onChange={(e) => setSummaryMonth(e.target.value)}
-            title="Filter by Month"
-          />
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
         <Link to="/admin/employees" className="card !mb-0 border-t-4 border-primary shadow-md hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer block">
@@ -311,6 +279,39 @@ const AdminDashboard = () => {
             </h3>
           </div>
           <p className="text-xs text-text-light mb-4">Shows calculation for Total Working Days (Total days in month - Official Holidays). Sundays are included in Working Days.</p>
+          
+          <div className="flex gap-4 mb-4 flex-wrap bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+            <div className="flex-1 min-w-[200px]">
+              <input 
+                type="text" 
+                placeholder="Filter by Employee Name..." 
+                className="form-control w-full bg-white text-sm"
+                value={filterEmployee}
+                onChange={(e) => setFilterEmployee(e.target.value)}
+              />
+            </div>
+            <div className="w-48">
+              <select 
+                className="form-control w-full bg-white text-sm"
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+              >
+                <option value="">All Departments</option>
+                {[...new Set(employees.map(e => e.department).filter(Boolean))].map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+            <div className="w-48">
+              <input 
+                type="month" 
+                className="form-control w-full bg-white text-sm"
+                value={summaryMonth}
+                onChange={(e) => setSummaryMonth(e.target.value)}
+                title="Filter by Month"
+              />
+            </div>
+          </div>
           
           <div className="overflow-x-auto max-h-[400px]">
             <table className="w-full text-left border-collapse">
