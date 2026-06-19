@@ -98,6 +98,10 @@ const AdminRequests = () => {
   const filteredRegularizations = regularizations.filter(filterRequest);
   const filteredResignations = resignations.filter(filterRequest);
 
+  const pendingLeaves = leaves.filter(req => req.status === 'Pending').length;
+  const pendingRegularizations = regularizations.filter(req => req.status === 'Pending').length;
+  const pendingResignations = resignations.filter(req => req.status === 'Pending').length;
+
   return (
     <div className="animate-fade-in pb-10">
       <div className="mb-6">
@@ -111,18 +115,33 @@ const AdminRequests = () => {
           onClick={() => setActiveTab('leave')}
         >
           <Calendar size={16} /> Leave Requests
+          {pendingLeaves > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+              {pendingLeaves}
+            </span>
+          )}
         </button>
         <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'regularization' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('regularization')}
         >
           <AlertCircle size={16} /> Regularization Requests
+          {pendingRegularizations > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+              {pendingRegularizations}
+            </span>
+          )}
         </button>
         <button 
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'resignation' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('resignation')}
         >
           <FileText size={16} /> Resignation Requests
+          {pendingResignations > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+              {pendingResignations}
+            </span>
+          )}
         </button>
       </div>
 
