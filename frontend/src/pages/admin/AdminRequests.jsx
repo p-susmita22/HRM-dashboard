@@ -5,6 +5,9 @@ import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Ey
 const AdminRequests = () => {
   const [activeTab, setActiveTab] = useState('leave');
   
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const [leaves, setLeaves] = useState([]);
   const [regularizations, setRegularizations] = useState([]);
   const [resignations, setResignations] = useState([]);
@@ -73,8 +76,9 @@ const AdminRequests = () => {
     alert('Request details sent as a PDF to the employee!');
   };
 
-  const viewDetails = () => {
-    alert('Viewing full request details... (To be implemented)');
+  const viewDetails = (req, type) => {
+    setSelectedRequest({ ...req, requestType: type });
+    setIsModalOpen(true);
   };
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString();
@@ -262,7 +266,7 @@ const AdminRequests = () => {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={viewDetails} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                        <button onClick={() => viewDetails(req, 'Leave')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
                         <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
                         <button onClick={() => deleteRequest('leaves', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
                       </div>
@@ -311,7 +315,7 @@ const AdminRequests = () => {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={viewDetails} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                        <button onClick={() => viewDetails(req, 'Regularization')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
                         <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
                         <button onClick={() => deleteRequest('regularizations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
                       </div>
@@ -339,7 +343,7 @@ const AdminRequests = () => {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={viewDetails} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                        <button onClick={() => viewDetails(req, 'Resignation')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
                         <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
                         <button onClick={() => deleteRequest('resignations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
                       </div>
@@ -357,6 +361,82 @@ const AdminRequests = () => {
           )}
         </div>
       </div>
+
+      {isModalOpen && selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
+                <FileText size={20} className="text-primary" /> {selectedRequest.requestType} Request Details
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <XCircle size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="mb-5">
+                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Employee</h4>
+                <p className="text-base font-bold text-text-dark">{selectedRequest.employee?.fullName}</p>
+                <p className="text-sm text-text-light">{selectedRequest.employee?.employeeId} - {selectedRequest.employee?.department}</p>
+              </div>
+              
+              {selectedRequest.requestType === 'Leave' && (
+                <div className="mb-5">
+                  <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Leave Type</h4>
+                  <p className="text-sm text-text-dark">{selectedRequest.leaveType}</p>
+                </div>
+              )}
+              
+              <div className="mb-5">
+                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-2">Requested Dates</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedRequest.dates && selectedRequest.dates.length > 0 ? (
+                    selectedRequest.dates.map((d, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
+                        {formatDate(d)}
+                      </span>
+                    ))
+                  ) : selectedRequest.resignationDate ? (
+                    <span className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
+                      {formatDate(selectedRequest.resignationDate)}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 bg-primary/10 text-primary-dark rounded text-xs font-bold border border-primary/20">
+                      {formatDate(selectedRequest.fromDate)} - {formatDate(selectedRequest.toDate)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-5">
+                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Reason</h4>
+                <p className="text-sm text-text-dark bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">{selectedRequest.reason}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-1">Status</h4>
+                <span className={`px-2.5 py-1 rounded-md text-xs font-bold inline-block ${
+                  selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' : 
+                  selectedRequest.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                }`}>
+                  {selectedRequest.status}
+                </span>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="btn bg-gray-100 text-text-dark hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
