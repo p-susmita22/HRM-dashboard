@@ -9,9 +9,14 @@ import {
 const AdminDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [remoteRequests, setRemoteRequests] = useState([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [filterEmployee, setFilterEmployee] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -33,6 +38,7 @@ const AdminDashboard = () => {
       ]);
       setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
       setAttendanceRecords(Array.isArray(attendanceRes.data) ? attendanceRes.data : []);
+      setLeaves(Array.isArray(leavesRes.data) ? leavesRes.data : []);
       setRemoteRequests(Array.isArray(remoteRes.data) ? remoteRes.data : []);
       
       const leavesCount = Array.isArray(leavesRes.data) ? leavesRes.data.length : 0;
@@ -134,11 +140,132 @@ const AdminDashboard = () => {
 
   const attendanceData = processAttendanceData();
 
+  const activeEmployees = employees.filter(emp => emp.role === 'employee' && emp.isActive);
+
+  // Monthly Summary Calculation
+  const getMonthlySummary = () => {
+    if (!summaryMonth) return [];
+    
+    const [year, month] = summaryMonth.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    // Get holidays for this month
+    const monthHolidays = new Set();
+    attendanceRecords.forEach(r => {
+      if (r.status === 'Holiday') {
+        const d = new Date(r.date);
+        if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+          monthHolidays.add(d.toDateString());
+        }
+      }
+    });
+
+    const officialHolidaysCount = monthHolidays.size;
+    const totalWorkingDays = daysInMonth - officialHolidaysCount;
+
+    const summaryData = activeEmployees.map(emp => {
+      let present = 0;
+      let absent = 0;
+      let onLeave = 0;
+      let halfDays = 0;
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dateStr = date.toDateString();
+        
+        // Exclude official holidays from working days
+        if (monthHolidays.has(dateStr)) continue;
+
+        const isOnLeave = leaves.some(l => {
+          if (l.employee?._id !== emp._id || l.status !== 'Approved') return false;
+          if (l.dates && l.dates.length > 0) return l.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+          const start = new Date(l.fromDate).setHours(0,0,0,0);
+          const end = new Date(l.toDate).setHours(23,59,59,999);
+          const dTime = date.getTime();
+          return dTime >= start && dTime <= end;
+        });
+
+        if (isOnLeave) {
+          onLeave++;
+          continue;
+        }
+
+        const record = attendanceRecords.find(r => 
+          r.employee?._id === emp._id && 
+          new Date(r.date).toDateString() === dateStr &&
+          r.status !== 'Holiday' && r.adminStatus === 'Approved'
+        );
+
+        if (record) {
+          if (record.status === 'Present') present++;
+          else if (record.status === 'Half Day') halfDays++;
+          else if (record.status === 'Absent') absent++;
+        } else {
+           if (date < today) {
+               absent++;
+           }
+        }
+      }
+      
+      return {
+        employee: emp,
+        present,
+        absent,
+        halfDays,
+        onLeave,
+        totalWorkingDays
+      };
+    });
+
+    return summaryData.filter(item => 
+      (filterEmployee === '' || item.employee.fullName.toLowerCase().includes(filterEmployee.toLowerCase())) &&
+      (filterDepartment === '' || item.employee.department === filterDepartment)
+    );
+  };
+
+  const monthlySummaryData = getMonthlySummary();
+
   return (
     <div className="animate-fade-in pb-10 relative">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-text-dark">Admin Dashboard</h2>
         <p className="text-text-light text-sm mt-1">Overview of your workforce and operations.</p>
+      </div>
+
+      <div className="flex gap-4 mb-6 px-2 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            placeholder="Filter by Employee Name..." 
+            className="form-control w-full"
+            value={filterEmployee}
+            onChange={(e) => setFilterEmployee(e.target.value)}
+          />
+        </div>
+        <div className="w-48">
+          <select 
+            className="form-control w-full"
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {[...new Set(employees.map(e => e.department).filter(Boolean))].map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+        <div className="w-48">
+          <input 
+            type="month" 
+            className="form-control w-full"
+            value={summaryMonth}
+            onChange={(e) => setSummaryMonth(e.target.value)}
+            title="Filter by Month"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
@@ -177,21 +304,46 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-        <div className="card lg:col-span-2 !mb-0">
-          <h3 className="text-lg font-semibold mb-4">Monthly Attendance</h3>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={attendanceData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-                <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
-                <Bar dataKey="leave" name="Leave" stackId="a" fill="#eab308" />
-                <Bar dataKey="absent" name="Absent" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="card lg:col-span-2 !mb-0 overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
+              <CalendarDays size={20} className="text-primary" /> Monthly Attendance Summary
+            </h3>
+          </div>
+          <p className="text-xs text-text-light mb-4">Shows calculation for Total Working Days (Total days in month - Official Holidays). Sundays are included in Working Days.</p>
+          
+          <div className="overflow-x-auto max-h-[400px]">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 bg-gray-50 z-10">
+                <tr className="border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Total Working Days</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Present</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Absent</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Half Day</th>
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-center">Leave</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {monthlySummaryData.length === 0 ? (
+                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No records found for this month.</td></tr>
+                ) : (
+                  monthlySummaryData.map(item => (
+                    <tr key={item.employee._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <p className="text-sm font-bold text-text-dark">{item.employee.fullName}</p>
+                        <p className="text-xs text-text-light">{item.employee.employeeId} · {item.employee.department}</p>
+                      </td>
+                      <td className="p-4 text-center font-bold text-text-dark">{item.totalWorkingDays}</td>
+                      <td className="p-4 text-center font-bold text-green-600">{item.present}</td>
+                      <td className="p-4 text-center font-bold text-red-600">{item.absent}</td>
+                      <td className="p-4 text-center font-bold text-orange-500">{item.halfDays}</td>
+                      <td className="p-4 text-center font-bold text-yellow-600">{item.onLeave}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
         <div className="card !mb-0">
