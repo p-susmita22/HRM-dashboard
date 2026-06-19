@@ -102,6 +102,28 @@ const AdminAttendance = () => {
     }
   };
 
+  const handleRemoteOutApprove = async (id) => {
+    try {
+      await axios.put(`/api/admin/attendance/${id}/remote-out-approve`);
+      fetchData();
+      alert('Remote punch-out approved!');
+    } catch (error) {
+      alert('Failed to approve remote punch-out');
+    }
+  };
+
+  const handleRemoteOutReject = async (id) => {
+    if (window.confirm('Reject this remote punch-out request?')) {
+      try {
+        await axios.put(`/api/admin/attendance/${id}/remote-out-reject`);
+        fetchData();
+        alert('Remote punch-out rejected.');
+      } catch (error) {
+        alert('Failed to reject remote punch-out');
+      }
+    }
+  };
+
   const handleHolidaySubmit = async (e) => {
     e.preventDefault();
     try {
@@ -631,7 +653,7 @@ const AdminAttendance = () => {
           <div className="p-5 border-b border-orange-100 bg-orange-50/40 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
             <div>
-              <h3 className="text-lg font-bold text-orange-800">Remote Punch-In Requests</h3>
+              <h3 className="text-lg font-bold text-orange-800">Remote Punch Requests</h3>
               <p className="text-sm text-orange-600 mt-0.5">Employees outside office premises — approve to mark their attendance.</p>
             </div>
           </div>
@@ -639,6 +661,7 @@ const AdminAttendance = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Type</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Date & Time</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Location</th>
@@ -647,23 +670,32 @@ const AdminAttendance = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredRemote.length === 0 ? (
-                  <tr><td colSpan="4" className="p-8 text-center text-text-light">No remote punch-in requests pending.</td></tr>
+                  <tr><td colSpan="5" className="p-8 text-center text-text-light">No remote punch requests pending.</td></tr>
                 ) : (
-                  filteredRemote.map(record => (
-                    <tr key={record._id} className="hover:bg-orange-50/30">
+                  filteredRemote.map(record => {
+                    const isOutRequest = record.isRemoteOut && record.remoteOutStatus === 'Pending';
+                    const punchTime = isOutRequest ? record.punchOut : record.punchIn;
+                    const punchLoc = isOutRequest ? record.punchOutLocation : record.punchInLocation;
+                    return (
+                    <tr key={record._id + (isOutRequest ? '-out' : '-in')} className="hover:bg-orange-50/30">
+                      <td className="p-4">
+                        <span className={`px-2 py-1 text-xs font-bold rounded ${isOutRequest ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                          {isOutRequest ? 'PUNCH OUT' : 'PUNCH IN'}
+                        </span>
+                      </td>
                       <td className="p-4">
                         <p className="text-sm font-medium text-text-dark">{formatDate(record.date)}</p>
-                        <p className="text-xs text-text-light">{formatTime(record.punchIn)}</p>
+                        <p className="text-xs text-text-light">{formatTime(punchTime)}</p>
                       </td>
                       <td className="p-4">
                         <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
                         <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
                       </td>
                       <td className="p-4">
-                        {record.punchInLocation?.lat ? (
+                        {punchLoc?.lat ? (
                           <div>
-                            <p className="text-xs text-gray-600 truncate max-w-[180px]">{record.punchInLocation.address?.split(',')[0] || 'Unknown location'}</p>
-                            <a href={`https://maps.google.com/?q=${record.punchInLocation.lat},${record.punchInLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5">
+                            <p className="text-xs text-gray-600 truncate max-w-[180px]">{punchLoc.address?.split(',')[0] || 'Unknown location'}</p>
+                            <a href={`https://maps.google.com/?q=${punchLoc.lat},${punchLoc.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5">
                               📍 View on Map
                             </a>
                           </div>
@@ -671,16 +703,17 @@ const AdminAttendance = () => {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => handleRemoteReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                          <button onClick={() => isOutRequest ? handleRemoteOutReject(record._id) : handleRemoteReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
                             <XCircle size={12} /> Reject
                           </button>
-                          <button onClick={() => handleRemoteApprove(record._id)} className="btn py-1 px-3 bg-green-600 text-white hover:bg-green-700 text-xs flex items-center gap-1">
+                          <button onClick={() => isOutRequest ? handleRemoteOutApprove(record._id) : handleRemoteApprove(record._id)} className="btn py-1 px-3 bg-green-600 text-white hover:bg-green-700 text-xs flex items-center gap-1">
                             <CheckCircle size={12} /> Approve
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

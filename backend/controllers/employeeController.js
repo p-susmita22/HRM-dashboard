@@ -98,6 +98,7 @@ export const punchIn = async (req, res) => {
 
 export const punchOut = async (req, res) => {
   try {
+    const { location, isRemoteOut } = req.body;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -119,6 +120,9 @@ export const punchOut = async (req, res) => {
     }
     
     attendance.punchOut = new Date();
+    attendance.punchOutLocation = location || null;
+    attendance.isRemoteOut = isRemoteOut || false;
+    attendance.remoteOutStatus = isRemoteOut ? 'Pending' : 'None';
     
     // Calculate total hours
     const diff = attendance.punchOut - attendance.punchIn;

@@ -9,6 +9,7 @@ const HomePage = () => {
   const [punchTime, setPunchTime] = useState(null);
   const [punchInLocation, setPunchInLocation] = useState(null);
   const [remoteRequestSent, setRemoteRequestSent] = useState(false);
+  const [remoteOutRequestSent, setRemoteOutRequestSent] = useState(false);
   const [punchOutTime, setPunchOutTime] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -38,8 +39,13 @@ const HomePage = () => {
             setPunchedIn(false);
           }
           if (attendanceRes.data.punchOut) {
-            setPunchedIn(false);
-            setPunchOutTime(new Date(attendanceRes.data.punchOut));
+            if (attendanceRes.data.isRemoteOut && attendanceRes.data.remoteOutStatus === 'Pending') {
+              setRemoteOutRequestSent(true);
+              // keep punchedIn true or just show disabled button
+            } else {
+              setPunchedIn(false);
+              setPunchOutTime(new Date(attendanceRes.data.punchOut));
+            }
           }
         }
       } catch (err) {
@@ -180,13 +186,46 @@ const HomePage = () => {
   };
 
   const handlePunchOut = async () => {
-    try {
-      const res = await axios.post('/api/employee/punch-out');
-      setPunchedIn(false);
-      setPunchOutTime(new Date(res.data.punchOut));
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to punch out');
+    if (!navigator.geolocation) {
+      return alert('Geolocation is not supported by your browser.');
     }
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
+        const isRemoteOut = distance > OFFICE_RADIUS_METERS;
+
+        let address = '';
+        try {
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const geoData = await geoRes.json();
+          if (geoData?.display_name) address = geoData.display_name;
+        } catch (e) { console.error('Geocoding failed', e); }
+
+        const locationData = { lat: latitude, lng: longitude, address };
+
+        if (isRemoteOut) {
+          const confirmRemote = window.confirm(
+            `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-out request will be sent to admin for approval. Your punch-out will only be finalized after approval.\n\nProceed?`
+          );
+          if (!confirmRemote) return;
+        }
+
+        const res = await axios.post('/api/employee/punch-out', { location: locationData, isRemoteOut });
+
+        if (isRemoteOut) {
+          setRemoteOutRequestSent(true);
+          alert('Remote punch-out request sent! Your attendance punch-out will be finalized after admin approval.');
+        } else {
+          setPunchedIn(false);
+          setPunchOutTime(new Date(res.data.punchOut));
+        }
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to punch out');
+      }
+    }, () => {
+      alert('Please allow location access to punch out.');
+    });
   };
 
   const handleLogout = () => {
@@ -346,9 +385,9 @@ const HomePage = () => {
             
             <div className="text-center">
               <button 
-                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${punchedIn ? 'btn-danger' : 'bg-gray-200 text-text-light cursor-not-allowed'}`}
+                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${(punchedIn && !remoteOutRequestSent) ? 'btn-danger' : 'bg-gray-200 text-text-light cursor-not-allowed'}`}
                 onClick={handlePunchOut}
-                disabled={!punchedIn}
+                disabled={!punchedIn || remoteOutRequestSent}
               >
                 Punch Out
               </button>
@@ -387,6 +426,16 @@ const HomePage = () => {
               <span className="text-sm font-semibold text-orange-800">Remote Punch-In Request Sent</span>
             </div>
             <p className="text-xs text-orange-600 max-w-xs">Your request is pending admin approval. Attendance will be marked once approved.</p>
+          </div>
+        )}
+
+        {remoteOutRequestSent && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg shadow-sm mb-6 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></div>
+              <span className="text-sm font-semibold text-orange-800">Remote Punch-Out Request Sent</span>
+            </div>
+            <p className="text-xs text-orange-600 max-w-xs">Your punch-out request is pending admin approval. You can close the portal.</p>
           </div>
         )}
 

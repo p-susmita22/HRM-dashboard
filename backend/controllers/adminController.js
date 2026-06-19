@@ -396,7 +396,12 @@ export const deleteAttendance = async (req, res) => {
 
 export const getRemotePunchRequests = async (req, res) => {
   try {
-    const records = await Attendance.find({ isRemote: true, remoteStatus: 'Pending' })
+    const records = await Attendance.find({
+      $or: [
+        { isRemote: true, remoteStatus: 'Pending' },
+        { isRemoteOut: true, remoteOutStatus: 'Pending' }
+      ]
+    })
       .populate('employee', 'fullName employeeId department')
       .sort({ createdAt: -1 });
     res.json(records);
@@ -432,6 +437,50 @@ export const rejectRemotePunch = async (req, res) => {
     res.json(updated);
   } catch (error) {
     console.error('Error rejecting remote punch:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const approveRemoteOutPunch = async (req, res) => {
+  try {
+    const record = await Attendance.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Record not found' });
+    
+    record.remoteOutStatus = 'Approved';
+    
+    // Process punchOut calculation here
+    if (record.punchIn && record.punchOut) {
+      const msDiff = new Date(record.punchOut).getTime() - new Date(record.punchIn).getTime();
+      const hours = msDiff / (1000 * 60 * 60);
+      record.totalHours = parseFloat(hours.toFixed(2));
+    }
+    
+    await record.save();
+    
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    res.json(updated);
+  } catch (error) {
+    console.error('Error approving remote out punch:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const rejectRemoteOutPunch = async (req, res) => {
+  try {
+    const record = await Attendance.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Record not found' });
+    
+    record.remoteOutStatus = 'Rejected';
+    record.punchOut = null; // Revert punch out time
+    record.punchOutLocation = null;
+    record.totalHours = 0;
+    
+    await record.save();
+    
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    res.json(updated);
+  } catch (error) {
+    console.error('Error rejecting remote out punch:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

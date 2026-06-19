@@ -65,6 +65,10 @@ router.get('/attendance/remote-requests', getRemotePunchRequests);
 router.put('/attendance/:id/remote-approve', approveRemotePunch);
 router.put('/attendance/:id/remote-reject', rejectRemotePunch);
 
+import { approveRemoteOutPunch, rejectRemoteOutPunch } from '../controllers/adminController.js';
+router.put('/attendance/:id/remote-out-approve', approveRemoteOutPunch);
+router.put('/attendance/:id/remote-out-reject', rejectRemoteOutPunch);
+
 // Requests Routes
 
 router.get('/leaves', getLeaveRequests);

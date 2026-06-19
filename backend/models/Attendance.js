@@ -38,6 +38,12 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['None', 'Pending', 'Approved', 'Rejected'],
     default: 'None'
   },
+  isRemoteOut: { type: Boolean, default: false },
+  remoteOutStatus: {
+    type: String,
+    enum: ['None', 'Pending', 'Approved', 'Rejected'],
+    default: 'None'
+  },
   dailyReport: { type: String, default: null }
 }, { timestamps: true });
 
