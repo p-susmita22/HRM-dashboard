@@ -12,8 +12,10 @@ const HelpPage = () => {
   const [leaveCurrentDate, setLeaveCurrentDate] = useState(new Date());
   const [myResignation, setMyResignation] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
+  const [employeeData, setEmployeeData] = useState(null);
 
   useEffect(() => {
+    fetchProfile();
     fetchMyLeaves();
     fetchMyRegularizations();
     fetchMyResignation();
@@ -29,6 +31,15 @@ const HelpPage = () => {
       setMonthlyData(res.data);
     } catch (error) {
       console.error('Error fetching monthly attendance:', error);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get('/api/employee/profile');
+      setEmployeeData(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -224,6 +235,10 @@ const HelpPage = () => {
   };
 
   const toggleRegDate = (date) => {
+    const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return;
+
     const status = getAttendanceStatus(date);
     const isFuture = new Date(date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
     
@@ -243,6 +258,10 @@ const HelpPage = () => {
   });
 
   const toggleLeaveDate = (date) => {
+    const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return;
+
     const status = getAttendanceStatus(date);
     if (status === 'Holiday' || status === 'Present' || status === 'Leave') return;
     
@@ -339,7 +358,12 @@ const HelpPage = () => {
                <h4 className="font-semibold text-center mb-4 text-text-dark">Select Dates to Apply Leave</h4>
                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
                  <div className="flex items-center justify-between mb-4">
-                   <button type="button" onClick={() => setLeaveCurrentDate(subMonths(leaveCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8592;</button>
+                   <button 
+                     type="button" 
+                     onClick={() => setLeaveCurrentDate(subMonths(leaveCurrentDate, 1))} 
+                     disabled={employeeData?.joiningDate && (leaveCurrentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (leaveCurrentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && leaveCurrentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth()))}
+                     className={`p-1.5 rounded-full transition-colors ${employeeData?.joiningDate && (leaveCurrentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (leaveCurrentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && leaveCurrentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth())) ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:bg-gray-100'}`}
+                   >&#8592;</button>
                    <span className="font-bold text-sm text-primary-dark">{format(leaveCurrentDate, 'MMMM yyyy')}</span>
                    <button type="button" onClick={() => setLeaveCurrentDate(addMonths(leaveCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8594;</button>
                  </div>
@@ -355,9 +379,14 @@ const HelpPage = () => {
                      const isSelected = leaveDates.includes(dateStr);
                      
                      const status = getAttendanceStatus(date);
-                     const isDisabled = status === 'Holiday' || status === 'Present' || status === 'Leave';
                      
-                     const baseStyle = getAttendanceColor(date);
+                     const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+                     if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+                     const isBeforeJoining = joiningDateObj && date.getTime() < joiningDateObj.getTime();
+
+                     const isDisabled = isBeforeJoining || status === 'Holiday' || status === 'Present' || status === 'Leave';
+                     
+                     const baseStyle = isBeforeJoining ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed' : getAttendanceColor(date);
                      
                      return (
                        <button
@@ -488,7 +517,12 @@ const HelpPage = () => {
                <h4 className="font-semibold text-center mb-4 text-text-dark">Select Dates to Regularize</h4>
                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
                  <div className="flex items-center justify-between mb-4">
-                   <button type="button" onClick={() => setRegCurrentDate(subMonths(regCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8592;</button>
+                   <button 
+                     type="button" 
+                     onClick={() => setRegCurrentDate(subMonths(regCurrentDate, 1))} 
+                     disabled={employeeData?.joiningDate && (regCurrentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (regCurrentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && regCurrentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth()))}
+                     className={`p-1.5 rounded-full transition-colors ${employeeData?.joiningDate && (regCurrentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (regCurrentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && regCurrentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth())) ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:bg-gray-100'}`}
+                   >&#8592;</button>
                    <span className="font-bold text-sm text-primary-dark">{format(regCurrentDate, 'MMMM yyyy')}</span>
                    <button type="button" onClick={() => setRegCurrentDate(addMonths(regCurrentDate, 1))} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">&#8594;</button>
                  </div>
@@ -506,9 +540,14 @@ const HelpPage = () => {
                      // Prevent clicking dates in the future (unless it's a Leave date), or Holidays/Present dates
                      const isFuture = new Date(date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
                      const status = getAttendanceStatus(date);
-                     const isDisabled = status === 'Holiday' || status === 'Present' || (isFuture && status !== 'Leave');
+
+                     const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+                     if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+                     const isBeforeJoining = joiningDateObj && date.getTime() < joiningDateObj.getTime();
+
+                     const isDisabled = isBeforeJoining || status === 'Holiday' || status === 'Present' || (isFuture && status !== 'Leave');
                      
-                     const baseStyle = getAttendanceColor(date);
+                     const baseStyle = isBeforeJoining ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed' : getAttendanceColor(date);
                      
                      return (
                        <button
