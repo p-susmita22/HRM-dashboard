@@ -83,7 +83,12 @@ const HomePage = () => {
     const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
     const realToday = new Date();
 
+    const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+
     days.forEach(date => {
+      if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return; // Skip dates before joining
+
       if (date.getDay() === 0) {
         sundays++;
         return;
@@ -127,7 +132,7 @@ const HomePage = () => {
     });
 
     setSummary({ present, absent, halfDays, onLeave, sundays, officialHolidays });
-  }, [monthlyData, currentDate, punchedIn]);
+  }, [monthlyData, currentDate, punchedIn, employeeData]);
 
   // ---- Office Geofencing ----
   const OFFICE_LAT = 20.28567438118417;
@@ -261,6 +266,10 @@ const HomePage = () => {
   });
 
   const getDayStatus = (date) => {
+    const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed';
+
     const isToday = date.getDate() === realToday.getDate() && 
                     date.getMonth() === realToday.getMonth() && 
                     date.getFullYear() === realToday.getFullYear();
@@ -311,6 +320,10 @@ const HomePage = () => {
   };
 
   const getDayTooltip = (date) => {
+    const joiningDateObj = employeeData?.joiningDate ? new Date(employeeData.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return 'Not Joined Yet';
+
     if (date > realToday) return 'Future Date';
 
     const isToday = date.getDate() === realToday.getDate() && 
@@ -480,7 +493,8 @@ const HomePage = () => {
             <div className="flex items-center justify-between mb-6 px-4 bg-gray-50 p-2 rounded-lg">
               <button 
                 onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="btn !bg-white hover:!bg-gray-200 text-text-dark !p-2 !rounded-full shadow-sm"
+                disabled={employeeData?.joiningDate && (currentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (currentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && currentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth()))}
+                className={`btn !bg-white !p-2 !rounded-full shadow-sm ${employeeData?.joiningDate && (currentDate.getFullYear() < new Date(employeeData.joiningDate).getFullYear() || (currentDate.getFullYear() === new Date(employeeData.joiningDate).getFullYear() && currentDate.getMonth() <= new Date(employeeData.joiningDate).getMonth())) ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:!bg-gray-200 text-text-dark'}`}
                 title="Previous Month"
               >
                 &#8592;
@@ -567,6 +581,7 @@ const HomePage = () => {
                 type="month" 
                 className="form-control text-sm py-1.5 px-3 bg-white border border-gray-200 rounded-md text-text-dark focus:border-primary focus:ring-1 focus:ring-primary shadow-sm"
                 value={format(currentDate, 'yyyy-MM')}
+                min={employeeData?.joiningDate ? format(new Date(employeeData.joiningDate), 'yyyy-MM') : undefined}
                 onChange={(e) => {
                   if (e.target.value) {
                     const [y, m] = e.target.value.split('-');
