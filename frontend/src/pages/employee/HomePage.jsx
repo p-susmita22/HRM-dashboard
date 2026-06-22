@@ -11,6 +11,8 @@ const HomePage = () => {
   const [remoteRequestSent, setRemoteRequestSent] = useState(false);
   const [remoteOutRequestSent, setRemoteOutRequestSent] = useState(false);
   const [punchOutTime, setPunchOutTime] = useState(null);
+  const [isPunchingIn, setIsPunchingIn] = useState(false);
+  const [isPunchingOut, setIsPunchingOut] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [employeeData, setEmployeeData] = useState(null);
@@ -142,7 +144,9 @@ const HomePage = () => {
   };
 
   const handlePunchIn = async () => {
+    setIsPunchingIn(true);
     if (!navigator.geolocation) {
+      setIsPunchingIn(false);
       return alert('Geolocation is not supported by your browser.');
     }
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -164,7 +168,10 @@ const HomePage = () => {
           const confirmRemote = window.confirm(
             `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-in request will be sent to admin for approval. Your punch-in will only be recorded after approval.\n\nProceed?`
           );
-          if (!confirmRemote) return;
+          if (!confirmRemote) {
+            setIsPunchingIn(false);
+            return;
+          }
         }
 
         const res = await axios.post('/api/employee/punch-in', { location: locationData, isRemote });
@@ -176,17 +183,23 @@ const HomePage = () => {
           setPunchedIn(true);
           setPunchTime(new Date(res.data.punchIn));
           setPunchInLocation(res.data.punchInLocation);
+          alert('Successfully punched in!');
         }
       } catch (error) {
         alert(error.response?.data?.message || 'Failed to punch in');
+      } finally {
+        setIsPunchingIn(false);
       }
     }, () => {
+      setIsPunchingIn(false);
       alert('Please allow location access to punch in.');
     });
   };
 
   const handlePunchOut = async () => {
+    setIsPunchingOut(true);
     if (!navigator.geolocation) {
+      setIsPunchingOut(false);
       return alert('Geolocation is not supported by your browser.');
     }
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -208,7 +221,10 @@ const HomePage = () => {
           const confirmRemote = window.confirm(
             `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-out request will be sent to admin for approval. Your punch-out will only be finalized after approval.\n\nProceed?`
           );
-          if (!confirmRemote) return;
+          if (!confirmRemote) {
+            setIsPunchingOut(false);
+            return;
+          }
         }
 
         const res = await axios.post('/api/employee/punch-out', { location: locationData, isRemoteOut });
@@ -219,11 +235,15 @@ const HomePage = () => {
         } else {
           setPunchedIn(false);
           setPunchOutTime(new Date(res.data.punchOut));
+          alert('Successfully punched out!');
         }
       } catch (error) {
         alert(error.response?.data?.message || 'Failed to punch out');
+      } finally {
+        setIsPunchingOut(false);
       }
     }, () => {
+      setIsPunchingOut(false);
       alert('Please allow location access to punch out.');
     });
   };
@@ -372,11 +392,18 @@ const HomePage = () => {
           <div className="flex items-center gap-3">
             <div className="text-center">
               <button 
-                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${!punchedIn && !punchTime ? 'btn-primary' : 'bg-gray-200 text-text-light cursor-not-allowed'}`}
+                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${(!punchedIn && !punchTime) || isPunchingIn ? 'btn-primary' : 'bg-gray-200 text-text-light cursor-not-allowed'} flex items-center justify-center gap-2 min-w-[100px]`}
                 onClick={handlePunchIn}
-                disabled={punchTime !== null}
+                disabled={punchTime !== null || isPunchingIn}
               >
-                Punch In
+                {isPunchingIn ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  'Punch In'
+                )}
               </button>
               <div className="text-xs font-bold text-text-dark">
                 {punchTime ? format(punchTime, 'hh:mm a') : '--:--'}
@@ -385,11 +412,18 @@ const HomePage = () => {
             
             <div className="text-center">
               <button 
-                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${(punchedIn && !remoteOutRequestSent) ? 'btn-danger' : 'bg-gray-200 text-text-light cursor-not-allowed'}`}
+                className={`btn !py-2 !px-4 text-sm shadow-md mb-1 ${(punchedIn && !remoteOutRequestSent) || isPunchingOut ? 'btn-danger' : 'bg-gray-200 text-text-light cursor-not-allowed'} flex items-center justify-center gap-2 min-w-[100px]`}
                 onClick={handlePunchOut}
-                disabled={!punchedIn || remoteOutRequestSent}
+                disabled={!punchedIn || remoteOutRequestSent || isPunchingOut}
               >
-                Punch Out
+                {isPunchingOut ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  'Punch Out'
+                )}
               </button>
               <div className="text-xs font-bold text-text-dark">
                 {punchOutTime ? format(punchOutTime, 'hh:mm a') : '--:--'}
