@@ -161,12 +161,14 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         const isRemote = false; // Disabled automatic remote flagging due to desktop GPS inaccuracies
 
         let address = '';
         try {
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1500);
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
           const geoData = await geoRes.json();
           if (geoData?.display_name) address = geoData.display_name;
         } catch (e) { console.error('Geocoding failed', e); }
@@ -190,11 +192,11 @@ const HomePage = () => {
         setIsPunchingIn(false);
         isPunchingRef.current = false;
       }
-    }, () => {
+    }, (err) => {
       setIsPunchingIn(false);
       isPunchingRef.current = false;
-      alert('Please allow location access to punch in.');
-    });
+      alert('Location access denied or timed out. Please check permissions.');
+    }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 });
   };
 
   const handlePunchOut = async () => {
@@ -209,12 +211,14 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         const isRemoteOut = false; // Disabled automatic remote flagging
 
         let address = '';
         try {
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1500);
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
           const geoData = await geoRes.json();
           if (geoData?.display_name) address = geoData.display_name;
         } catch (e) { console.error('Geocoding failed', e); }
@@ -237,11 +241,11 @@ const HomePage = () => {
         setIsPunchingOut(false);
         isPunchingRef.current = false;
       }
-    }, () => {
+    }, (err) => {
       setIsPunchingOut(false);
       isPunchingRef.current = false;
-      alert('Please allow location access to punch out.');
-    });
+      alert('Location access denied or timed out. Please check permissions.');
+    }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 });
   };
 
   const handleLogout = () => {
