@@ -161,6 +161,7 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         
         if (distance > 500) {
@@ -171,7 +172,19 @@ const HomePage = () => {
         }
 
         const isRemote = false; 
-        const address = 'Multimaart Office, Benupur';
+        let address = 'Multimaart Office, Benupur';
+
+        if (isMobile) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            const geoData = await geoRes.json();
+            if (geoData?.display_name) address = geoData.display_name;
+          } catch (e) { console.error('Geocoding failed', e); }
+        }
+
         const locationData = { lat: latitude, lng: longitude, address };
 
         const res = await axios.post('/api/employee/punch-in', { location: locationData, isRemote });
@@ -195,7 +208,11 @@ const HomePage = () => {
       setIsPunchingIn(false);
       isPunchingRef.current = false;
       alert('Location access denied or timed out. Please check permissions.');
-    }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 });
+    }, { 
+      enableHighAccuracy: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), 
+      timeout: 10000, 
+      maximumAge: 0 
+    });
   };
 
   const handlePunchOut = async () => {
@@ -210,6 +227,7 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         
         if (distance > 500) {
@@ -220,7 +238,19 @@ const HomePage = () => {
         }
 
         const isRemoteOut = false;
-        const address = 'Multimaart Office, Benupur';
+        let address = 'Multimaart Office, Benupur';
+
+        if (isMobile) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            const geoData = await geoRes.json();
+            if (geoData?.display_name) address = geoData.display_name;
+          } catch (e) { console.error('Geocoding failed', e); }
+        }
+
         const locationData = { lat: latitude, lng: longitude, address };
 
         const res = await axios.post('/api/employee/punch-out', { location: locationData, isRemoteOut });
@@ -243,7 +273,11 @@ const HomePage = () => {
       setIsPunchingOut(false);
       isPunchingRef.current = false;
       alert('Location access denied or timed out. Please check permissions.');
-    }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 });
+    }, { 
+      enableHighAccuracy: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), 
+      timeout: 10000, 
+      maximumAge: 0 
+    });
   };
 
   const handleLogout = () => {

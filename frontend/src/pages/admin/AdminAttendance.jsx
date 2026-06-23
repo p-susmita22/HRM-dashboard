@@ -614,7 +614,14 @@ const AdminAttendance = () => {
                           </a>
                         )}
                       </td>
-                      <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
+                      <td className="p-4">
+                        <p className="text-sm text-text-dark">{formatTime(record.punchOut)}</p>
+                        {record.punchOutLocation && record.punchOutLocation.lat && (
+                          <a href={`https://maps.google.com/?q=${record.punchOutLocation.lat},${record.punchOutLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline block mt-0.5 truncate max-w-[150px]" title={record.punchOutLocation.address || 'View on Map'}>
+                            📍 {record.punchOutLocation.address ? record.punchOutLocation.address.split(',')[0] : 'Map'}
+                          </a>
+                        )}
+                      </td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end items-center gap-2">
                           {(() => {
@@ -771,7 +778,14 @@ const AdminAttendance = () => {
                                   </a>
                                 )}
                               </td>
-                              <td className="p-4 text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</td>
+                              <td className="p-4">
+                                <p className="text-sm text-text-dark">{item.record ? formatTime(item.record.punchOut) : '--:--'}</p>
+                                {item.record?.punchOutLocation && item.record.punchOutLocation.lat && (
+                                  <a href={`https://maps.google.com/?q=${item.record.punchOutLocation.lat},${item.record.punchOutLocation.lng}`} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline block mt-0.5 truncate max-w-[150px]" title={item.record.punchOutLocation.address || 'View on Map'}>
+                                    📍 {item.record.punchOutLocation.address ? item.record.punchOutLocation.address.split(',')[0] : 'Map'}
+                                  </a>
+                                )}
+                              </td>
                               <td className="p-4">{item.record?.punchIn ? getStatusBadge('Present') : getStatusBadge('Absent')}</td>
                               <td className="p-4 text-right">
                                 <button 
