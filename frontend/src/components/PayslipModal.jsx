@@ -31,6 +31,77 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const numberToWords = (num) => {
+    if (!num || isNaN(num) || num === 0) return '';
+    const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+    const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+    const numStr = num.toString().split('.')[0];
+    if (numStr.length > 9) return 'Overflow';
+    const n = ('000000000' + numStr).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    let str = '';
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+    return str.trim() + ' Rupees Only';
+  };
+
+  React.useEffect(() => {
+    const safeNum = (val) => Number(val) || 0;
+
+    const calcTotal = (type) => safeNum(formData[`${type}Monthly`]) + safeNum(formData[`${type}Arrear`]);
+
+    const basicTotal = calcTotal('basic');
+    const hraTotal = calcTotal('hra');
+    const specialTotal = calcTotal('special');
+    const conveyanceTotal = calcTotal('conveyance');
+    const clientTotal = calcTotal('client');
+
+    const totalEarningsAnnual = safeNum(formData.basicAnnual) + safeNum(formData.hraAnnual) + safeNum(formData.specialAnnual) + safeNum(formData.conveyanceAnnual) + safeNum(formData.clientAnnual);
+    const totalEarningsMonthly = safeNum(formData.basicMonthly) + safeNum(formData.hraMonthly) + safeNum(formData.specialMonthly) + safeNum(formData.conveyanceMonthly) + safeNum(formData.clientMonthly);
+    const totalEarningsArrear = safeNum(formData.basicArrear) + safeNum(formData.hraArrear) + safeNum(formData.specialArrear) + safeNum(formData.conveyanceArrear) + safeNum(formData.clientArrear);
+    
+    const totalEarningsTotal = totalEarningsMonthly + totalEarningsArrear;
+
+    const pfDeduction = safeNum(formData.pfDeduction);
+    const totalDeductions = pfDeduction;
+
+    const netPay = totalEarningsTotal - totalDeductions;
+    const netPayWords = numberToWords(netPay);
+
+    setFormData(prev => {
+      const updates = {
+        basicTotal: basicTotal ? String(basicTotal) : '',
+        hraTotal: hraTotal ? String(hraTotal) : '',
+        specialTotal: specialTotal ? String(specialTotal) : '',
+        conveyanceTotal: conveyanceTotal ? String(conveyanceTotal) : '',
+        clientTotal: clientTotal ? String(clientTotal) : '',
+        totalEarningsAnnual: totalEarningsAnnual ? String(totalEarningsAnnual) : '',
+        totalEarningsMonthly: totalEarningsMonthly ? String(totalEarningsMonthly) : '',
+        totalEarningsArrear: totalEarningsArrear ? String(totalEarningsArrear) : '',
+        totalEarningsTotal: totalEarningsTotal ? String(totalEarningsTotal) : '',
+        totalDeductions: totalDeductions ? String(totalDeductions) : '',
+        netPay: netPay ? String(netPay) : '',
+        netPayWords: netPayWords
+      };
+
+      let changed = false;
+      for (let key in updates) {
+        if (prev[key] !== updates[key]) changed = true;
+      }
+      return changed ? { ...prev, ...updates } : prev;
+    });
+  }, [
+    formData.basicAnnual, formData.basicMonthly, formData.basicArrear,
+    formData.hraAnnual, formData.hraMonthly, formData.hraArrear,
+    formData.specialAnnual, formData.specialMonthly, formData.specialArrear,
+    formData.conveyanceAnnual, formData.conveyanceMonthly, formData.conveyanceArrear,
+    formData.clientAnnual, formData.clientMonthly, formData.clientArrear,
+    formData.pfDeduction
+  ]);
+
   const handleSend = async (e) => {
     e.preventDefault();
     try {
@@ -55,7 +126,7 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
 
   if (!employee) return null;
 
-  const renderInput = (name, placeholder, pattern, title) => (
+  const renderInput = (name, placeholder, pattern, title, required = true, readOnly = false) => (
     <input 
       type="text" 
       name={name}
@@ -64,8 +135,9 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
       placeholder={placeholder}
       pattern={pattern}
       title={title}
-      required
-      className="w-full bg-transparent border-b border-gray-300 focus:border-primary outline-none px-1 py-0.5 text-sm"
+      required={required}
+      readOnly={readOnly}
+      className={`w-full bg-transparent border-b border-gray-300 focus:border-primary outline-none px-1 py-0.5 text-sm ${readOnly ? 'text-gray-600 bg-gray-50' : ''}`}
     />
   );
 
@@ -138,7 +210,7 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 font-semibold bg-gray-50">Leaving Date</td>
-                  <td className="border border-gray-300 p-2">{renderInput('leavingDate', 'DD/MM/YYYY or N/A')}</td>
+                  <td className="border border-gray-300 p-2">{renderInput('leavingDate', 'DD/MM/YYYY or N/A', undefined, undefined, false)}</td>
                   <td className="border border-gray-300 p-2 bg-gray-50"></td>
                   <td className="border border-gray-300 p-2"></td>
                 </tr>
@@ -160,45 +232,45 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
               <tbody>
                 <tr>
                   <td className="border border-gray-300 p-2 text-left">Basic</td>
-                  <td className="border border-gray-300 p-1">{renderInput('basicAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('basicMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('basicArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('basicTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('basicAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('basicMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('basicArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('basicTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 text-left">HRA</td>
-                  <td className="border border-gray-300 p-1">{renderInput('hraAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('hraMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('hraArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('hraTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('hraAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('hraMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('hraArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('hraTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 text-left">Special Allowance</td>
-                  <td className="border border-gray-300 p-1">{renderInput('specialAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('specialMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('specialArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('specialTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('specialAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('specialMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('specialArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('specialTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 text-left">Conveyance</td>
-                  <td className="border border-gray-300 p-1">{renderInput('conveyanceAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('conveyanceMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('conveyanceArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('conveyanceTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('conveyanceAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('conveyanceMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('conveyanceArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('conveyanceTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 text-left">Client Handling Incentive</td>
-                  <td className="border border-gray-300 p-1">{renderInput('clientAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('clientMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('clientArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('clientTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('clientAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('clientMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('clientArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('clientTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr className="bg-gray-50 font-bold">
                   <td className="border border-gray-300 p-2 text-left">Total Earnings</td>
-                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
-                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsAnnual', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsMonthly', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsArrear', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('totalEarningsTotal', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
               </tbody>
             </table>
@@ -219,7 +291,7 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
                 </tr>
                 <tr className="bg-gray-50 font-bold">
                   <td className="border border-gray-300 p-2">Total Deductions</td>
-                  <td className="border border-gray-300 p-1">{renderInput('totalDeductions', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('totalDeductions', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
               </tbody>
             </table>
@@ -236,11 +308,11 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
               <tbody>
                 <tr>
                   <td className="border border-gray-300 p-2 font-bold">Net Pay</td>
-                  <td className="border border-gray-300 p-1">{renderInput('netPay', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('netPay', undefined, '^\\d+(\\.\\d{1,2})?$', 'Enter a valid number', false, true)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-2 font-bold">Net Pay in Words</td>
-                  <td className="border border-gray-300 p-1">{renderInput('netPayWords')}</td>
+                  <td className="border border-gray-300 p-1">{renderInput('netPayWords', undefined, undefined, undefined, false, true)}</td>
                 </tr>
               </tbody>
             </table>
