@@ -161,17 +161,23 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         const isRemote = false; // Disabled automatic remote flagging due to desktop GPS inaccuracies
 
         let address = '';
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1500);
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          const geoData = await geoRes.json();
-          if (geoData?.display_name) address = geoData.display_name;
-        } catch (e) { console.error('Geocoding failed', e); }
+        if (distance < 5000) {
+          // If within 5km, assume they are at the office to account for desktop ISP inaccuracies
+          address = 'Multimaart Office, Benupur';
+        } else {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            const geoData = await geoRes.json();
+            if (geoData?.display_name) address = geoData.display_name;
+          } catch (e) { console.error('Geocoding failed', e); }
+        }
 
         const locationData = { lat: latitude, lng: longitude, address };
 
@@ -211,17 +217,22 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         const isRemoteOut = false; // Disabled automatic remote flagging
 
         let address = '';
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1500);
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          const geoData = await geoRes.json();
-          if (geoData?.display_name) address = geoData.display_name;
-        } catch (e) { console.error('Geocoding failed', e); }
+        if (distance < 5000) {
+          address = 'Multimaart Office, Benupur';
+        } else {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            const geoData = await geoRes.json();
+            if (geoData?.display_name) address = geoData.display_name;
+          } catch (e) { console.error('Geocoding failed', e); }
+        }
 
         const locationData = { lat: latitude, lng: longitude, address };
 
