@@ -78,6 +78,8 @@ const HomePage = () => {
         const { latitude, longitude } = position.coords;
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
         
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         if (distance <= 500) {
            setCurrentLocationText('7WP3+753 Benupur, Odisha');
         } else {
