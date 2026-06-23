@@ -617,23 +617,31 @@ const AdminAttendance = () => {
                       <td className="p-4 text-sm text-text-dark">{formatTime(record.punchOut)}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end items-center gap-2">
-                          {record.punchOut ? (
-                            <>
-                              <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
-                                <XCircle size={12} /> Reject
-                              </button>
-                              <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
-                                <CheckCircle size={12} /> Accept
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-xs text-orange-500 font-medium italic mr-2">Waiting for Punch Out...</span>
-                              <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1" title="Mark as Absent">
-                                <XCircle size={12} /> Reject
-                              </button>
-                            </>
-                          )}
+                          {(() => {
+                            const isToday = new Date(record.date).toDateString() === new Date().toDateString();
+                            if (record.punchOut || !isToday) {
+                              return (
+                                <>
+                                  {!record.punchOut && <span className="text-xs text-orange-500 font-medium italic mr-2">Missing Punch Out</span>}
+                                  <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
+                                    <XCircle size={12} /> Reject
+                                  </button>
+                                  <button onClick={() => handleApprove(record._id)} className="btn py-1 px-3 btn-primary text-xs flex items-center gap-1">
+                                    <CheckCircle size={12} /> Accept
+                                  </button>
+                                </>
+                              );
+                            } else {
+                              return (
+                                <>
+                                  <span className="text-xs text-orange-500 font-medium italic mr-2">Waiting for Punch Out...</span>
+                                  <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1" title="Mark as Absent">
+                                    <XCircle size={12} /> Reject
+                                  </button>
+                                </>
+                              );
+                            }
+                          })()}
                           <button onClick={() => handleDeleteAttendance(record._id)} className="btn py-1 px-3 bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 text-xs flex items-center gap-1 transition-colors" title="Delete Record">
                             <Trash2 size={12} /> Delete
                           </button>

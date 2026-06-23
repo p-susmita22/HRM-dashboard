@@ -18,6 +18,7 @@ const HomePage = () => {
   const [employeeData, setEmployeeData] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, sundays: 0, officialHolidays: 0 });
+  const isPunchingRef = React.useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -149,9 +150,12 @@ const HomePage = () => {
   };
 
   const handlePunchIn = async () => {
+    if (isPunchingRef.current) return;
+    isPunchingRef.current = true;
     setIsPunchingIn(true);
     if (!navigator.geolocation) {
       setIsPunchingIn(false);
+      isPunchingRef.current = false;
       return alert('Geolocation is not supported by your browser.');
     }
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -194,17 +198,22 @@ const HomePage = () => {
         alert(error.response?.data?.message || 'Failed to punch in');
       } finally {
         setIsPunchingIn(false);
+        isPunchingRef.current = false;
       }
     }, () => {
       setIsPunchingIn(false);
+      isPunchingRef.current = false;
       alert('Please allow location access to punch in.');
     });
   };
 
   const handlePunchOut = async () => {
+    if (isPunchingRef.current) return;
+    isPunchingRef.current = true;
     setIsPunchingOut(true);
     if (!navigator.geolocation) {
       setIsPunchingOut(false);
+      isPunchingRef.current = false;
       return alert('Geolocation is not supported by your browser.');
     }
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -246,9 +255,11 @@ const HomePage = () => {
         alert(error.response?.data?.message || 'Failed to punch out');
       } finally {
         setIsPunchingOut(false);
+        isPunchingRef.current = false;
       }
     }, () => {
       setIsPunchingOut(false);
+      isPunchingRef.current = false;
       alert('Please allow location access to punch out.');
     });
   };
