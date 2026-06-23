@@ -46,6 +46,22 @@ const AdminAttendance = () => {
     fetchData();
   }, []);
 
+  // Lock scrolling on main container when any modal is open
+  useEffect(() => {
+    const scrollContainer = document.getElementById('main-scroll-container');
+    if (!scrollContainer) return;
+
+    if (historyModalEmployee || showHolidayModal || showEditHolidayModal) {
+      scrollContainer.style.overflow = 'hidden';
+    } else {
+      scrollContainer.style.overflow = 'auto';
+    }
+
+    return () => {
+      scrollContainer.style.overflow = 'auto';
+    };
+  }, [historyModalEmployee, showHolidayModal, showEditHolidayModal]);
+
   const handleApprove = async (id) => {
     try {
       await axios.put(`/api/admin/attendance/${id}/approve`);

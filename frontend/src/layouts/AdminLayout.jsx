@@ -199,7 +199,7 @@ const AdminLayout = () => {
             )}
           </div>
         </div>
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div id="main-scroll-container" className="flex-1 p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </div>
       </div>
