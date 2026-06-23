@@ -21,6 +21,7 @@ const HomePage = () => {
   const [employeeData, setEmployeeData] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, sundays: 0, officialHolidays: 0 });
+  const [locationError, setLocationError] = useState(null); // 'denied', 'unavailable', 'timeout', or null
   const isPunchingRef = React.useRef(false);
   const navigate = useNavigate();
 
@@ -97,11 +98,11 @@ const HomePage = () => {
       }
     }, (error) => {
        if (error.code === 1) { // PERMISSION_DENIED
-         alert("Please ENABLE location permissions in your browser/device settings to fetch your location.");
+         setLocationError('denied');
        } else if (error.code === 2) { // POSITION_UNAVAILABLE
-         alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+         setLocationError('unavailable');
        } else if (error.code === 3) { // TIMEOUT
-         alert("Location request timed out. Please check your GPS signal and try again.");
+         setLocationError('timeout');
        }
        setCurrentLocationText('Location access denied');
        setIsRefreshingLocation(false);
@@ -262,11 +263,11 @@ const HomePage = () => {
       setIsPunchingIn(false);
       isPunchingRef.current = false;
       if (error.code === 1) {
-        alert("Please ENABLE location permissions in your browser/device settings to punch in.");
+        setLocationError('denied');
       } else if (error.code === 2) {
-        alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+        setLocationError('unavailable');
       } else if (error.code === 3) {
-        alert("Location request timed out. Please check your GPS signal and try again.");
+        setLocationError('timeout');
       } else {
         alert('Location access denied or timed out. Please check permissions.');
       }
@@ -335,11 +336,11 @@ const HomePage = () => {
       setIsPunchingOut(false);
       isPunchingRef.current = false;
       if (error.code === 1) {
-        alert("Please ENABLE location permissions in your browser/device settings to punch out.");
+        setLocationError('denied');
       } else if (error.code === 2) {
-        alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+        setLocationError('unavailable');
       } else if (error.code === 3) {
-        alert("Location request timed out. Please check your GPS signal and try again.");
+        setLocationError('timeout');
       } else {
         alert('Location access denied or timed out. Please check permissions.');
       }
@@ -771,6 +772,63 @@ const HomePage = () => {
           
         </div>
       </div>
+
+      {/* Custom Location Error Modal */}
+      {locationError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-text-dark mb-2">Location Access Required</h2>
+            <div className="text-sm text-text-light mb-6 text-left space-y-3 bg-gray-50 p-4 rounded-xl">
+              {locationError === 'denied' && (
+                <>
+                  <p className="font-semibold text-red-600">You have blocked location access.</p>
+                  <p>To punch in/out, you must allow location access:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-xs">
+                    <li>Tap the <strong>Padlock/Settings icon</strong> in your browser's top address bar.</li>
+                    <li>Go to <strong>Permissions</strong> or <strong>Site Settings</strong>.</li>
+                    <li>Change <strong>Location</strong> from Block to <strong>Allow</strong>.</li>
+                  </ul>
+                </>
+              )}
+              {locationError === 'unavailable' && (
+                <>
+                  <p className="font-semibold text-red-600">GPS signal is turned off.</p>
+                  <p>We cannot find your location because your device's GPS is disabled.</p>
+                  <ul className="list-disc pl-5 space-y-1 text-xs">
+                    <li>Pull down your phone's notification menu.</li>
+                    <li>Turn ON <strong>Location / GPS</strong>.</li>
+                  </ul>
+                </>
+              )}
+              {locationError === 'timeout' && (
+                <>
+                  <p className="font-semibold text-red-600">Location request timed out.</p>
+                  <p>Your GPS signal is too weak. You might be deep indoors.</p>
+                  <ul className="list-disc pl-5 space-y-1 text-xs">
+                    <li>Step closer to a window or go outside.</li>
+                    <li>Ensure your GPS is turned ON.</li>
+                  </ul>
+                </>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setLocationError(null)} className="btn bg-gray-200 text-gray-700 px-6">Close</button>
+              <button 
+                onClick={() => {
+                  setLocationError(null);
+                  fetchCurrentLocation();
+                }} 
+                className="btn btn-primary px-6 flex items-center gap-2"
+              >
+                <RefreshCw size={16} /> Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
