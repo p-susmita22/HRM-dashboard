@@ -80,26 +80,29 @@ const HomePage = () => {
         
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        if (distance <= 500) {
-           setCurrentLocationText('7WP3+753 Benupur, Odisha');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const geoData = await geoRes.json();
+        if (geoData?.display_name) {
+          setCurrentLocationText(geoData.display_name.split(',').slice(0, 3).join(', '));
         } else {
-           const controller = new AbortController();
-           const timeoutId = setTimeout(() => controller.abort(), 3000);
-           const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-           clearTimeout(timeoutId);
-           const geoData = await geoRes.json();
-           if (geoData?.display_name) {
-             setCurrentLocationText(geoData.display_name.split(',').slice(0, 3).join(', '));
-           } else {
-             setCurrentLocationText('Unknown Location');
-           }
+          setCurrentLocationText('Unknown Location');
         }
       } catch(e) {
          setCurrentLocationText('Location tracking failed');
       } finally {
          setIsRefreshingLocation(false);
       }
-    }, () => {
+    }, (error) => {
+       if (error.code === 1) { // PERMISSION_DENIED
+         alert("Please ENABLE location permissions in your browser/device settings to fetch your location.");
+       } else if (error.code === 2) { // POSITION_UNAVAILABLE
+         alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+       } else if (error.code === 3) { // TIMEOUT
+         alert("Location request timed out. Please check your GPS signal and try again.");
+       }
        setCurrentLocationText('Location access denied');
        setIsRefreshingLocation(false);
     }, { 
@@ -255,10 +258,18 @@ const HomePage = () => {
         setIsPunchingIn(false);
         isPunchingRef.current = false;
       }
-    }, (err) => {
+    }, (error) => {
       setIsPunchingIn(false);
       isPunchingRef.current = false;
-      alert('Location access denied or timed out. Please check permissions.');
+      if (error.code === 1) {
+        alert("Please ENABLE location permissions in your browser/device settings to punch in.");
+      } else if (error.code === 2) {
+        alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+      } else if (error.code === 3) {
+        alert("Location request timed out. Please check your GPS signal and try again.");
+      } else {
+        alert('Location access denied or timed out. Please check permissions.');
+      }
     }, { 
       enableHighAccuracy: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), 
       timeout: 10000, 
@@ -320,10 +331,18 @@ const HomePage = () => {
         setIsPunchingOut(false);
         isPunchingRef.current = false;
       }
-    }, (err) => {
+    }, (error) => {
       setIsPunchingOut(false);
       isPunchingRef.current = false;
-      alert('Location access denied or timed out. Please check permissions.');
+      if (error.code === 1) {
+        alert("Please ENABLE location permissions in your browser/device settings to punch out.");
+      } else if (error.code === 2) {
+        alert("Location information is unavailable. Please ensure your GPS is turned ON.");
+      } else if (error.code === 3) {
+        alert("Location request timed out. Please check your GPS signal and try again.");
+      } else {
+        alert('Location access denied or timed out. Please check permissions.');
+      }
     }, { 
       enableHighAccuracy: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), 
       timeout: 10000, 
