@@ -162,23 +162,16 @@ const HomePage = () => {
       try {
         const { latitude, longitude } = position.coords;
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        const isRemote = false; // Disabled automatic remote flagging due to desktop GPS inaccuracies
-
-        let address = '';
-        if (distance < 5000) {
-          // If within 5km, assume they are at the office to account for desktop ISP inaccuracies
-          address = 'Multimaart Office, Benupur';
-        } else {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1500);
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const geoData = await geoRes.json();
-            if (geoData?.display_name) address = geoData.display_name;
-          } catch (e) { console.error('Geocoding failed', e); }
+        
+        if (distance > 500) {
+          alert(`You are ${Math.round(distance)} meters away from the office. You must be within 500 meters to punch in.`);
+          setIsPunchingIn(false);
+          isPunchingRef.current = false;
+          return;
         }
 
+        const isRemote = false; 
+        const address = 'Multimaart Office, Benupur';
         const locationData = { lat: latitude, lng: longitude, address };
 
         const res = await axios.post('/api/employee/punch-in', { location: locationData, isRemote });
@@ -218,22 +211,16 @@ const HomePage = () => {
       try {
         const { latitude, longitude } = position.coords;
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        const isRemoteOut = false; // Disabled automatic remote flagging
-
-        let address = '';
-        if (distance < 5000) {
-          address = 'Multimaart Office, Benupur';
-        } else {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1500);
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const geoData = await geoRes.json();
-            if (geoData?.display_name) address = geoData.display_name;
-          } catch (e) { console.error('Geocoding failed', e); }
+        
+        if (distance > 500) {
+          alert(`You are ${Math.round(distance)} meters away from the office. You must be within 500 meters to punch out.`);
+          setIsPunchingOut(false);
+          isPunchingRef.current = false;
+          return;
         }
 
+        const isRemoteOut = false;
+        const address = 'Multimaart Office, Benupur';
         const locationData = { lat: latitude, lng: longitude, address };
 
         const res = await axios.post('/api/employee/punch-out', { location: locationData, isRemoteOut });
