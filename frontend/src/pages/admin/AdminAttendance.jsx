@@ -622,7 +622,6 @@ const AdminAttendance = () => {
                             if (record.punchOut || !isToday) {
                               return (
                                 <>
-                                  {!record.punchOut && <span className="text-xs text-orange-500 font-medium italic mr-2">Missing Punch Out</span>}
                                   <button onClick={() => handleReject(record._id)} className="btn py-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 text-xs flex items-center gap-1">
                                     <XCircle size={12} /> Reject
                                   </button>
