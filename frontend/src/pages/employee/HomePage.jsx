@@ -162,7 +162,7 @@ const HomePage = () => {
       try {
         const { latitude, longitude } = position.coords;
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        const isRemote = distance > OFFICE_RADIUS_METERS;
+        const isRemote = false; // Disabled automatic remote flagging due to desktop GPS inaccuracies
 
         let address = '';
         try {
@@ -172,16 +172,6 @@ const HomePage = () => {
         } catch (e) { console.error('Geocoding failed', e); }
 
         const locationData = { lat: latitude, lng: longitude, address };
-
-        if (isRemote) {
-          const confirmRemote = window.confirm(
-            `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-in request will be sent to admin for approval. Your punch-in will only be recorded after approval.\n\nProceed?`
-          );
-          if (!confirmRemote) {
-            setIsPunchingIn(false);
-            return;
-          }
-        }
 
         const res = await axios.post('/api/employee/punch-in', { location: locationData, isRemote });
 
@@ -220,7 +210,7 @@ const HomePage = () => {
       try {
         const { latitude, longitude } = position.coords;
         const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        const isRemoteOut = distance > OFFICE_RADIUS_METERS;
+        const isRemoteOut = false; // Disabled automatic remote flagging
 
         let address = '';
         try {
@@ -230,16 +220,6 @@ const HomePage = () => {
         } catch (e) { console.error('Geocoding failed', e); }
 
         const locationData = { lat: latitude, lng: longitude, address };
-
-        if (isRemoteOut) {
-          const confirmRemote = window.confirm(
-            `You are ${Math.round(distance)}m away from the office.\n\nA remote punch-out request will be sent to admin for approval. Your punch-out will only be finalized after approval.\n\nProceed?`
-          );
-          if (!confirmRemote) {
-            setIsPunchingOut(false);
-            return;
-          }
-        }
 
         const res = await axios.post('/api/employee/punch-out', { location: locationData, isRemoteOut });
 
