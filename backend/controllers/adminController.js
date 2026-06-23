@@ -597,7 +597,13 @@ export const getSidebarCounts = async (req, res) => {
     const regularizationsPending = await Regularization.countDocuments({ status: 'Pending' });
     const resignationsPending = await Resignation.countDocuments({ status: 'Pending' });
     const unreadMessages = await Message.countDocuments({ sender: 'employee', isRead: false });
-    const unreadReports = await Attendance.countDocuments({ dailyReport: { $ne: null }, isReportRead: false });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const unreadReports = await Attendance.countDocuments({ 
+      dailyReport: { $ne: null }, 
+      isReportRead: { $ne: true },
+      date: { $gte: today }
+    });
 
     res.json({
       attendanceCount: attendancePending + remotePending,

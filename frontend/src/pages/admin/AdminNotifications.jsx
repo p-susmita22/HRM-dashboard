@@ -85,7 +85,7 @@ const AdminNotifications = () => {
       unreadCount: 0,
       lastMessage: null,
       hasReport: record?.dailyReport ? true : false,
-      isReportUnread: record?.dailyReport && record?.isReportRead === false ? true : false
+      isReportUnread: record?.dailyReport && record?.isReportRead !== true ? true : false
     };
     return acc;
   }, {});
