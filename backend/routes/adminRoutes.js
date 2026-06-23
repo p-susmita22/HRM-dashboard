@@ -57,8 +57,9 @@ router.post('/attendance/holiday', markHoliday);
 router.put('/attendance/holiday/:date', editHoliday);
 router.delete('/attendance/holiday/:date', deleteHoliday);
 
-import { deleteDailyReport } from '../controllers/adminController.js';
+import { deleteDailyReport, markReportAsRead } from '../controllers/adminController.js';
 router.delete('/attendance/:id/report', deleteDailyReport);
+router.put('/report/read/:employeeId', markReportAsRead);
 
 // Remote Punch Requests
 router.get('/attendance/remote-requests', getRemotePunchRequests);

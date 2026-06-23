@@ -48,6 +48,7 @@ const AdminNotifications = () => {
     setActiveTab('chat');
     try {
       await axios.put(`/api/messages/admin/read/${empId}`);
+      await axios.put(`/api/admin/report/read/${empId}`);
       fetchData();
     } catch(err) {}
   };
@@ -83,7 +84,8 @@ const AdminNotifications = () => {
       messages: [],
       unreadCount: 0,
       lastMessage: null,
-      hasReport: record?.dailyReport ? true : false
+      hasReport: record?.dailyReport ? true : false,
+      isReportUnread: record?.dailyReport && record?.isReportRead === false ? true : false
     };
     return acc;
   }, {});
@@ -101,9 +103,12 @@ const AdminNotifications = () => {
   });
 
   const threads = Object.values(groupedData).sort((a, b) => {
-    // Sort logic: prioritize unread messages, then hasReport, then recent messages
+    // Sort logic: prioritize unread messages and unread reports, then hasReport, then recent messages
     if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+    if (a.isReportUnread && !b.isReportUnread) return -1;
+    if (!a.isReportUnread && b.isReportUnread) return 1;
     
     if (a.hasReport && !b.hasReport) return -1;
     if (!a.hasReport && b.hasReport) return 1;
@@ -146,12 +151,12 @@ const AdminNotifications = () => {
                     <h4 className="font-semibold text-sm text-text-dark">{thread.employee.fullName}</h4>
                     <div className="flex gap-1">
                       {thread.hasReport && (
-                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1" title="Report Submitted">
-                          <FileText size={10} /> Report
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${thread.isReportUnread ? 'bg-red-500 text-white' : 'bg-green-100 text-green-700'}`} title={thread.isReportUnread ? 'New Report' : 'Report Submitted'}>
+                          <FileText size={10} /> {thread.isReportUnread ? 'New Report' : 'Report'}
                         </span>
                       )}
                       {thread.unreadCount > 0 && (
-                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{thread.unreadCount} New</span>
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{thread.unreadCount} Msg</span>
                       )}
                     </div>
                   </div>

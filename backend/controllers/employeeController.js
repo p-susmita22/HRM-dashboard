@@ -335,6 +335,7 @@ export const submitDailyReport = async (req, res) => {
     }
 
     attendance.dailyReport = reportContent;
+    attendance.isReportRead = false;
     await attendance.save();
 
     res.json({ message: 'Daily report submitted successfully', attendance });

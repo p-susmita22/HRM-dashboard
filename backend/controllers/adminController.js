@@ -597,11 +597,12 @@ export const getSidebarCounts = async (req, res) => {
     const regularizationsPending = await Regularization.countDocuments({ status: 'Pending' });
     const resignationsPending = await Resignation.countDocuments({ status: 'Pending' });
     const unreadMessages = await Message.countDocuments({ sender: 'employee', isRead: false });
+    const unreadReports = await Attendance.countDocuments({ dailyReport: { $ne: null }, isReportRead: false });
 
     res.json({
       attendanceCount: attendancePending + remotePending,
       requestsCount: leavesPending + regularizationsPending + resignationsPending,
-      notificationsCount: unreadMessages
+      notificationsCount: unreadMessages + unreadReports
     });
   } catch (error) {
     console.error('Error fetching sidebar counts:', error);
@@ -891,6 +892,30 @@ export const deleteDailyReport = async (req, res) => {
     res.json({ message: 'Report deleted successfully' });
   } catch (error) {
     console.error('Error deleting report:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const markReportAsRead = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Find today's attendance for the employee and mark it as read
+    const record = await Attendance.findOne({
+      employee: req.params.employeeId,
+      date: { $gte: today },
+      dailyReport: { $ne: null }
+    });
+    
+    if (record && !record.isReportRead) {
+      record.isReportRead = true;
+      await record.save();
+    }
+    
+    res.json({ message: 'Report marked as read' });
+  } catch (error) {
+    console.error('Error marking report as read:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
