@@ -5,6 +5,7 @@ import { X, Send } from 'lucide-react';
 import logo from '../assets/multimaart-logo.png';
 
 const PayslipModal = ({ employee, onClose, initialData = null }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialData || {
     monthYear: '',
     panNo: '',
@@ -104,6 +105,7 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
 
   const handleSend = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006';
       if (initialData && initialData._id) {
@@ -121,6 +123,8 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
     } catch (error) {
       console.error('Error sending payslip:', error);
       alert('Failed to send payslip');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -324,12 +328,25 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
           </div>
 
           <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-xl">
-            <button type="button" onClick={onClose} className="btn bg-gray-200 text-gray-700 px-6">Cancel</button>
-            <button type="submit" className="btn btn-primary px-8 flex items-center gap-2">
-              <Send size={16} /> {initialData ? 'Update Payslip' : 'Send Payslip'}
+            <button type="button" onClick={onClose} disabled={isSubmitting} className="btn bg-gray-200 text-gray-700 px-6 disabled:opacity-50">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary px-8 flex items-center gap-2 disabled:opacity-70">
+              {isSubmitting ? (
+                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> {initialData ? 'Updating...' : 'Sending...'}</>
+              ) : (
+                <><Send size={16} /> {initialData ? 'Update Payslip' : 'Send Payslip'}</>
+              )}
             </button>
           </div>
         </form>
+
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 rounded-xl backdrop-blur-sm">
+            <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="font-bold text-sm text-text-dark">{initialData ? 'Updating Payslip...' : 'Generating & Sending...'}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>,
     document.body

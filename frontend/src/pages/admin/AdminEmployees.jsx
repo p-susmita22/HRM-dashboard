@@ -21,6 +21,7 @@ const AdminEmployees = () => {
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
   const [uploadingFor, setUploadingFor] = useState(null);
+  const [actionLoadingText, setActionLoadingText] = useState('');
 
   const [formData, setFormData] = useState({
     firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: ''
@@ -52,6 +53,7 @@ const AdminEmployees = () => {
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
+    setActionLoadingText(isEditing ? 'Updating Employee...' : 'Registering Employee...');
     try {
       if (isEditing) {
         await axios.put(`/api/admin/employees/${selectedEmployee._id}`, formData);
@@ -67,17 +69,22 @@ const AdminEmployees = () => {
       fetchDashboardData();
     } catch (error) {
       alert(error.response?.data?.message || 'Action failed');
+    } finally {
+      setActionLoadingText('');
     }
   };
 
   const handleDeleteEmployee = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
+      setActionLoadingText('Deleting Employee...');
       try {
         await axios.delete(`/api/admin/employees/${id}`);
         fetchDashboardData();
         setActiveDropdown(null);
       } catch (error) {
         alert('Failed to delete employee');
+      } finally {
+        setActionLoadingText('');
       }
     }
   };
@@ -122,6 +129,7 @@ const AdminEmployees = () => {
 
   const handleDeleteEmployeeDocument = async (empId, docId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
+    setActionLoadingText('Deleting Document...');
     try {
       await axios.delete(`/api/admin/employees/${empId}/documents/${docId}`);
       // Update selectedEmployee locally so UI updates
@@ -139,6 +147,8 @@ const AdminEmployees = () => {
       alert('Document deleted successfully!');
     } catch (error) {
       alert('Failed to delete document.');
+    } finally {
+      setActionLoadingText('');
     }
   };
 
@@ -211,12 +221,12 @@ const AdminEmployees = () => {
         <p className="text-text-light text-sm mt-1">View, add, and remove employees from the system.</p>
       </div>
 
-      {uploadingFor && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center">
+      {(uploadingFor || actionLoadingText) && (
+        <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 animate-fade-in">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-lg font-bold text-text-dark">Uploading Document...</p>
-            <p className="text-sm text-text-light">Please wait while the file is being processed.</p>
+            <p className="text-lg font-bold text-text-dark">{actionLoadingText || 'Uploading Document...'}</p>
+            <p className="text-sm text-text-light">Please wait while the request is processed...</p>
           </div>
         </div>
       )}
