@@ -773,57 +773,56 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Custom Location Error Modal */}
+      {/* Custom Location Error Modal (Google Maps Style Replica) */}
       {locationError && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MapPin size={32} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 animate-fade-in">
+          <div className="bg-[#eff1f4] rounded-[28px] max-w-sm w-full p-6 text-left shadow-2xl font-sans">
+            <h2 className="text-[19px] leading-tight font-medium text-gray-900 mb-4">
+              To continue, your device will need to use Location Accuracy
+            </h2>
+            <p className="text-[13px] text-gray-800 font-medium mb-4">
+              The following settings should be on:
+            </p>
+            
+            <div className="space-y-4 mb-6">
+              <div className="flex items-start gap-4">
+                <MapPin size={22} className="text-[#3b6b2c] mt-0.5 flex-shrink-0" />
+                <p className="text-[13px] text-gray-800 font-medium">Device location</p>
+              </div>
+              <div className="flex items-start gap-4">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#3b6b2c] mt-0.5 flex-shrink-0">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                </svg>
+                <p className="text-[13px] text-gray-800 leading-snug">
+                  <strong className="font-medium">Location Accuracy,</strong> which provides more accurate location for apps and services. To do this, Google periodically processes information about device sensors and wireless signals from your device to crowdsource wireless signal locations. These are used without identifying you to improve location accuracy and location-based services and to improve, provide and maintain Google's services based on Google's and third parties' legitimate interests to serve users' needs.
+                </p>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-text-dark mb-2">Location Access Required</h2>
-            <div className="text-sm text-text-light mb-6 text-left space-y-3 bg-gray-50 p-4 rounded-xl">
-              {locationError === 'denied' && (
-                <>
-                  <p className="font-semibold text-red-600">You have blocked location access.</p>
-                  <p>To punch in/out, you must allow location access:</p>
-                  <ul className="list-disc pl-5 space-y-1 text-xs">
-                    <li>Tap the <strong>Padlock/Settings icon</strong> in your browser's top address bar.</li>
-                    <li>Go to <strong>Permissions</strong> or <strong>Site Settings</strong>.</li>
-                    <li>Change <strong>Location</strong> from Block to <strong>Allow</strong>.</li>
-                  </ul>
-                </>
-              )}
-              {locationError === 'unavailable' && (
-                <>
-                  <p className="font-semibold text-red-600">GPS signal is turned off.</p>
-                  <p>We cannot find your location because your device's GPS is disabled.</p>
-                  <ul className="list-disc pl-5 space-y-1 text-xs">
-                    <li>Pull down your phone's notification menu.</li>
-                    <li>Turn ON <strong>Location / GPS</strong>.</li>
-                  </ul>
-                </>
-              )}
-              {locationError === 'timeout' && (
-                <>
-                  <p className="font-semibold text-red-600">Location request timed out.</p>
-                  <p>Your GPS signal is too weak. You might be deep indoors.</p>
-                  <ul className="list-disc pl-5 space-y-1 text-xs">
-                    <li>Step closer to a window or go outside.</li>
-                    <li>Ensure your GPS is turned ON.</li>
-                  </ul>
-                </>
-              )}
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setLocationError(null)} className="btn bg-gray-200 text-gray-700 px-6">Close</button>
+            
+            <p className="text-[12px] text-gray-700 leading-snug mb-8">
+              You can change this at any time in location settings. <span className="text-[#3b6b2c] font-medium cursor-pointer hover:underline" onClick={() => setLocationError(null)}>Manage settings</span> or <span className="text-[#3b6b2c] font-medium cursor-pointer hover:underline" onClick={() => setLocationError(null)}>learn more</span>
+            </p>
+
+            <div className="flex gap-2 justify-end">
+              <button 
+                onClick={() => setLocationError(null)} 
+                className="px-5 py-2.5 rounded-full border border-gray-400 text-gray-800 text-[13px] font-medium hover:bg-gray-200 transition-colors"
+              >
+                No, thanks
+              </button>
               <button 
                 onClick={() => {
                   setLocationError(null);
                   fetchCurrentLocation();
                 }} 
-                className="btn btn-primary px-6 flex items-center gap-2"
+                className="px-6 py-2.5 rounded-full bg-[#406830] text-white text-[13px] font-medium hover:bg-[#345427] transition-colors"
               >
-                <RefreshCw size={16} /> Try Again
+                Turn on
               </button>
             </div>
           </div>
