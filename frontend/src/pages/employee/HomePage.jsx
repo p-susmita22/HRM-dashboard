@@ -532,7 +532,24 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="p-5 max-w-6xl mx-auto mt-4">
+      {/* Mobile Location Bar */}
+      <div className="md:hidden bg-blue-50/40 border-b border-blue-100 px-4 py-2.5 flex justify-between items-center sticky top-[73px] z-20 backdrop-blur-md">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <MapPin size={14} className="text-primary flex-shrink-0" />
+          <span className="text-xs font-bold text-text-dark truncate">
+            {currentLocationText}
+          </span>
+        </div>
+        <button 
+          onClick={fetchCurrentLocation} 
+          disabled={isRefreshingLocation} 
+          className="ml-2 p-1.5 bg-white text-primary rounded-md shadow-sm border border-blue-100 flex-shrink-0"
+        >
+          <RefreshCw size={14} className={isRefreshingLocation ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto mt-4">
         {punchedIn && (
           <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-6 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto bg-green-50/30 gap-4">
             <div className="flex items-center gap-2">
