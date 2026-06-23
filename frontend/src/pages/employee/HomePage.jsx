@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { Clock, CheckCircle, XCircle, Info, FileText, CalendarDays, UploadCloud, MapPin, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import logo from '../../assets/multimaart-logo.png';
 
@@ -10,6 +11,8 @@ const HomePage = () => {
   const [punchInLocation, setPunchInLocation] = useState(null);
   const [remoteRequestSent, setRemoteRequestSent] = useState(false);
   const [remoteOutRequestSent, setRemoteOutRequestSent] = useState(false);
+  const [currentLocationText, setCurrentLocationText] = useState('Detecting location...');
+  const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
   const [punchOutTime, setPunchOutTime] = useState(null);
   const [isPunchingIn, setIsPunchingIn] = useState(false);
   const [isPunchingOut, setIsPunchingOut] = useState(false);
@@ -22,6 +25,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchCurrentLocation();
     const fetchProfileAndAttendance = async () => {
       try {
         const [profileRes, attendanceRes] = await Promise.all([
@@ -57,6 +61,51 @@ const HomePage = () => {
     };
     fetchProfileAndAttendance();
   }, []);
+
+  const fetchCurrentLocation = () => {
+    setIsRefreshingLocation(true);
+    setCurrentLocationText('Updating location...');
+    if (!navigator.geolocation) {
+      setCurrentLocationText('Location not supported');
+      setIsRefreshingLocation(false);
+      return;
+    }
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
+        
+        if (distance <= 500) {
+           setCurrentLocationText('7WP3+753 Benupur, Odisha');
+        } else {
+           const controller = new AbortController();
+           const timeoutId = setTimeout(() => controller.abort(), 3000);
+           const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+           clearTimeout(timeoutId);
+           const geoData = await geoRes.json();
+           if (geoData?.display_name) {
+             setCurrentLocationText(geoData.display_name.split(',').slice(0, 3).join(', '));
+           } else {
+             setCurrentLocationText('Unknown Location');
+           }
+        }
+      } catch(e) {
+         setCurrentLocationText('Location tracking failed');
+      } finally {
+         setIsRefreshingLocation(false);
+      }
+    }, () => {
+       setCurrentLocationText('Location access denied');
+       setIsRefreshingLocation(false);
+    }, { 
+      enableHighAccuracy: isMobile, 
+      timeout: 10000, 
+      maximumAge: 0 
+    });
+  };
 
   useEffect(() => {
     const fetchMonthlyData = async () => {
@@ -172,7 +221,7 @@ const HomePage = () => {
         }
 
         const isRemote = false; 
-        let address = 'Multimaart Office, Benupur';
+        let address = '7WP3+753 Benupur, Odisha';
 
         if (isMobile) {
           try {
@@ -238,7 +287,7 @@ const HomePage = () => {
         }
 
         const isRemoteOut = false;
-        let address = 'Multimaart Office, Benupur';
+        let address = '7WP3+753 Benupur, Odisha';
 
         if (isMobile) {
           try {
@@ -424,6 +473,16 @@ const HomePage = () => {
         </div>
         
         <div className="flex items-center gap-4 sm:gap-6">
+          <div className="text-right hidden md:block max-w-[180px]">
+            <p className="text-xs text-text-light font-medium flex items-center justify-end gap-1">
+              <MapPin size={12} /> Location
+              <button onClick={fetchCurrentLocation} disabled={isRefreshingLocation} className="p-0.5 text-primary hover:bg-blue-50 rounded" title="Refresh Location">
+                 <RefreshCw size={10} className={isRefreshingLocation ? 'animate-spin' : ''} />
+              </button>
+            </p>
+            <p className="text-[10px] font-medium text-text-dark truncate" title={currentLocationText}>{currentLocationText}</p>
+          </div>
+
           <div className="text-right hidden sm:block">
             <p className="text-xs text-text-light font-medium">Office Time</p>
             <p className="text-sm font-bold text-text-dark">9:30 AM - 5:30 PM</p>
