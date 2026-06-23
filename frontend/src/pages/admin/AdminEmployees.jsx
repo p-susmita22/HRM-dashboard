@@ -254,8 +254,8 @@ const AdminEmployees = () => {
           </div>
         </div>
         
-        <div className="overflow-x-auto min-h-[300px]">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto min-h-[400px] pb-32">
+          <table className="w-full text-left border-collapse relative z-10">
             <thead>
               <tr className="bg-gray-50 border-y border-gray-100">
                 <th className="p-4 text-xs font-semibold text-text-light uppercase tracking-wider">Employee ID</th>
@@ -325,7 +325,7 @@ const AdminEmployees = () => {
                       </button>
 
                       {activeDropdown === emp._id && (
-                        <div ref={dropdownRef} className="absolute right-8 top-10 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-50 text-left animate-fade-in">
+                        <div ref={dropdownRef} className="absolute right-8 top-10 w-48 bg-white rounded-lg shadow-2xl border border-gray-100 py-1 z-[9999] text-left animate-fade-in">
                           <button onClick={() => openEditModal(emp)} className="w-full text-left px-4 py-2 text-sm text-text-dark hover:bg-gray-50 flex items-center gap-2">
                             <Edit size={14} className="text-primary" /> Edit Employee
                           </button>
