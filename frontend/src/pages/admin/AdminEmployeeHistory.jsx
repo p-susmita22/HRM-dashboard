@@ -5,6 +5,15 @@ import { RotateCcw, Trash2, ChevronDown, ChevronUp, User, Calendar, FileText, Lo
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '—';
 const formatTime = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
 
+const formatTotalHours = (decimalHours) => {
+  if (!decimalHours || decimalHours <= 0) return '—';
+  const hrs = Math.floor(decimalHours);
+  const mins = Math.round((decimalHours - hrs) * 60);
+  if (hrs === 0) return `${mins}m`;
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}m`;
+};
+
 const statusBadge = (status) => {
   const map = {
     Present: 'bg-green-100 text-green-700',
@@ -238,7 +247,7 @@ const AdminEmployeeHistory = () => {
                                     <td className="p-3">{statusBadge(r.status)}</td>
                                     <td className="p-3 text-gray-600">{formatTime(r.punchIn)}</td>
                                     <td className="p-3 text-gray-600">{formatTime(r.punchOut)}</td>
-                                    <td className="p-3 text-gray-600">{r.totalHours ? `${r.totalHours.toFixed(1)}h` : '—'}</td>
+                                    <td className="p-3 text-gray-600 font-medium">{formatTotalHours(r.totalHours)}</td>
                                   </tr>
                                 ))}
                               </tbody>

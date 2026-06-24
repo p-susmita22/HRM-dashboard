@@ -189,6 +189,15 @@ const AdminAttendance = () => {
     return new Date(dateString).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const formatTotalHours = (decimalHours) => {
+    if (!decimalHours || decimalHours <= 0) return '-';
+    const hrs = Math.floor(decimalHours);
+    const mins = Math.round((decimalHours - hrs) * 60);
+    if (hrs === 0) return `${mins}m`;
+    if (mins === 0) return `${hrs}h`;
+    return `${hrs}h ${mins}m`;
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Present': return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 border border-green-200"><div className="w-2 h-2 rounded-full bg-green-500"></div> Present</span>;
@@ -992,7 +1001,7 @@ const AdminAttendance = () => {
                                             {record.isLeaveBlock ? (
                                                 <span className="text-xs font-medium text-text-light/60 italic">-</span>
                                             ) : (
-                                                record.totalHours > 0 ? `${record.totalHours} hrs` : '-'
+                                                <span className="font-medium text-text-dark">{formatTotalHours(record.totalHours)}</span>
                                             )}
                                         </td>
                                         <td className="p-3">{getStatusBadge(record.status)}</td>
