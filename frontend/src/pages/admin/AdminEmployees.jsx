@@ -369,15 +369,15 @@ const AdminEmployees = () => {
       {/* Add/Edit Employee Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90dvh]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">{isEditing ? 'Edit Employee' : 'Add New Employee'}</h2>
               <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleAddEmployee} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleAddEmployee} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">First name</label>
@@ -486,14 +486,14 @@ const AdminEmployees = () => {
       {/* View Details Modal */}
       {showViewModal && selectedEmployee && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90dvh]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">Employee Details</h2>
               <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-status-absent transition-colors">
                 <X size={24} />
               </button>
             </div>
-            <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
               <div className="flex items-center gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-100">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl border border-primary/20">
                   {selectedEmployee.fullName.charAt(0)}
