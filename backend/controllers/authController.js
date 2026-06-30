@@ -71,20 +71,24 @@ export const loginEmployee = async (req, res) => {
           const hasPunchedIn = att && att.punchIn;
           
           if (!hasPunchedIn && (!att || att.status === 'Absent')) {
-            // Check if they were on leave
-            const cTime = currentDate.getTime();
-            const isOnLeave = leaves.some(l => {
-              if (l.dates && l.dates.length > 0) {
-                return l.dates.some(d => new Date(d).setHours(0,0,0,0) === cTime);
-              }
-              const start = new Date(l.fromDate).setHours(0,0,0,0);
-              const end = new Date(l.toDate).setHours(23,59,59,999);
-              return cTime >= start && cTime <= end;
-            });
+            // If this absence happened BEFORE the employee's last update (e.g. Admin reactivation), ignore it.
+            // This prevents an infinite lockout loop where Admin reactivates them but the past absence blocks them again.
+            if (currentDate.getTime() > new Date(employee.updatedAt).getTime()) {
+              // Check if they were on leave
+              const cTime = currentDate.getTime();
+              const isOnLeave = leaves.some(l => {
+                if (l.dates && l.dates.length > 0) {
+                  return l.dates.some(d => new Date(d).setHours(0,0,0,0) === cTime);
+                }
+                const start = new Date(l.fromDate).setHours(0,0,0,0);
+                const end = new Date(l.toDate).setHours(23,59,59,999);
+                return cTime >= start && cTime <= end;
+              });
 
-            if (!isOnLeave) {
-              hasUnauthorizedAbsence = true;
-              break;
+              if (!isOnLeave) {
+                hasUnauthorizedAbsence = true;
+                break;
+              }
             }
           }
         }
