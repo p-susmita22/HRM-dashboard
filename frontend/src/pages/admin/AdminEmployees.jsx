@@ -376,8 +376,9 @@ const AdminEmployees = () => {
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleAddEmployee} className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <form onSubmit={handleAddEmployee} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1">First name</label>
                   <input type="text" className="form-control w-full" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
@@ -472,8 +473,9 @@ const AdminEmployees = () => {
                   </div>
                 )}
               </div>
-              <div className="mt-8 flex justify-end gap-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="btn bg-gray-100 text-text-dark hover:bg-gray-200">Cancel</button>
+              </div>
+              <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn bg-white border border-gray-200 text-text-dark hover:bg-gray-50">Cancel</button>
                 <button type="submit" className="btn btn-primary px-6">{isEditing ? 'Save Changes' : 'Register Employee'}</button>
               </div>
             </form>
@@ -491,7 +493,7 @@ const AdminEmployees = () => {
                 <X size={24} />
               </button>
             </div>
-            <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
               <div className="flex items-center gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-100">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl border border-primary/20">
                   {selectedEmployee.fullName.charAt(0)}
@@ -630,7 +632,7 @@ const AdminEmployees = () => {
                 )}
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
               <button onClick={() => setShowViewModal(false)} className="btn btn-primary px-6">Close</button>
             </div>
           </div>
