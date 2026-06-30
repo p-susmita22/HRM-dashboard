@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Users, MoreVertical, Trash2, Eye, Edit, Lock, Unlock, FileUp, X, Download, FileText, Send } from 'lucide-react';
 import PayslipModal from '../../components/PayslipModal';
@@ -50,6 +51,18 @@ const AdminEmployees = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Manage body scroll when modals are open
+  useEffect(() => {
+    if (showAddModal || showViewModal || showPayslipModal || uploadingFor || actionLoadingText) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showAddModal, showViewModal, showPayslipModal, uploadingFor, actionLoadingText]);
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
@@ -221,14 +234,15 @@ const AdminEmployees = () => {
         <p className="text-text-light text-sm mt-1">View, add, and remove employees from the system.</p>
       </div>
 
-      {(uploadingFor || actionLoadingText) && (
+      {(uploadingFor || actionLoadingText) && createPortal(
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 animate-fade-in">
+          <div className="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <p className="text-lg font-bold text-text-dark">{actionLoadingText || 'Uploading Document...'}</p>
             <p className="text-sm text-text-light">Please wait while the request is processed...</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="card shadow-lg border-none overflow-visible">
@@ -367,8 +381,8 @@ const AdminEmployees = () => {
       </div>
 
       {/* Add/Edit Employee Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+      {showAddModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-2 sm:p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">{isEditing ? 'Edit Employee' : 'Add New Employee'}</h2>
@@ -480,12 +494,13 @@ const AdminEmployees = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* View Details Modal */}
-      {showViewModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+      {showViewModal && selectedEmployee && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-2 sm:p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
               <h2 className="text-xl font-bold text-text-dark">Employee Details</h2>
@@ -636,7 +651,8 @@ const AdminEmployees = () => {
               <button onClick={() => setShowViewModal(false)} className="btn btn-primary px-6">Close</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       {showPayslipModal && selectedEmployee && (
         <PayslipModal 

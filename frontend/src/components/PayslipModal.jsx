@@ -146,7 +146,7 @@ const PayslipModal = ({ employee, onClose, initialData = null }) => {
   );
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-2 sm:p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl relative flex flex-col max-h-[95dvh] sm:max-h-[90dvh]">
         <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-100 bg-gray-50 rounded-t-xl shrink-0">
           <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
