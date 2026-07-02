@@ -220,7 +220,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                     const aDate = new Date(a.date);
                     return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
                 });
-                const isHalfDay = record && record.status === 'Half Day';
+                const isHalfDay = record && record.adminStatus === 'Approved' && record.status === 'Half Day';
                 
                 return (
                 <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14">
