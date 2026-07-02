@@ -64,7 +64,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
     });
 
-    if (record) {
+    if (record && record.adminStatus === 'Approved') {
         if (record.status === 'Holiday') return 'bg-[#1E3A8A] text-white shadow-md font-bold border-2 border-[#1E3A8A]';
         if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-yellow-400 text-white shadow-md font-bold';
         if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
@@ -76,9 +76,10 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
             }
             return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold'; // Fallback Half Day color
         }
-        if (record.status === 'Absent' && record.adminStatus === 'Approved') return 'bg-yellow-400 text-white shadow-md font-bold';
         if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
     }
+
+    if (isToday && record && record.punchIn) return 'bg-status-present/80 text-white shadow-sm ring-2 ring-status-present ring-offset-2';
 
     // If the date is in the future
     if (date > realToday && !isToday) return 'bg-gray-100 text-text-light'; 
@@ -107,14 +108,16 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
 
     const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
 
-    if (record) {
-      const punchDetails = record.punchIn ? `(In: ${formatT(record.punchIn)} | Out: ${formatT(record.punchOut)})` : '';
+    if (record && record.adminStatus === 'Approved') {
+      const punchDetails = `(In: ${formatT(record.punchIn)} | Out: ${formatT(record.punchOut)})`;
       if (record.status === 'Holiday') return 'Official Holiday';
       if (record.status === 'Leave' || record.status === 'Leave Approved') return 'On Leave';
       if (record.status === 'Present') return `Full Day ${punchDetails}`;
       if (record.status === 'Half Day') return `Half Day ${punchDetails}`;
       if (record.status === 'Absent') return `Absent ${punchDetails}`;
     }
+
+    if (isToday && record && record.punchIn) return `Working (In: ${formatT(record.punchIn)})`;
 
     const isOnLeave = monthlyData.leaves.some(leave => {
         if (leave.dates && leave.dates.length > 0) {
