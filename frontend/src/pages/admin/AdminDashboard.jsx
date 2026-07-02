@@ -184,6 +184,7 @@ const AdminDashboard = () => {
       let absent = 0;
       let onLeave = 0;
       let halfDays = 0;
+      let empWorkingDays = 0;
       
       const today = new Date();
       today.setHours(0,0,0,0);
@@ -192,8 +193,17 @@ const AdminDashboard = () => {
         const date = new Date(year, month - 1, day);
         const dateStr = date.toDateString();
         
+        const joiningTime = emp.joiningDate ? new Date(emp.joiningDate).setHours(0,0,0,0) : 0;
+        
+        // Exclude days before joining
+        if (date.getTime() < joiningTime) {
+            continue;
+        }
+
         // Exclude official holidays from working days
         if (monthHolidays.has(dateStr)) continue;
+        
+        empWorkingDays++;
 
         const isOnLeave = leaves.some(l => {
           if (l.employee?._id !== emp._id || l.status !== 'Approved') return false;
@@ -212,7 +222,7 @@ const AdminDashboard = () => {
         const record = attendanceRecords.find(r => 
           r.employee?._id === emp._id && 
           new Date(r.date).toDateString() === dateStr &&
-          r.status !== 'Holiday' && r.adminStatus === 'Approved'
+          r.status !== 'Holiday' && r.adminStatus !== 'Rejected'
         );
 
         if (record) {
@@ -232,7 +242,7 @@ const AdminDashboard = () => {
         absent,
         halfDays,
         onLeave,
-        totalWorkingDays
+        totalWorkingDays: empWorkingDays
       };
     });
 
