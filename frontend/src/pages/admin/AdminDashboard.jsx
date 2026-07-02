@@ -91,7 +91,23 @@ const AdminDashboard = () => {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   const departmentData = employees.reduce((acc, employee) => {
-    const dept = employee.department || 'Unassigned';
+    let dept = (employee.department || 'Unassigned').trim();
+    const lowerDept = dept.toLowerCase();
+    
+    if (lowerDept === 'opertion & it' || lowerDept === 'operation & it' || lowerDept === 'operations & it') {
+      dept = 'Operations & IT';
+    } else if (lowerDept === 'operation' || lowerDept === 'operations') {
+      dept = 'Operations';
+    } else if (lowerDept === 'hr') {
+      dept = 'HR';
+    } else if (lowerDept === 'it') {
+      dept = 'IT';
+    } else if (lowerDept === 'back office' || lowerDept === 'backoffice') {
+      dept = 'Back Office';
+    } else {
+      dept = dept.charAt(0).toUpperCase() + dept.slice(1);
+    }
+
     const existing = acc.find(item => item.name === dept);
     if (existing) {
       existing.value += 1;
