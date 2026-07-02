@@ -79,7 +79,6 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
     }
 
-    if (isToday && record && record.punchIn) return 'bg-status-present/80 text-white shadow-sm ring-2 ring-status-present ring-offset-2';
 
     // If the date is in the future
     if (date > realToday && !isToday) return 'bg-gray-100 text-text-light'; 
