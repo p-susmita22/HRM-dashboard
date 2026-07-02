@@ -365,14 +365,14 @@ const AdminDashboard = () => {
         </div>
         <div className="card !mb-0">
           <h3 className="text-lg font-semibold mb-4">Department Distribution</h3>
-          <div className="h-72 w-full flex items-center justify-center">
+          <div className="h-96 w-full flex items-center justify-center">
             {departmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={departmentData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={5}
@@ -383,7 +383,7 @@ const AdminDashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Legend iconType="circle" layout="vertical" verticalAlign="bottom" align="center" />
+                  <Legend iconType="circle" layout="vertical" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
