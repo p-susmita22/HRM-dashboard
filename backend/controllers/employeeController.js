@@ -140,16 +140,6 @@ export const punchOut = async (req, res) => {
       isHalfDay = true;
     }
     
-    // 2. Punch in time 12:00 PM or after (>= 12)
-    if (punchInHour >= 12) {
-      isHalfDay = true;
-    }
-    
-    // 3. Punch out time 1:30 PM (13:30) to 2:00 PM (14:00)
-    if ((punchOutHour === 13 && punchOutMinute >= 30) || punchOutHour === 14) {
-      isHalfDay = true;
-    }
-    
     if (isHalfDay) {
       attendance.status = 'Half Day';
     } else {
