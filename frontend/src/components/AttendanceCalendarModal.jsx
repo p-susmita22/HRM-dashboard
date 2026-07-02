@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { X, CalendarDays, Download, Image as ImageIcon } from 'lucide-react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
-import html2canvas from 'html-to-image'; // Wait, let's use window.print or simple html2pdf. We will use a basic approach.
 import html2pdf from 'html2pdf.js';
 
 const AttendanceCalendarModal = ({ employee, onClose }) => {
