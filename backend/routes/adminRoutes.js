@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllEmployees, addEmployee, deleteEmployee, editEmployee, toggleLockEmployee, uploadOfferLetter, deleteEmployeeDocument, uploadHRPolicies, getHRPolicies, deleteHRPolicies, sendPayslip, updatePayslip, getArchivedEmployees, restoreEmployee, permanentlyDeleteEmployee, getEmployeeHistory } from '../controllers/adminController.js';
-import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch } from '../controllers/adminController.js';
+import { getAllAttendance, approveAttendance, rejectAttendance, markHoliday, editHoliday, deleteHoliday, deleteAttendance, getRemotePunchRequests, approveRemotePunch, rejectRemotePunch, getEmployeeMonthlyAttendance } from '../controllers/adminController.js';
 import { getSidebarCounts, getLeaveRequests, updateLeaveStatus, deleteLeaveRequest, removeDateFromLeave,
   getRegularizationRequests, updateRegularizationStatus, deleteRegularizationRequest, removeDateFromRegularization,
   getResignationRequests, updateResignationStatus, deleteResignationRequest
@@ -50,6 +50,7 @@ router.get('/employees/:id/history', getEmployeeHistory);
 
 // Attendance Routes
 router.get('/attendance', getAllAttendance);
+router.get('/employees/:id/attendance/monthly', getEmployeeMonthlyAttendance);
 router.put('/attendance/:id/approve', approveAttendance);
 router.put('/attendance/:id/reject', rejectAttendance);
 router.delete('/attendance/:id', deleteAttendance);

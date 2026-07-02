@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Users, MoreVertical, Trash2, Eye, Edit, Lock, Unlock, FileUp, X, Download, FileText, Send } from 'lucide-react';
+import { Users, MoreVertical, Trash2, Eye, Edit, Lock, Unlock, FileUp, X, Download, FileText, Send, CalendarDays } from 'lucide-react';
 import PayslipModal from '../../components/PayslipModal';
+import AttendanceCalendarModal from '../../components/AttendanceCalendarModal';
 
 const AdminEmployees = () => {
   const [employees, setEmployees] = useState([]);
@@ -14,6 +15,7 @@ const AdminEmployees = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showPayslipModal, setShowPayslipModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -54,7 +56,7 @@ const AdminEmployees = () => {
 
   // Manage body scroll when modals are open
   useEffect(() => {
-    if (showAddModal || showViewModal || showPayslipModal || uploadingFor || actionLoadingText) {
+    if (showAddModal || showViewModal || showPayslipModal || showCalendarModal || uploadingFor || actionLoadingText) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -62,7 +64,7 @@ const AdminEmployees = () => {
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [showAddModal, showViewModal, showPayslipModal, uploadingFor, actionLoadingText]);
+  }, [showAddModal, showViewModal, showPayslipModal, showCalendarModal, uploadingFor, actionLoadingText]);
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
@@ -499,7 +501,7 @@ const AdminEmployees = () => {
       )}
 
       {/* View Details Modal */}
-      {showViewModal && selectedEmployee && createPortal(
+      {showViewModal && selectedEmployee && !showCalendarModal && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-2 sm:p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 shrink-0">
@@ -509,14 +511,23 @@ const AdminEmployees = () => {
               </button>
             </div>
             <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
-              <div className="flex items-center gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-100">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl border border-primary/20">
-                  {selectedEmployee.fullName.charAt(0)}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl border border-primary/20 shrink-0">
+                    {selectedEmployee.fullName.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-text-dark">{selectedEmployee.fullName}</h3>
+                    <p className="text-text-light text-sm">{selectedEmployee.employeeId}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-text-dark">{selectedEmployee.fullName}</h3>
-                  <p className="text-text-light text-sm">{selectedEmployee.employeeId}</p>
-                </div>
+                
+                <button 
+                  onClick={() => setShowCalendarModal(true)}
+                  className="btn py-2 px-4 text-sm bg-status-holiday/10 text-[#0284c7] hover:bg-status-holiday hover:text-white border border-status-holiday/20 transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <CalendarDays size={16} /> View Attendance
+                </button>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
@@ -654,6 +665,15 @@ const AdminEmployees = () => {
         </div>,
         document.body
       )}
+
+      {/* Attendance Calendar Modal */}
+      {showCalendarModal && selectedEmployee && (
+        <AttendanceCalendarModal 
+          employee={selectedEmployee} 
+          onClose={() => setShowCalendarModal(false)} 
+        />
+      )}
+
       {showPayslipModal && selectedEmployee && (
         <PayslipModal 
           employee={selectedEmployee} 

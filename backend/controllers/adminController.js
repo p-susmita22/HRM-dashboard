@@ -325,6 +325,29 @@ export const updatePayslip = async (req, res) => {
 // --- Attendance Management ---
 import Attendance from '../models/Attendance.js';
 
+export const getEmployeeMonthlyAttendance = async (req, res) => {
+  try {
+    const { year, month } = req.query; // 1-indexed month
+    const employeeId = req.params.id;
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const attendances = await Attendance.find({
+      employee: employeeId,
+      date: { $gte: startDate, $lte: endDate }
+    });
+
+    const leaves = await Leave.find({
+      employee: employeeId,
+      status: 'Approved'
+    });
+
+    res.json({ attendances, leaves });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getAllAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find()
