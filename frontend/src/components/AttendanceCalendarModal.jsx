@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { X, CalendarDays, Download, Image as ImageIcon } from 'lucide-react';
-import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
+import { X, CalendarDays, Download } from 'lucide-react';
+import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 
 const AttendanceCalendarModal = ({ employee, onClose }) => {
@@ -10,6 +10,8 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [loading, setLoading] = useState(true);
   const calendarRef = useRef(null);
+  
+  const realToday = new Date();
 
   useEffect(() => {
     fetchMonthlyData();
@@ -39,46 +41,101 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
   });
 
   const getDayStatus = (date) => {
-    const isSunday = date.getDay() === 0;
-    
-    // Check if it's an official holiday
-    const holidayRecord = monthlyData.attendances.find(a => {
-      const aDate = new Date(a.date);
-      return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth() && a.status === 'Holiday';
+    const joiningDateObj = employee?.joiningDate ? new Date(employee.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed';
+
+    const isToday = date.getDate() === realToday.getDate() && 
+                    date.getMonth() === realToday.getMonth() && 
+                    date.getFullYear() === realToday.getFullYear();
+                    
+    // Color Sundays as Holiday (Blue) FIRST
+    if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
+
+    const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
     });
-    
-    if (holidayRecord) return 'bg-[#1E3A8A] text-white';
+    if (isOnLeave) return 'bg-yellow-400 text-white shadow-md font-bold';
 
     const record = monthlyData.attendances.find(a => {
-      const aDate = new Date(a.date);
-      return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth() && a.status !== 'Holiday';
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
     });
 
     if (record) {
-      if (record.status === 'Half Day') {
-        const isLate = new Date(record.punchIn).getHours() >= 10;
-        if (isLate) return 'bg-gradient-to-b from-status-absent to-status-present text-white';
-        else return 'bg-gradient-to-b from-status-present to-status-absent text-white';
-      }
-      if (record.status === 'Absent' && record.adminStatus === 'Approved') return 'bg-yellow-400 text-white';
-      if (record.status === 'Absent') return 'bg-status-absent text-white';
-      return 'bg-status-present text-white';
+        if (record.status === 'Holiday') return 'bg-[#1E3A8A] text-white shadow-md font-bold border-2 border-[#1E3A8A]';
+        if (record.status === 'Leave Approved' || record.status === 'Leave') return 'bg-yellow-400 text-white shadow-md font-bold';
+        if (record.status === 'Present') return 'bg-status-present text-white shadow-md font-bold';
+        if (record.status === 'Half Day') {
+            if (record.halfDayType === 'First Half Absent') {
+                return 'bg-gradient-to-b from-status-absent to-status-present text-white shadow-md font-bold';
+            } else if (record.halfDayType === 'Second Half Absent') {
+                return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold';
+            }
+            return 'bg-gradient-to-b from-status-present to-status-absent text-white shadow-md font-bold'; // Fallback Half Day color
+        }
+        if (record.status === 'Absent' && record.adminStatus === 'Approved') return 'bg-yellow-400 text-white shadow-md font-bold';
+        if (record.status === 'Absent') return 'bg-status-absent text-white shadow-md font-bold';
+    }
+
+    // If the date is in the future
+    if (date > realToday && !isToday) return 'bg-gray-100 text-text-light'; 
+    
+    // Default empty status for past dates (unmarked)
+    if (date < realToday && !isToday) return 'bg-red-50 text-status-absent/60 border border-status-absent/20'; // Indicating missing punch
+    
+    return 'bg-gray-50 text-text-light';
+  };
+
+  const getDayTooltip = (date) => {
+    const joiningDateObj = employee?.joiningDate ? new Date(employee.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+    if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return 'Not Joined Yet';
+
+    if (date > realToday) return 'Future Date';
+
+    const isToday = date.getDate() === realToday.getDate() && 
+                    date.getMonth() === realToday.getMonth() && 
+                    date.getFullYear() === realToday.getFullYear();
+
+    const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+    });
+
+    const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
+
+    if (record) {
+      const punchDetails = record.punchIn ? `(In: ${formatT(record.punchIn)} | Out: ${formatT(record.punchOut)})` : '';
+      if (record.status === 'Holiday') return 'Official Holiday';
+      if (record.status === 'Leave' || record.status === 'Leave Approved') return 'On Leave';
+      if (record.status === 'Present') return `Full Day ${punchDetails}`;
+      if (record.status === 'Half Day') return `Half Day ${punchDetails}`;
+      if (record.status === 'Absent') return `Absent ${punchDetails}`;
     }
 
     const isOnLeave = monthlyData.leaves.some(leave => {
-      const cTime = date.getTime();
-      if (leave.dates && leave.dates.length > 0) {
-        return leave.dates.some(d => new Date(d).setHours(0,0,0,0) === cTime);
-      }
-      const start = new Date(leave.fromDate).setHours(0,0,0,0);
-      const end = new Date(leave.toDate).setHours(23,59,59,999);
-      return cTime >= start && cTime <= end;
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
     });
+    if (isOnLeave) return 'On Leave';
 
-    if (isOnLeave) return 'bg-yellow-400 text-white';
-    if (isSunday) return 'bg-status-holiday text-white';
+    if (date.getDay() === 0) return 'Sunday (Holiday)';
 
-    return date > new Date() ? 'bg-white text-gray-400 border border-gray-100' : 'bg-status-absent text-white';
+    if (date < realToday && !isToday) return 'Absent (No punches)';
+
+    return 'Pending';
   };
 
   const downloadPDF = () => {
@@ -111,7 +168,8 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="btn !bg-gray-100 hover:!bg-gray-200 text-text-dark !p-2 !rounded-full shadow-sm"
+                disabled={employee?.joiningDate && (currentDate.getFullYear() < new Date(employee.joiningDate).getFullYear() || (currentDate.getFullYear() === new Date(employee.joiningDate).getFullYear() && currentDate.getMonth() <= new Date(employee.joiningDate).getMonth()))}
+                className={`btn !bg-gray-100 !p-2 !rounded-full shadow-sm ${employee?.joiningDate && (currentDate.getFullYear() < new Date(employee.joiningDate).getFullYear() || (currentDate.getFullYear() === new Date(employee.joiningDate).getFullYear() && currentDate.getMonth() <= new Date(employee.joiningDate).getMonth())) ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:!bg-gray-200 text-text-dark'}`}
               >
                 &#8592;
               </button>
@@ -158,24 +216,46 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 <div key={`empty-${i}`} />
               ))}
 
-              {daysInMonth.map((date) => (
-                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-12 sm:h-14">
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center rounded-full text-xs sm:text-sm font-medium shadow-sm cursor-default ${getDayStatus(date)}`}>
+              {daysInMonth.map((date) => {
+                const record = monthlyData.attendances.find(a => {
+                    const aDate = new Date(a.date);
+                    return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+                });
+                const isHalfDay = record && record.status === 'Half Day';
+                
+                return (
+                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14">
+                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
                     {date.getDate()}
                   </div>
+                  {isHalfDay && (
+                    <span className="text-[9px] font-bold text-gray-500 mt-0.5 leading-tight text-center">Half Day</span>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
 
             <div className="mt-8 pt-4 border-t border-gray-100">
               <h4 className="text-sm font-semibold mb-3 text-text-dark">Legend:</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[11px] sm:text-[13px] font-medium text-text-dark">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-status-present shadow-sm"></div> Full Day</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-status-absent shadow-sm"></div> Absent</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400 shadow-sm"></div> Leave</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-[#1E3A8A] shadow-sm"></div> Official Holidays</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px] font-medium text-text-dark">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-status-present shadow-sm"></div> Full Day
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-status-absent shadow-sm"></div> Absent
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Leave
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#1E3A8A] shadow-sm"></div> Official Holidays
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Day
+                </div>
               </div>
             </div>
           </div>
