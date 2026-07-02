@@ -22,11 +22,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006';
-      
-      const res = await axios.get(`${API_URL}/api/admin/employees/${employee._id}/attendance/monthly?year=${year}&month=${month}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await axios.get(`/api/admin/employees/${employee._id}/attendance/monthly?year=${year}&month=${month}`);
       setMonthlyData(res.data);
     } catch (error) {
       console.error('Error fetching monthly data', error);
