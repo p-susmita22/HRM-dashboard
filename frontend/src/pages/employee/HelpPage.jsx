@@ -292,6 +292,7 @@ const HelpPage = () => {
   };
 
   return (
+    <>
     <div className="animate-fade-in p-5 max-w-4xl mx-auto">
       <h2 className="mt-5 mb-5 text-xl font-bold text-primary-dark">Help & Requests</h2>
       
@@ -846,6 +847,7 @@ const HelpPage = () => {
       </div>,
       document.body
     )}
+    </>
   );
 };
 
