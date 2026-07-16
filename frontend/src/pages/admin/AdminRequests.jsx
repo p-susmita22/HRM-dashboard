@@ -220,6 +220,7 @@ const AdminRequests = () => {
         </div>
       </div>
 
+      {activeTab !== 'compoff' && (
       <div className="card shadow-md border-none overflow-hidden">
         <div className="overflow-x-auto min-h-[300px]">
           {loading ? (
@@ -388,6 +389,7 @@ const AdminRequests = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* Comp Off Credit Section */}
       {activeTab === 'compoff' && (
