@@ -115,11 +115,16 @@ const AdminRequests = () => {
     return matchName && matchDept && matchDate;
   };
 
-  const filteredLeaves = leaves.filter(filterRequest);
+  const normalLeaves = leaves.filter(req => req.leaveType !== 'Comp Off');
+  const compOffLeaves = leaves.filter(req => req.leaveType === 'Comp Off');
+
+  const filteredLeaves = normalLeaves.filter(filterRequest);
+  const filteredCompOffLeaves = compOffLeaves.filter(filterRequest);
   const filteredRegularizations = regularizations.filter(filterRequest);
   const filteredResignations = resignations.filter(filterRequest);
 
-  const pendingLeaves = leaves.filter(req => req.status === 'Pending').length;
+  const pendingLeaves = normalLeaves.filter(req => req.status === 'Pending').length;
+  const pendingCompOffs = compOffLeaves.filter(req => req.status === 'Pending').length;
   const pendingRegularizations = regularizations.filter(req => req.status === 'Pending').length;
   const pendingResignations = resignations.filter(req => req.status === 'Pending').length;
 
@@ -183,7 +188,12 @@ const AdminRequests = () => {
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'compoff' ? 'border-purple-500 text-purple-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('compoff')}
         >
-          <Gift size={16} /> Credit Comp Off
+          <Gift size={16} /> Comp Off
+          {pendingCompOffs > 0 && (
+            <span className="bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+              {pendingCompOffs}
+            </span>
+          )}
         </button>
       </div>
 
@@ -220,7 +230,6 @@ const AdminRequests = () => {
         </div>
       </div>
 
-      {activeTab !== 'compoff' && (
       <div className="card shadow-md border-none overflow-hidden">
         <div className="overflow-x-auto min-h-[300px]">
           {loading ? (
@@ -231,7 +240,7 @@ const AdminRequests = () => {
                 <tr className="bg-gray-50 border-y border-gray-100">
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
                   
-                  {activeTab === 'leave' && (
+                  {(activeTab === 'leave' || activeTab === 'compoff') && (
                     <>
                       <th className="p-4 text-xs font-semibold text-text-light uppercase">Leave Type</th>
                       <th className="p-4 text-xs font-semibold text-text-light uppercase">Duration</th>
@@ -258,7 +267,7 @@ const AdminRequests = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {activeTab === 'leave' && filteredLeaves.map(req => (
+                {(activeTab === 'leave' || activeTab === 'compoff') && (activeTab === 'leave' ? filteredLeaves : filteredCompOffLeaves).map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
@@ -380,6 +389,7 @@ const AdminRequests = () => {
                 ))}
 
                 {((activeTab === 'leave' && filteredLeaves.length === 0) || 
+                  (activeTab === 'compoff' && filteredCompOffLeaves.length === 0) || 
                   (activeTab === 'regularization' && filteredRegularizations.length === 0) || 
                   (activeTab === 'resignation' && filteredResignations.length === 0)) && (
                   <tr><td colSpan="6" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
@@ -389,11 +399,10 @@ const AdminRequests = () => {
           )}
         </div>
       </div>
-      )}
 
       {/* Comp Off Credit Section */}
       {activeTab === 'compoff' && (
-        <div className="card shadow-md border-none max-w-2xl">
+        <div className="card shadow-md border-none mt-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
               <Gift size={20} className="text-purple-600" />
