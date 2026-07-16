@@ -587,6 +587,12 @@ const AdminEmployees = () => {
                   <p className="text-xs text-text-light mb-1">Status</p>
                   <p className="text-sm font-medium text-text-dark">{selectedEmployee.isLocked ? 'Locked' : selectedEmployee.isActive ? 'Active' : 'Inactive'}</p>
                 </div>
+                <div>
+                  <p className="text-xs text-text-light mb-1">Status Restrictions</p>
+                  <p className="text-sm font-medium text-text-dark">
+                    Inactive: {selectedEmployee.inactiveCount || 0} times | Locked: {selectedEmployee.lockedCount || 0} times
+                  </p>
+                </div>
               </div>
               
               <div className="mt-8">

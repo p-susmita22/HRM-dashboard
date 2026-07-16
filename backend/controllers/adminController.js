@@ -169,8 +169,11 @@ export const getEmployeeHistory = async (req, res) => {
       
       if (joiningDate) employee.joiningDate = new Date(joiningDate);
       
-      if (isActive !== undefined) {
+      if (isActive !== undefined && employee.isActive !== isActive) {
         employee.isActive = isActive;
+        if (!isActive) {
+          employee.inactiveCount = (employee.inactiveCount || 0) + 1;
+        }
       }
       
       if (password && password.trim() !== '') {
@@ -193,6 +196,9 @@ export const toggleLockEmployee = async (req, res) => {
     if (!employee) return res.status(404).json({ message: 'Employee not found' });
     
     employee.isLocked = !employee.isLocked;
+    if (employee.isLocked) {
+      employee.lockedCount = (employee.lockedCount || 0) + 1;
+    }
     await employee.save();
     
     res.json({ message: `Employee ${employee.isLocked ? 'locked' : 'unlocked'} successfully`, isLocked: employee.isLocked });
