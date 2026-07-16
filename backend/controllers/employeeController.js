@@ -151,7 +151,7 @@ export const punchOut = async (req, res) => {
     // --- Auto Comp Off for Sunday work ---
     const punchDate = new Date(attendance.date);
     if (punchDate.getDay() === 0) { // 0 = Sunday
-      const compOffDays = isHalfDay ? 0.5 : 1;
+      const compOffDays = 1; // Full day OR Half Day on Sunday = 1 Comp Off
       const employee = await Employee.findById(req.user._id);
       if (employee) {
         employee.compOffBalance = parseFloat(((employee.compOffBalance || 0) + compOffDays).toFixed(1));
