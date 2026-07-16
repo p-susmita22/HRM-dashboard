@@ -36,11 +36,13 @@ router.get('/regularizations', getMyRegularizations);
 router.post('/regularizations', applyRegularization);
 router.delete('/regularizations/:id', deleteRegularization);
 
-import { getMyResignation, applyResignation, submitDailyReport, deleteDailyReport } from '../controllers/employeeController.js';
+import { getMyResignation, applyResignation, submitDailyReport, deleteDailyReport, getCompOffHistory } from '../controllers/employeeController.js';
 router.get('/resignation', getMyResignation);
 router.post('/resignation', applyResignation);
 
 router.post('/daily-report', submitDailyReport);
 router.delete('/daily-report', deleteDailyReport);
+
+router.get('/comp-off-history', getCompOffHistory);
 
 export default router;

@@ -378,3 +378,30 @@ export const deleteDailyReport = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getCompOffHistory = async (req, res) => {
+  try {
+    const allAttendances = await Attendance.find({
+      employee: req.user._id,
+      punchIn: { $exists: true, $ne: null },
+      status: { $in: ['Present', 'Half Day'] }
+    }).sort({ date: -1 });
+
+    // Filter only Sundays
+    const sundayRecords = allAttendances.filter(a => new Date(a.date).getDay() === 0);
+
+    const history = sundayRecords.map(a => ({
+      date: a.date,
+      status: a.status,
+      compOffEarned: 1, // Always 1 regardless of half/full day
+      punchIn: a.punchIn,
+      punchOut: a.punchOut,
+      totalHours: a.totalHours
+    }));
+
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import axios from 'axios';
 
@@ -15,6 +16,8 @@ const HelpPage = () => {
   const [employeeData, setEmployeeData] = useState(null);
   const [compOffBalance, setCompOffBalance] = useState(0);
   const [selectedLeaveType, setSelectedLeaveType] = useState('');
+  const [showCompOffHistory, setShowCompOffHistory] = useState(false);
+  const [compOffHistory, setCompOffHistory] = useState([]);
 
   useEffect(() => {
     fetchProfile();
@@ -41,6 +44,15 @@ const HelpPage = () => {
       const res = await axios.get('/api/employee/profile');
       setEmployeeData(res.data);
       setCompOffBalance(res.data.compOffBalance || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchCompOffHistory = async () => {
+    try {
+      const res = await axios.get('/api/employee/comp-off-history');
+      setCompOffHistory(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -310,13 +322,17 @@ const HelpPage = () => {
             <form onSubmit={handleApplyLeave}>
               <h3 className="mb-4 text-lg font-semibold">Apply for Leave</h3>
 
-              {/* Comp Off Balance Banner */}
-              <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between">
+              {/* Comp Off Balance Banner - Clickable */}
+              <div
+                onClick={() => { fetchCompOffHistory(); setShowCompOffHistory(true); }}
+                className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-purple-100 hover:border-purple-300 transition-all group"
+                title="Click to see Comp Off history"
+              >
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🔄</span>
                   <div>
                     <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Comp Off Balance</p>
-                    <p className="text-xs text-purple-500">Credited by Admin for extra work days</p>
+                    <p className="text-xs text-purple-500 group-hover:text-purple-700 transition-colors">Click to view history ↗</p>
                   </div>
                 </div>
                 <span className={`text-2xl font-black px-3 py-1 rounded-lg ${compOffBalance > 0 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
@@ -749,6 +765,87 @@ const HelpPage = () => {
         )}
       </div>
     </div>
+
+    {/* Comp Off History Modal */}
+    {showCompOffHistory && createPortal(
+      <div
+        className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4"
+        onClick={() => setShowCompOffHistory(false)}
+      >
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-lg">🔄</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-text-dark">Comp Off History</h3>
+                <p className="text-xs text-text-light">Extra Sunday work days</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowCompOffHistory(false)}
+              className="text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Balance Summary */}
+          <div className="mx-5 mt-4 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between">
+            <span className="text-sm font-semibold text-purple-700">Total Available Balance</span>
+            <span className={`text-xl font-black px-3 py-1 rounded-lg ${compOffBalance > 0 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              {compOffBalance} day{compOffBalance !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* History List */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            {compOffHistory.length === 0 ? (
+              <div className="text-center py-10">
+                <span className="text-4xl block mb-3">📅</span>
+                <p className="text-text-light text-sm">No Sunday work records found.</p>
+              </div>
+            ) : (
+              compOffHistory.map((record, idx) => {
+                const d = new Date(record.date);
+                const pIn = record.punchIn ? new Date(record.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
+                const pOut = record.punchOut ? new Date(record.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
+                const hrs = record.totalHours ? record.totalHours.toFixed(1) : '0';
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-purple-50 hover:border-purple-200 transition-colors">
+                    <div>
+                      <p className="font-bold text-sm text-text-dark">
+                        {d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-text-light mt-0.5">
+                        {pIn} – {pOut} &nbsp;·&nbsp; {hrs} hrs &nbsp;·&nbsp;
+                        <span className={`font-semibold ${record.status === 'Half Day' ? 'text-orange-500' : 'text-green-600'}`}>
+                          {record.status}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="bg-purple-100 text-purple-700 font-black text-sm px-2.5 py-1 rounded-lg shrink-0">
+                      +{record.compOffEarned} day
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-gray-100 text-center">
+            <p className="text-xs text-text-light">Sunday kaam karne par automatically 1 Comp Off credit hota hai.</p>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
   );
 };
 
