@@ -99,4 +99,9 @@ router.put('/profile', updateAdminProfile);
 router.put('/password', changeAdminPassword);
 router.post('/logout-devices', logoutOtherDevices);
 
+// Comp Off Routes
+import { creditCompOff, deductCompOff } from '../controllers/adminController.js';
+router.post('/comp-off/credit', creditCompOff);
+router.post('/comp-off/deduct', deductCompOff);
+
 export default router;

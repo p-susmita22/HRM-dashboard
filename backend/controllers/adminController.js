@@ -666,6 +666,16 @@ export const updateLeaveStatus = async (req, res) => {
         }
       }
 
+      // Deduct Comp Off balance if it's a Comp Off leave
+      if (leave.leaveType === 'Comp Off') {
+        const emp = await Employee.findById(leave.employee._id);
+        if (emp) {
+          const daysUsed = datesToProcess.length;
+          emp.compOffBalance = Math.max(0, (emp.compOffBalance || 0) - daysUsed);
+          await emp.save();
+        }
+      }
+
       for (const d of datesToProcess) {
         if (!d) continue;
         const currentDate = new Date(d);
@@ -958,3 +968,43 @@ export const deleteReceipt = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// --- Comp Off Management ---
+export const creditCompOff = async (req, res) => {
+  try {
+    const { employeeId, days, reason, workDate } = req.body;
+    if (!employeeId || !days || days <= 0) {
+      return res.status(400).json({ message: 'Invalid employee or days' });
+    }
+
+    const employee = await Employee.findById(employeeId);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    employee.compOffBalance = (employee.compOffBalance || 0) + Number(days);
+    await employee.save();
+
+    res.json({
+      message: `Comp Off credited successfully. New balance: ${employee.compOffBalance} day(s).`,
+      compOffBalance: employee.compOffBalance
+    });
+  } catch (error) {
+    console.error('Error crediting comp off:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deductCompOff = async (req, res) => {
+  try {
+    const { employeeId, days } = req.body;
+    const employee = await Employee.findById(employeeId);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    employee.compOffBalance = Math.max(0, (employee.compOffBalance || 0) - Number(days));
+    await employee.save();
+
+    res.json({ message: 'Comp Off deducted', compOffBalance: employee.compOffBalance });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

@@ -13,6 +13,8 @@ const HelpPage = () => {
   const [myResignation, setMyResignation] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [employeeData, setEmployeeData] = useState(null);
+  const [compOffBalance, setCompOffBalance] = useState(0);
+  const [selectedLeaveType, setSelectedLeaveType] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -38,6 +40,7 @@ const HelpPage = () => {
     try {
       const res = await axios.get('/api/employee/profile');
       setEmployeeData(res.data);
+      setCompOffBalance(res.data.compOffBalance || 0);
     } catch (err) {
       console.error(err);
     }
@@ -55,8 +58,9 @@ const HelpPage = () => {
   const handleApplyLeave = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const leaveType = formData.get('leaveType');
     const data = {
-      leaveType: formData.get('leaveType'),
+      leaveType,
       dates: leaveDates.join(','),
       reason: formData.get('reason')
     };
@@ -65,9 +69,11 @@ const HelpPage = () => {
       await axios.post('/api/employee/leaves', data);
       e.target.reset();
       setLeaveDates([]);
+      setSelectedLeaveType('');
       fetchMyLeaves();
+      fetchProfile(); // Refresh compoff balance
     } catch (err) {
-      alert('Failed to apply leave');
+      alert(err.response?.data?.message || 'Failed to apply leave');
     }
   };
 
@@ -303,15 +309,42 @@ const HelpPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <form onSubmit={handleApplyLeave}>
               <h3 className="mb-4 text-lg font-semibold">Apply for Leave</h3>
+
+              {/* Comp Off Balance Banner */}
+              <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🔄</span>
+                  <div>
+                    <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Comp Off Balance</p>
+                    <p className="text-xs text-purple-500">Credited by Admin for extra work days</p>
+                  </div>
+                </div>
+                <span className={`text-2xl font-black px-3 py-1 rounded-lg ${compOffBalance > 0 ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  {compOffBalance} day{compOffBalance !== 1 ? 's' : ''}
+                </span>
+              </div>
+
               <div className="mb-4">
                 <label className="block mb-1.5 font-medium text-sm">Leave Type</label>
-                <select name="leaveType" className="form-control" required>
+                <select
+                  name="leaveType"
+                  className="form-control"
+                  required
+                  value={selectedLeaveType}
+                  onChange={(e) => setSelectedLeaveType(e.target.value)}
+                >
                   <option value="">Select Leave Type</option>
                   <option value="Casual Leave">Casual Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
                   <option value="Emergency Leave">Emergency Leave</option>
                   <option value="Earned Leave">Earned Leave</option>
+                  <option value="Comp Off" disabled={compOffBalance <= 0}>
+                    Comp Off {compOffBalance > 0 ? `(${compOffBalance} available)` : '(No balance)'}
+                  </option>
                 </select>
+                {selectedLeaveType === 'Comp Off' && compOffBalance > 0 && leaveDates.length > compOffBalance && (
+                  <p className="text-red-500 text-xs mt-1">⚠️ You can only select up to {compOffBalance} day(s) for Comp Off.</p>
+                )}
               </div>
               <div className="mb-4">
                 <label className="block mb-1.5 font-medium text-sm">Selected Dates ({leaveDates.length})</label>

@@ -160,6 +160,16 @@ export const applyLeave = async (req, res) => {
     const { leaveType, dates, reason } = req.body;
     const dateArray = dates ? dates.split(',') : [];
 
+    // If it's a Comp Off leave, check balance
+    if (leaveType === 'Comp Off') {
+      const employee = await Employee.findById(req.user._id);
+      if (!employee || (employee.compOffBalance || 0) < dateArray.length) {
+        return res.status(400).json({ 
+          message: `Insufficient Comp Off balance. Available: ${employee?.compOffBalance || 0} day(s), Requested: ${dateArray.length} day(s).` 
+        });
+      }
+    }
+
     const leave = new Leave({
       employee: req.user._id,
       leaveType,

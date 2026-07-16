@@ -19,6 +19,7 @@ const employeeSchema = new mongoose.Schema({
   joiningDate: { type: Date, required: true },
   role: { type: String, enum: ['employee', 'admin'], default: 'employee' },
   isActive: { type: Boolean, default: true },
+  compOffBalance: { type: Number, default: 0 },
   consecutiveAbsents: { type: Number, default: 0 },
   isLocked: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false },

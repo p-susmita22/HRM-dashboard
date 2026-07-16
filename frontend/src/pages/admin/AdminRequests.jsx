@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Eye } from 'lucide-react';
+import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Eye, Gift } from 'lucide-react';
 
 const AdminRequests = () => {
   const [activeTab, setActiveTab] = useState('leave');
@@ -13,6 +13,10 @@ const AdminRequests = () => {
   const [regularizations, setRegularizations] = useState([]);
   const [resignations, setResignations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState([]);
+  const [compOffForm, setCompOffForm] = useState({ employeeId: '', days: 1, reason: '', workDate: '' });
+  const [compOffLoading, setCompOffLoading] = useState(false);
+  const [compOffSuccess, setCompOffSuccess] = useState('');
 
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
@@ -40,6 +44,7 @@ const AdminRequests = () => {
 
   useEffect(() => {
     fetchRequests();
+    axios.get('/api/admin/employees').then(r => setEmployees(r.data)).catch(() => {});
   }, [activeTab]);
 
   const updateStatus = async (type, id, status) => {
@@ -118,6 +123,21 @@ const AdminRequests = () => {
   const pendingRegularizations = regularizations.filter(req => req.status === 'Pending').length;
   const pendingResignations = resignations.filter(req => req.status === 'Pending').length;
 
+  const handleCreditCompOff = async (e) => {
+    e.preventDefault();
+    setCompOffLoading(true);
+    setCompOffSuccess('');
+    try {
+      const res = await axios.post('/api/admin/comp-off/credit', compOffForm);
+      setCompOffSuccess(res.data.message);
+      setCompOffForm({ employeeId: '', days: 1, reason: '', workDate: '' });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to credit Comp Off');
+    } finally {
+      setCompOffLoading(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in pb-10">
       <div className="mb-6">
@@ -158,6 +178,12 @@ const AdminRequests = () => {
               {pendingResignations}
             </span>
           )}
+        </button>
+        <button 
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'compoff' ? 'border-purple-500 text-purple-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('compoff')}
+        >
+          <Gift size={16} /> Credit Comp Off
         </button>
       </div>
 
@@ -362,6 +388,94 @@ const AdminRequests = () => {
           )}
         </div>
       </div>
+
+      {/* Comp Off Credit Section */}
+      {activeTab === 'compoff' && (
+        <div className="card shadow-md border-none max-w-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Gift size={20} className="text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-text-dark">Credit Comp Off to Employee</h3>
+              <p className="text-xs text-text-light">Reward an employee with Comp Off days for working on holidays/Sundays or overtime.</p>
+            </div>
+          </div>
+
+          {compOffSuccess && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 font-medium flex items-center gap-2">
+              <CheckCircle size={16} /> {compOffSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handleCreditCompOff} className="space-y-4">
+            <div>
+              <label className="block mb-1.5 font-medium text-sm text-text-dark">Select Employee</label>
+              <select
+                className="form-control"
+                required
+                value={compOffForm.employeeId}
+                onChange={e => setCompOffForm({ ...compOffForm, employeeId: e.target.value })}
+              >
+                <option value="">-- Select Employee --</option>
+                {employees.filter(e => e.role === 'employee' && e.isActive).map(emp => (
+                  <option key={emp._id} value={emp._id}>
+                    {emp.fullName} ({emp.employeeId}) — Current Balance: {emp.compOffBalance || 0} day(s)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1.5 font-medium text-sm text-text-dark">Days to Credit</label>
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  className="form-control"
+                  required
+                  value={compOffForm.days}
+                  onChange={e => setCompOffForm({ ...compOffForm, days: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block mb-1.5 font-medium text-sm text-text-dark">Work Date (Optional)</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={compOffForm.workDate}
+                  onChange={e => setCompOffForm({ ...compOffForm, workDate: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-1.5 font-medium text-sm text-text-dark">Reason / Notes</label>
+              <textarea
+                className="form-control"
+                rows="3"
+                placeholder="e.g. Worked on Sunday 14 July 2026 for project deadline..."
+                value={compOffForm.reason}
+                onChange={e => setCompOffForm({ ...compOffForm, reason: e.target.value })}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={compOffLoading}
+              className="btn bg-purple-600 hover:bg-purple-700 text-white w-full flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {compOffLoading ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Gift size={16} />
+              )}
+              {compOffLoading ? 'Crediting...' : 'Credit Comp Off'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {isModalOpen && selectedRequest && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 p-4" onClick={() => setIsModalOpen(false)}>
