@@ -76,7 +76,10 @@ export const deleteEmployee = async (req, res) => {
     // Soft-delete: archive instead of permanently removing
     employee.isArchived = true;
     employee.archivedAt = new Date();
-    employee.isActive = false;
+    if (employee.isActive) {
+      employee.isActive = false;
+      employee.inactiveCount = (employee.inactiveCount || 0) + 1;
+    }
     await employee.save();
     
     res.json({ message: 'Employee moved to history successfully' });
