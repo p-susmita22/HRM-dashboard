@@ -541,6 +541,16 @@ const AdminRequests = () => {
                 </p>
               </div>
               
+              <div className="mb-3">
+                <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Applied On</p>
+                <p className="text-sm font-medium text-text-dark">
+                  {selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                  }) : 'Not available'}
+                </p>
+              </div>
+              
               <div className="flex justify-between items-center mt-4">
                 <span className={`px-2 py-1 rounded text-[10px] font-bold ${
                   selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' : 
