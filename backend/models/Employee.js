@@ -26,6 +26,10 @@ const employeeSchema = new mongoose.Schema({
   inactiveCount: { type: Number, default: 0 },
   isArchived: { type: Boolean, default: false },
   archivedAt: { type: Date },
+  activeDesktopId: { type: String, default: null },
+  activeDesktopToken: { type: String, default: null },
+  activeMobileId: { type: String, default: null },
+  activeMobileToken: { type: String, default: null },
   loginActivity: [{
     device: String,
     ip: String,

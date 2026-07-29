@@ -327,7 +327,13 @@ const HomePage = () => {
     });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const deviceType = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+      await axios.post('/api/auth/logout', { deviceType });
+    } catch (e) {
+      console.error('Logout API failed', e);
+    }
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('role');
     window.location.href = '/login';

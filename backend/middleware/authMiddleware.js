@@ -16,6 +16,12 @@ export const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Account deactivated' });
       }
       
+      if (req.user.role === 'employee') {
+        if (req.user.activeDesktopToken !== token && req.user.activeMobileToken !== token) {
+           return res.status(401).json({ message: 'Session expired or logged in from another device' });
+        }
+      }
+      
       next();
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, token failed' });

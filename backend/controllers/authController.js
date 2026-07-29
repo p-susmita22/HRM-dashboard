@@ -11,7 +11,7 @@ const generateToken = (id, role) => {
 
 export const loginEmployee = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceId, deviceType } = req.body;
 
     const employee = await Employee.findOne({ email: new RegExp(`^${email.trim()}$`, 'i') });
 
@@ -103,6 +103,28 @@ export const loginEmployee = async (req, res) => {
     }
 
     if (await employee.matchPassword(password)) {
+      if (employee.role === 'employee') {
+        if (deviceType === 'mobile') {
+          if (employee.activeMobileId && employee.activeMobileId !== deviceId && employee.activeMobileToken) {
+            employee.isLocked = true;
+            employee.lockedCount = (employee.lockedCount || 0) + 1;
+            employee.activeMobileId = null;
+            employee.activeMobileToken = null;
+            await employee.save();
+            return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second mobile phone. Please contact Admin.' });
+          }
+        } else {
+          if (employee.activeDesktopId && employee.activeDesktopId !== deviceId && employee.activeDesktopToken) {
+            employee.isLocked = true;
+            employee.lockedCount = (employee.lockedCount || 0) + 1;
+            employee.activeDesktopId = null;
+            employee.activeDesktopToken = null;
+            await employee.save();
+            return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second system. Please contact Admin.' });
+          }
+        }
+      }
+
       // Record login activity
       const device = req.headers['user-agent'] || 'Unknown Device';
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
@@ -118,6 +140,18 @@ export const loginEmployee = async (req, res) => {
         employee.loginActivity.shift();
       }
       
+      const token = generateToken(employee._id, employee.role);
+
+      if (employee.role === 'employee') {
+        if (deviceType === 'mobile') {
+          employee.activeMobileId = deviceId;
+          employee.activeMobileToken = token;
+        } else {
+          employee.activeDesktopId = deviceId;
+          employee.activeDesktopToken = token;
+        }
+      }
+
       await employee.save();
 
       res.json({
@@ -126,7 +160,7 @@ export const loginEmployee = async (req, res) => {
         fullName: employee.fullName,
         email: employee.email,
         role: employee.role,
-        token: generateToken(employee._id, employee.role),
+        token,
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -170,6 +204,26 @@ export const registerAdmin = async (req, res) => {
     } else {
       res.status(400).json({ message: 'Invalid admin data' });
     }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const logoutEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.user._id);
+    if (employee) {
+      const { deviceType } = req.body;
+      if (deviceType === 'mobile') {
+        employee.activeMobileId = null;
+        employee.activeMobileToken = null;
+      } else {
+        employee.activeDesktopId = null;
+        employee.activeDesktopToken = null;
+      }
+      await employee.save();
+    }
+    res.json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

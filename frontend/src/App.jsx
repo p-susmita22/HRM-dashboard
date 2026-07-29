@@ -70,9 +70,18 @@ const EmployeeLogin = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = 'DEV-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+        localStorage.setItem('deviceId', deviceId);
+      }
+      const deviceType = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+
       const response = await axios.post('/api/auth/login', {
         email,
-        password
+        password,
+        deviceId,
+        deviceType
       });
       
       // Save token (mocked simple state logic for now)
