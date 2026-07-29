@@ -216,29 +216,17 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        
-        if (distance > 500) {
-          alert(`You are ${Math.round(distance)} meters away from the office. You must be within 500 meters to punch in.`);
-          setIsPunchingIn(false);
-          isPunchingRef.current = false;
-          return;
-        }
+        const isRemote = true; 
+        let address = 'Unknown location';
 
-        const isRemote = false; 
-        let address = '7WP3+753 Benupur, Odisha';
-
-        if (isMobile) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500);
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const geoData = await geoRes.json();
-            if (geoData?.display_name) address = geoData.display_name;
-          } catch (e) { console.error('Geocoding failed', e); }
-        }
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          const geoData = await geoRes.json();
+          if (geoData?.display_name) address = geoData.display_name;
+        } catch (e) { console.error('Geocoding failed', e); }
 
         const locationData = { lat: latitude, lng: longitude, address };
 
@@ -290,29 +278,17 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
-        
-        if (distance > 500) {
-          alert(`You are ${Math.round(distance)} meters away from the office. You must be within 500 meters to punch out.`);
-          setIsPunchingOut(false);
-          isPunchingRef.current = false;
-          return;
-        }
+        const isRemoteOut = true;
+        let address = 'Unknown location';
 
-        const isRemoteOut = false;
-        let address = '7WP3+753 Benupur, Odisha';
-
-        if (isMobile) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500);
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const geoData = await geoRes.json();
-            if (geoData?.display_name) address = geoData.display_name;
-          } catch (e) { console.error('Geocoding failed', e); }
-        }
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          const geoData = await geoRes.json();
+          if (geoData?.display_name) address = geoData.display_name;
+        } catch (e) { console.error('Geocoding failed', e); }
 
         const locationData = { lat: latitude, lng: longitude, address };
 
