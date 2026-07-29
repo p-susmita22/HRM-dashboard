@@ -360,7 +360,7 @@ export const getEmployeeMonthlyAttendance = async (req, res) => {
 export const getAllAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find()
-      .populate('employee', 'fullName employeeId department')
+      .populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName')
       .sort({ date: -1 });
     res.json(attendance);
   } catch (error) {
@@ -391,7 +391,7 @@ export const approveAttendance = async (req, res) => {
     await record.save();
     
     // Return populated record to update UI instantly
-    const updatedRecord = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updatedRecord = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updatedRecord);
   } catch (error) {
     console.error('Error approving attendance:', error);
@@ -408,7 +408,7 @@ export const rejectAttendance = async (req, res) => {
     record.adminStatus = 'Rejected';
     await record.save();
     
-    const updatedRecord = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updatedRecord = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updatedRecord);
   } catch (error) {
     console.error('Error rejecting attendance:', error);
@@ -434,7 +434,7 @@ export const getRemotePunchRequests = async (req, res) => {
         { isRemoteOut: true, remoteOutStatus: 'Pending' }
       ]
     })
-      .populate('employee', 'fullName employeeId department')
+      .populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName')
       .sort({ createdAt: -1 });
     res.json(records);
   } catch (error) {
@@ -449,7 +449,7 @@ export const approveRemotePunch = async (req, res) => {
     if (!record) return res.status(404).json({ message: 'Record not found' });
     record.remoteStatus = 'Approved';
     await record.save();
-    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updated);
   } catch (error) {
     console.error('Error approving remote punch:', error);
@@ -465,7 +465,7 @@ export const rejectRemotePunch = async (req, res) => {
     record.status = 'Absent';
     record.adminStatus = 'Rejected';
     await record.save();
-    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updated);
   } catch (error) {
     console.error('Error rejecting remote punch:', error);
@@ -489,7 +489,7 @@ export const approveRemoteOutPunch = async (req, res) => {
     
     await record.save();
     
-    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updated);
   } catch (error) {
     console.error('Error approving remote out punch:', error);
@@ -509,7 +509,7 @@ export const rejectRemoteOutPunch = async (req, res) => {
     
     await record.save();
     
-    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department');
+    const updated = await Attendance.findById(req.params.id).populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName');
     res.json(updated);
   } catch (error) {
     console.error('Error rejecting remote out punch:', error);
@@ -650,7 +650,7 @@ export const getSidebarCounts = async (req, res) => {
 
 export const getLeaveRequests = async (req, res) => {
   try {
-    const leaves = await Leave.find().populate('employee', 'fullName employeeId department').sort({ createdAt: -1 });
+    const leaves = await Leave.find().populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName').sort({ createdAt: -1 });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -735,7 +735,7 @@ export const removeDateFromLeave = async (req, res) => {
 
 export const getRegularizationRequests = async (req, res) => {
   try {
-    const regularizations = await Regularization.find().populate('employee', 'fullName employeeId department').sort({ createdAt: -1 });
+    const regularizations = await Regularization.find().populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName').sort({ createdAt: -1 });
     res.json(regularizations);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -806,7 +806,7 @@ export const removeDateFromRegularization = async (req, res) => {
 
 export const getResignationRequests = async (req, res) => {
   try {
-    const resignations = await Resignation.find().populate('employee', 'fullName employeeId department').sort({ createdAt: -1 });
+    const resignations = await Resignation.find().populate('employee', 'fullName employeeId department activeMobileDeviceName activeDesktopDeviceName').sort({ createdAt: -1 });
     res.json(resignations);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

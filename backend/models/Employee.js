@@ -28,8 +28,10 @@ const employeeSchema = new mongoose.Schema({
   archivedAt: { type: Date },
   activeDesktopId: { type: String, default: null },
   activeDesktopToken: { type: String, default: null },
+  activeDesktopDeviceName: { type: String, default: null },
   activeMobileId: { type: String, default: null },
   activeMobileToken: { type: String, default: null },
+  activeMobileDeviceName: { type: String, default: null },
   loginActivity: [{
     device: String,
     ip: String,

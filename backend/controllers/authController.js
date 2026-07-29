@@ -3,6 +3,20 @@ import Attendance from '../models/Attendance.js';
 import Leave from '../models/Leave.js';
 import jwt from 'jsonwebtoken';
 
+const extractDeviceName = (userAgent) => {
+  if (!userAgent) return 'Unknown Device';
+  if (/android/i.test(userAgent)) {
+    const match = userAgent.match(/Android.*?; ([a-zA-Z0-9\-_ ]+)/i);
+    return match ? `Android (${match[1].trim()})` : 'Android';
+  }
+  if (/iphone/i.test(userAgent)) return 'iPhone';
+  if (/ipad/i.test(userAgent)) return 'iPad';
+  if (/windows/i.test(userAgent)) return 'Windows PC';
+  if (/mac/i.test(userAgent)) return 'Mac';
+  if (/linux/i.test(userAgent)) return 'Linux';
+  return 'Unknown Device';
+};
+
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || 'fallback_secret', {
     expiresIn: '30d',
@@ -141,14 +155,17 @@ export const loginEmployee = async (req, res) => {
       }
       
       const token = generateToken(employee._id, employee.role);
+      const parsedDeviceName = extractDeviceName(device);
 
       if (employee.role === 'employee') {
         if (deviceType === 'mobile') {
           employee.activeMobileId = deviceId;
           employee.activeMobileToken = token;
+          employee.activeMobileDeviceName = parsedDeviceName;
         } else {
           employee.activeDesktopId = deviceId;
           employee.activeDesktopToken = token;
+          employee.activeDesktopDeviceName = parsedDeviceName;
         }
       }
 

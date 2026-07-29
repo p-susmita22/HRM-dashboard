@@ -314,7 +314,19 @@ const AdminEmployees = () => {
                           {emp.fullName.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-text-dark text-sm hover:text-primary transition-colors">{emp.fullName}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-text-dark text-sm hover:text-primary transition-colors">{emp.fullName}</p>
+                            {emp.activeMobileDeviceName && (
+                              <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center shadow-sm" title="Logged in via Mobile">
+                                📱 {emp.activeMobileDeviceName}
+                              </span>
+                            )}
+                            {emp.activeDesktopDeviceName && (
+                              <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 flex items-center shadow-sm" title="Logged in via System">
+                                💻 {emp.activeDesktopDeviceName}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-text-light">{emp.email}</p>
                         </div>
                       </div>

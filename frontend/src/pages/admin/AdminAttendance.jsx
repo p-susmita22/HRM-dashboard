@@ -639,7 +639,19 @@ const AdminAttendance = () => {
                     <tr key={record._id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
                       <td className="p-4">
-                        <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
+                          {record.employee?.activeMobileDeviceName && (
+                            <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center shadow-sm" title="Logged in via Mobile">
+                              📱 {record.employee.activeMobileDeviceName}
+                            </span>
+                          )}
+                          {record.employee?.activeDesktopDeviceName && (
+                            <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 flex items-center shadow-sm" title="Logged in via System">
+                              💻 {record.employee.activeDesktopDeviceName}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
                       </td>
                       <td className="p-4">
@@ -738,7 +750,19 @@ const AdminAttendance = () => {
                         <p className="text-xs text-text-light">{formatTime(punchTime)}</p>
                       </td>
                       <td className="p-4">
-                        <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-text-dark">{record.employee?.fullName}</p>
+                          {record.employee?.activeMobileDeviceName && (
+                            <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center shadow-sm" title="Logged in via Mobile">
+                              📱 {record.employee.activeMobileDeviceName}
+                            </span>
+                          )}
+                          {record.employee?.activeDesktopDeviceName && (
+                            <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 flex items-center shadow-sm" title="Logged in via System">
+                              💻 {record.employee.activeDesktopDeviceName}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-text-light">{record.employee?.employeeId}</p>
                       </td>
                       <td className="p-4">
@@ -804,7 +828,19 @@ const AdminAttendance = () => {
                             <tr key={item.employee._id} className="hover:bg-gray-50">
                               <td className="p-4 text-sm font-medium text-text-light">{item.employee.employeeId}</td>
                               <td className="p-4">
-                                <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-semibold text-text-dark">{item.employee.fullName}</p>
+                                  {item.employee.activeMobileDeviceName && (
+                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center shadow-sm" title="Logged in via Mobile">
+                                      📱 {item.employee.activeMobileDeviceName}
+                                    </span>
+                                  )}
+                                  {item.employee.activeDesktopDeviceName && (
+                                    <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 flex items-center shadow-sm" title="Logged in via System">
+                                      💻 {item.employee.activeDesktopDeviceName}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td className="p-4">
                                 <p className="text-sm text-text-dark">{item.record ? formatTime(item.record.punchIn) : '--:--'}</p>
