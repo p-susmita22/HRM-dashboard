@@ -119,19 +119,17 @@ export const loginEmployee = async (req, res) => {
     if (await employee.matchPassword(password)) {
       if (employee.role === 'employee') {
         if (deviceType === 'mobile') {
-          if (employee.activeMobileId && employee.activeMobileId !== deviceId && employee.activeMobileToken) {
+          if (employee.activeMobileId && employee.activeMobileId !== deviceId) {
             employee.isLocked = true;
             employee.lockedCount = (employee.lockedCount || 0) + 1;
-            employee.activeMobileId = null;
             employee.activeMobileToken = null;
             await employee.save();
             return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second mobile phone. Please contact Admin.' });
           }
         } else {
-          if (employee.activeDesktopId && employee.activeDesktopId !== deviceId && employee.activeDesktopToken) {
+          if (employee.activeDesktopId && employee.activeDesktopId !== deviceId) {
             employee.isLocked = true;
             employee.lockedCount = (employee.lockedCount || 0) + 1;
-            employee.activeDesktopId = null;
             employee.activeDesktopToken = null;
             await employee.save();
             return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second system. Please contact Admin.' });
@@ -232,10 +230,8 @@ export const logoutEmployee = async (req, res) => {
     if (employee) {
       const { deviceType } = req.body;
       if (deviceType === 'mobile') {
-        employee.activeMobileId = null;
         employee.activeMobileToken = null;
       } else {
-        employee.activeDesktopId = null;
         employee.activeDesktopToken = null;
       }
       await employee.save();

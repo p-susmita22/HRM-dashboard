@@ -183,6 +183,14 @@ export const getEmployeeHistory = async (req, res) => {
         employee.isLocked = isLocked;
         if (isLocked) {
           employee.lockedCount = (employee.lockedCount || 0) + 1;
+        } else {
+          // If admin unlocks the account, clear device bindings so they can log in on a new device
+          employee.activeMobileId = null;
+          employee.activeMobileToken = null;
+          employee.activeMobileDeviceName = null;
+          employee.activeDesktopId = null;
+          employee.activeDesktopToken = null;
+          employee.activeDesktopDeviceName = null;
         }
       }
       
@@ -208,6 +216,13 @@ export const toggleLockEmployee = async (req, res) => {
     employee.isLocked = !employee.isLocked;
     if (employee.isLocked) {
       employee.lockedCount = (employee.lockedCount || 0) + 1;
+    } else {
+      employee.activeMobileId = null;
+      employee.activeMobileToken = null;
+      employee.activeMobileDeviceName = null;
+      employee.activeDesktopId = null;
+      employee.activeDesktopToken = null;
+      employee.activeDesktopDeviceName = null;
     }
     await employee.save();
     
