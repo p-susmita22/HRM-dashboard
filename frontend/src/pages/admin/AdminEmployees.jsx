@@ -189,7 +189,8 @@ const AdminEmployees = () => {
       region: emp.region || '',
       zone: emp.zone || '',
       joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toISOString().split('T')[0] : '',
-      isActive: emp.isActive !== undefined ? emp.isActive : true
+      isActive: emp.isActive !== undefined ? emp.isActive : true,
+      isLocked: emp.isLocked || false
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -199,7 +200,7 @@ const AdminEmployees = () => {
   const openAddModal = () => {
     setIsEditing(false);
     setSelectedEmployee(null);
-    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: '', isActive: true });
+    setFormData({ firstName: '', middleName: '', lastName: '', employeeId: '', gender: 'Male', email: '', password: '', phoneNumber: '', department: '', designation: '', region: '', zone: '', joiningDate: '', isActive: true, isLocked: false });
     setShowAddModal(true);
   };
 
@@ -484,21 +485,38 @@ const AdminEmployees = () => {
                   <input type="date" className="form-control w-full" value={formData.joiningDate} onChange={e => setFormData({...formData, joiningDate: e.target.value})} required />
                 </div>
                 {isEditing && (
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Account Status</label>
-                    <select 
-                      className="form-control w-full font-semibold"
-                      value={formData.isActive ? "true" : "false"}
-                      onChange={e => setFormData({...formData, isActive: e.target.value === "true"})}
-                      style={{
-                        color: formData.isActive ? '#10B981' : '#EF4444',
-                        backgroundColor: formData.isActive ? '#ECFDF5' : '#FEF2F2'
-                      }}
-                    >
-                      <option value="true" className="text-green-600 bg-white">Active (Can Login)</option>
-                      <option value="false" className="text-red-600 bg-white">Inactive (Login Disabled)</option>
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Account Status</label>
+                      <select 
+                        className="form-control w-full font-semibold"
+                        value={formData.isActive ? "true" : "false"}
+                        onChange={e => setFormData({...formData, isActive: e.target.value === "true"})}
+                        style={{
+                          color: formData.isActive ? '#10B981' : '#EF4444',
+                          backgroundColor: formData.isActive ? '#ECFDF5' : '#FEF2F2'
+                        }}
+                      >
+                        <option value="true" className="text-green-600 bg-white">Active (Can Login)</option>
+                        <option value="false" className="text-red-600 bg-white">Inactive (Login Disabled)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Lock Status</label>
+                      <select 
+                        className="form-control w-full font-semibold"
+                        value={formData.isLocked ? "true" : "false"}
+                        onChange={e => setFormData({...formData, isLocked: e.target.value === "true"})}
+                        style={{
+                          color: formData.isLocked ? '#F59E0B' : '#10B981',
+                          backgroundColor: formData.isLocked ? '#FFFBEB' : '#ECFDF5'
+                        }}
+                      >
+                        <option value="false" className="text-green-600 bg-white">Unlocked (Normal)</option>
+                        <option value="true" className="text-orange-600 bg-white">Locked (Requires Unlock)</option>
+                      </select>
+                    </div>
+                  </>
                 )}
               </div>
               </div>

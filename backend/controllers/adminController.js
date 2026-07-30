@@ -150,7 +150,7 @@ export const getEmployeeHistory = async (req, res) => {
 
   export const editEmployee = async (req, res) => {
     try {
-      const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password, isActive, joiningDate } = req.body;
+      const { employeeId, firstName, middleName, lastName, email, phoneNumber, department, designation, gender, region, zone, password, isActive, isLocked, joiningDate } = req.body;
       
       const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
       
@@ -176,6 +176,13 @@ export const getEmployeeHistory = async (req, res) => {
         employee.isActive = isActive;
         if (!isActive) {
           employee.inactiveCount = (employee.inactiveCount || 0) + 1;
+        }
+      }
+      
+      if (isLocked !== undefined && employee.isLocked !== isLocked) {
+        employee.isLocked = isLocked;
+        if (isLocked) {
+          employee.lockedCount = (employee.lockedCount || 0) + 1;
         }
       }
       
