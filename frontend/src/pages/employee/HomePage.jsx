@@ -576,9 +576,9 @@ const HomePage = () => {
         </button>
       </div>
 
-      <div className="p-4 sm:p-6 max-w-7xl mx-auto mt-4">
+      <div className="p-2 sm:px-6 max-w-7xl mx-auto mt-2">
         {punchedIn && (
-          <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-6 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto bg-green-50/30 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-green-100 mb-4 p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center max-w-2xl mx-auto bg-green-50/30 gap-2">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-status-present animate-pulse"></div>
               <span className="text-sm font-semibold text-text-dark">Current Working Status</span>
@@ -616,13 +616,13 @@ const HomePage = () => {
           </div>
         )}
 
-        <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+        <div className="flex flex-col gap-4 max-w-4xl mx-auto">
           {/* Top Summary Block */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 w-full relative">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 w-full relative">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
               <div>
-                <div className="text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
-                <div className="text-sm text-gray-500 font-medium">Total paid days</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
+                <div className="text-xs sm:text-sm text-gray-500 font-medium">Total paid days</div>
               </div>
               <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto flex items-center gap-2 relative">
                 {`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}
@@ -641,40 +641,40 @@ const HomePage = () => {
               </div>
             </div>
             
-            <hr className="border-gray-200 mb-5" />
+            <hr className="border-gray-200 mb-3" />
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.present}</span>
-                <span className="text-xs text-gray-500 mt-2">Present</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.present}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Present</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.onLeave}</span>
-                <span className="text-xs text-gray-500 mt-2">Paid leave</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.onLeave}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Paid leave</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.sundays}</span>
-                <span className="text-xs text-gray-500 mt-2">Weekly off</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.sundays}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Weekly off</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.officialHolidays}</span>
-                <span className="text-xs text-gray-500 mt-2">Holidays</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.officialHolidays}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Holidays</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.absent}</span>
-                <span className="text-xs text-gray-500 mt-2">Absent</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.absent}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Absent</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
-                <span className="text-xs text-gray-500 mt-2">Unpaid leave</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Unpaid leave</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">{summary.halfDays}</span>
-                <span className="text-xs text-gray-500 mt-2">Half Days</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.halfDays}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Half Days</span>
               </div>
-              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
-                <span className="text-xs text-gray-500 mt-2">Arrears</span>
+              <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Arrears</span>
               </div>
             </div>
           </div>
