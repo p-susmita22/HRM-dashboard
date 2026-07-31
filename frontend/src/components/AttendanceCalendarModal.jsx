@@ -9,6 +9,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [loading, setLoading] = useState(true);
+  const [selectedPunchDetails, setSelectedPunchDetails] = useState(null);
   const calendarRef = useRef(null);
   
   const realToday = new Date();
@@ -136,6 +137,28 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
     return 'Pending';
   };
 
+  const handleDateClick = (date, record) => {
+    if (!record || !record.punchIn) return; // Only show if there's actual attendance data
+    
+    const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
+    let totalHours = '--';
+    
+    if (record.punchIn && record.punchOut) {
+      const diffMs = new Date(record.punchOut) - new Date(record.punchIn);
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      totalHours = `${hours}h ${minutes}m`;
+    }
+
+    setSelectedPunchDetails({
+      date: format(date, 'MMM dd, yyyy'),
+      punchIn: formatT(record.punchIn),
+      punchOut: formatT(record.punchOut),
+      totalHours,
+      status: record.status || 'Present'
+    });
+  };
+
   const downloadPDF = () => {
     if (!calendarRef.current) return;
     const opt = {
@@ -222,8 +245,8 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 const isHalfDay = record && record.adminStatus === 'Approved' && record.status === 'Half Day';
                 
                 return (
-                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14">
-                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
+                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14 cursor-pointer" onClick={() => handleDateClick(date, record)}>
+                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 ${getDayStatus(date)}`}>
                     {date.getDate()}
                   </div>
                   {isHalfDay && (
@@ -256,6 +279,24 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 </div>
               </div>
             </div>
+
+            {selectedPunchDetails && (
+              <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center rounded-xl p-4 backdrop-blur-sm">
+                <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-100 max-w-sm w-full relative">
+                  <button onClick={() => setSelectedPunchDetails(null)} className="absolute top-3 right-3 text-gray-400 hover:text-status-absent transition-colors">
+                    <X size={20} />
+                  </button>
+                  <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Attendance Details</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-text-light">Date:</span> <span className="font-semibold text-text-dark">{selectedPunchDetails.date}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Status:</span> <span className="font-semibold text-text-dark">{selectedPunchDetails.status}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Punch In:</span> <span className="font-semibold text-status-present">{selectedPunchDetails.punchIn}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Punch Out:</span> <span className="font-semibold text-status-absent">{selectedPunchDetails.punchOut}</span></div>
+                    <div className="flex justify-between border-t pt-3 mt-2"><span className="text-text-dark font-bold">Total Working Hours:</span> <span className="font-bold text-primary">{selectedPunchDetails.totalHours}</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
