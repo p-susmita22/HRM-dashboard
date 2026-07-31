@@ -616,9 +616,71 @@ const HomePage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Side: Calendar */}
-          <div className="lg:col-span-2 card shadow-lg border-t-4 border-primary !mb-0 relative">
+        <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+          {/* Top Summary Block */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 w-full relative">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
+              <div>
+                <div className="text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
+                <div className="text-sm text-gray-500 font-medium">Total paid days</div>
+              </div>
+              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto flex items-center gap-2 relative">
+                {`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}
+                <input 
+                  type="month" 
+                  className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
+                  value={format(currentDate, 'yyyy-MM')}
+                  min={employeeData?.joiningDate ? format(new Date(employeeData.joiningDate), 'yyyy-MM') : undefined}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [y, m] = e.target.value.split('-');
+                      setCurrentDate(new Date(y, m - 1, 1));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            
+            <hr className="border-gray-200 mb-5" />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.present}</span>
+                <span className="text-xs text-gray-500 mt-2">Present</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.onLeave}</span>
+                <span className="text-xs text-gray-500 mt-2">Paid leave</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.sundays}</span>
+                <span className="text-xs text-gray-500 mt-2">Weekly off</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.officialHolidays}</span>
+                <span className="text-xs text-gray-500 mt-2">Holidays</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.absent}</span>
+                <span className="text-xs text-gray-500 mt-2">Absent</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-xs text-gray-500 mt-2">Unpaid leave</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.halfDays}</span>
+                <span className="text-xs text-gray-500 mt-2">Half Days</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between bg-white shadow-sm">
+                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-xs text-gray-500 mt-2">Arrears</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Side: Calendar */}
+          <div className="card shadow-lg border-t-4 border-primary !mb-0 relative w-full">
             <h3 className="mb-4 text-xl font-bold text-center text-text-dark">Attendance Calendar</h3>
             <div className="flex items-center justify-between mb-6 px-4 bg-gray-50 p-2 rounded-lg">
               <button 
@@ -721,78 +783,7 @@ const HomePage = () => {
             )}
           </div>
 
-          {/* Right Side: Monthly Summary */}
-          <div className="card shadow-lg border-t-4 border-accent !mb-0 h-fit">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-bold text-text-dark">Monthly Details</h3>
-              <input 
-                type="month" 
-                className="form-control text-sm py-1.5 px-3 bg-white border border-gray-200 rounded-md text-text-dark focus:border-primary focus:ring-1 focus:ring-primary shadow-sm"
-                value={format(currentDate, 'yyyy-MM')}
-                min={employeeData?.joiningDate ? format(new Date(employeeData.joiningDate), 'yyyy-MM') : undefined}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [y, m] = e.target.value.split('-');
-                    setCurrentDate(new Date(y, m - 1, 1));
-                  }
-                }}
-              />
-            </div>
-            <h4 className="text-text-light mb-5 font-medium text-sm">
-              {format(currentDate, 'MMMM yyyy')} Summary
-            </h4>
-            
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-status-present/5 rounded-lg border border-status-present/20">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-present"></div> Full Day
-                </span>
-                <span className="font-bold text-lg text-status-present">{summary.present}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-status-absent/5 rounded-lg border border-status-absent/20">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-absent"></div> Absent
-                </span>
-                <span className="font-bold text-lg text-status-absent">{summary.absent}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-yellow-500/5 rounded-lg border border-yellow-500/20">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-sm bg-gradient-to-b from-status-absent to-status-present"></div> Half Days
-                </span>
-                <span className="font-bold text-lg text-yellow-600">{summary.halfDays}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div> On Leave
-                </span>
-                <span className="font-bold text-lg text-yellow-600">{summary.onLeave}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-[#1E3A8A]/5 rounded-lg border border-[#1E3A8A]/20">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#1E3A8A]"></div> Official Holidays
-                </span>
-                <span className="font-bold text-lg text-[#1E3A8A]">{summary.officialHolidays}</span>
-              </div>
-
-              <div className="flex justify-between items-center p-3 bg-status-holiday/5 rounded-lg border border-status-holiday/20">
-                <span className="font-medium text-text-dark flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-status-holiday"></div> Sundays (Off Days)
-                </span>
-                <span className="font-bold text-lg text-status-holiday">{summary.sundays}</span>
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <p className="text-xs text-text-light">
-                Summary updates automatically as you punch in and out daily.
-              </p>
-            </div>
           </div>
-          
         </div>
       </div>
 
