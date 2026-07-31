@@ -785,7 +785,6 @@ const HomePage = () => {
 
           </div>
         </div>
-      </div>
 
       {/* Custom Location Error Modal (Google Maps Style Replica) */}
       {locationError && (
