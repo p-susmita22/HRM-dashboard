@@ -354,7 +354,6 @@ const HelpPage = () => {
                   <option value="Casual Leave">Casual Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
                   <option value="Emergency Leave">Emergency Leave</option>
-                  <option value="Earned Leave">Earned Leave</option>
                   <option value="Comp Off" disabled={compOffBalance <= 0}>
                     Comp Off {compOffBalance > 0 ? `(${compOffBalance} available)` : '(No balance)'}
                   </option>

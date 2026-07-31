@@ -20,7 +20,7 @@ const HomePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [employeeData, setEmployeeData] = useState(null);
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
-  const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, sundays: 0, officialHolidays: 0 });
+  const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, unpaidLeave: 0, sundays: 0, officialHolidays: 0 });
   const [locationError, setLocationError] = useState(null); // 'denied', 'unavailable', 'timeout', or null
   const [selectedPunchDetails, setSelectedPunchDetails] = useState(null);
   const isPunchingRef = React.useRef(false);
@@ -134,6 +134,7 @@ const HomePage = () => {
     let absent = 0;
     let halfDays = 0;
     let onLeave = 0;
+    let unpaidLeave = 0;
     let sundays = 0;
     let officialHolidays = 0;
 
@@ -151,7 +152,7 @@ const HomePage = () => {
         return;
       }
       
-      const isOnLeave = monthlyData.leaves.some(leave => {
+      const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
           return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
         }
@@ -161,8 +162,12 @@ const HomePage = () => {
         return d >= start && d <= end;
       });
 
-      if (isOnLeave) {
-        onLeave++;
+      if (matchingLeave) {
+        if (matchingLeave.leaveType === 'Comp Off') {
+          onLeave++;
+        } else {
+          unpaidLeave++;
+        }
         return;
       }
 
@@ -176,7 +181,7 @@ const HomePage = () => {
         else if (record.status === 'Half Day') halfDays++;
         else if (record.status === 'Absent') absent++;
         else if (record.status === 'Holiday') officialHolidays++;
-        else if (record.status === 'Leave Approved') onLeave++;
+        else if (record.status === 'Leave Approved') unpaidLeave++;
       } else {
         const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
         if (isToday && punchedIn) {
@@ -188,7 +193,7 @@ const HomePage = () => {
       }
     });
 
-    setSummary({ present, absent, halfDays, onLeave, sundays, officialHolidays });
+    setSummary({ present, absent, halfDays, onLeave, unpaidLeave, sundays, officialHolidays });
   }, [monthlyData, currentDate, punchedIn, employeeData]);
 
   // ---- Office Geofencing ----
@@ -666,7 +671,7 @@ const HomePage = () => {
                 <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Absent</span>
               </div>
               <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">
-                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-none">{summary.unpaidLeave}</span>
                 <span className="text-[10px] sm:text-xs text-gray-500 mt-1">Unpaid leave</span>
               </div>
               <div className="border border-gray-200 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between bg-white shadow-sm">

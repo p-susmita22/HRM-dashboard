@@ -19,7 +19,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
   }, [currentDate]);
 
   const summary = React.useMemo(() => {
-    let present = 0, absent = 0, halfDays = 0, onLeave = 0, sundays = 0, officialHolidays = 0;
+    let present = 0, absent = 0, halfDays = 0, onLeave = 0, unpaidLeave = 0, sundays = 0, officialHolidays = 0;
     const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
     const joiningDateObj = employee?.joiningDate ? new Date(employee.joiningDate) : null;
     if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
@@ -31,7 +31,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         return;
       }
       
-      const isOnLeave = monthlyData.leaves.some(leave => {
+      const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
           return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
         }
@@ -41,8 +41,12 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         return d >= start && d <= end;
       });
 
-      if (isOnLeave) {
-        onLeave++;
+      if (matchingLeave) {
+        if (matchingLeave.leaveType === 'Comp Off') {
+          onLeave++;
+        } else {
+          unpaidLeave++;
+        }
         return;
       }
 
@@ -56,7 +60,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         else if (record.status === 'Half Day') halfDays++;
         else if (record.status === 'Absent') absent++;
         else if (record.status === 'Holiday') officialHolidays++;
-        else if (record.status === 'Leave Approved') onLeave++;
+        else if (record.status === 'Leave Approved') unpaidLeave++;
       } else {
         const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
         if (date < realToday && !isToday) {
@@ -65,7 +69,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
       }
     });
 
-    return { present, absent, halfDays, onLeave, sundays, officialHolidays };
+    return { present, absent, halfDays, onLeave, unpaidLeave, sundays, officialHolidays };
   }, [monthlyData, currentDate, employee]);
 
   const fetchMonthlyData = async () => {
@@ -311,7 +315,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 <span className="text-xs text-gray-500 mt-2">Absent</span>
               </div>
               <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
-                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.unpaidLeave}</span>
                 <span className="text-xs text-gray-500 mt-2">Unpaid leave</span>
               </div>
               <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
