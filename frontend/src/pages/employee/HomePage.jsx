@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, Info, FileText, CalendarDays, UploadCloud, MapPin, RefreshCw } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Info, FileText, CalendarDays, UploadCloud, MapPin, RefreshCw, X } from 'lucide-react';
 import axios from 'axios';
 import logo from '../../assets/multimaart-logo.png';
 
@@ -22,6 +22,7 @@ const HomePage = () => {
   const [monthlyData, setMonthlyData] = useState({ attendances: [], leaves: [] });
   const [summary, setSummary] = useState({ present: 0, absent: 0, halfDays: 0, onLeave: 0, sundays: 0, officialHolidays: 0 });
   const [locationError, setLocationError] = useState(null); // 'denied', 'unavailable', 'timeout', or null
+  const [selectedPunchDetails, setSelectedPunchDetails] = useState(null);
   const isPunchingRef = React.useRef(false);
   const navigate = useNavigate();
 
@@ -446,6 +447,28 @@ const HomePage = () => {
     return 'Pending';
   };
 
+  const handleDateClick = (date, record) => {
+    if (!record || !record.punchIn) return; // Only show if there's actual attendance data
+    
+    const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
+    let totalHours = '--';
+    
+    if (record.punchIn && record.punchOut) {
+      const diffMs = new Date(record.punchOut) - new Date(record.punchIn);
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      totalHours = `${hours}h ${minutes}m`;
+    }
+
+    setSelectedPunchDetails({
+      date: format(date, 'MMM dd, yyyy'),
+      punchIn: formatT(record.punchIn),
+      punchOut: formatT(record.punchOut),
+      totalHours,
+      status: record.status || 'Present'
+    });
+  };
+
   return (
     <div className="animate-fade-in pb-10">
       {/* Header with Punch In/Out Top Right */}
@@ -595,7 +618,7 @@ const HomePage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side: Calendar */}
-          <div className="lg:col-span-2 card shadow-lg border-t-4 border-primary !mb-0">
+          <div className="lg:col-span-2 card shadow-lg border-t-4 border-primary !mb-0 relative">
             <h3 className="mb-4 text-xl font-bold text-center text-text-dark">Attendance Calendar</h3>
             <div className="flex items-center justify-between mb-6 px-4 bg-gray-50 p-2 rounded-lg">
               <button 
@@ -637,8 +660,8 @@ const HomePage = () => {
                 const isHalfDay = record && record.adminStatus === 'Approved' && record.status === 'Half Day';
                 
                 return (
-                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14">
-                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 cursor-help ${getDayStatus(date)}`}>
+                <div key={date.toISOString()} className="flex flex-col items-center justify-start h-14 cursor-pointer" onClick={() => handleDateClick(date, record)}>
+                  <div title={getDayTooltip(date)} className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-sm font-medium shadow-sm transition-transform hover:scale-110 ${getDayStatus(date)}`}>
                     {date.getDate()}
                   </div>
                   {isHalfDay && (
@@ -678,6 +701,24 @@ const HomePage = () => {
                 <strong>Rules:</strong> If an employee punches in after 10:00 AM or punches out before 5:15 PM, today's attendance will be marked as a Half Day.
               </div>
             </div>
+
+            {selectedPunchDetails && (
+              <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center rounded-xl p-4 backdrop-blur-sm">
+                <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-100 max-w-sm w-full relative">
+                  <button onClick={() => setSelectedPunchDetails(null)} className="absolute top-3 right-3 text-gray-400 hover:text-status-absent transition-colors">
+                    <X size={20} />
+                  </button>
+                  <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Attendance Details</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-text-light">Date:</span> <span className="font-semibold text-text-dark">{selectedPunchDetails.date}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Status:</span> <span className="font-semibold text-text-dark">{selectedPunchDetails.status}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Punch In:</span> <span className="font-semibold text-status-present">{selectedPunchDetails.punchIn}</span></div>
+                    <div className="flex justify-between"><span className="text-text-light">Punch Out:</span> <span className="font-semibold text-status-absent">{selectedPunchDetails.punchOut}</span></div>
+                    <div className="flex justify-between border-t pt-3 mt-2"><span className="text-text-dark font-bold">Total Working Hours:</span> <span className="font-bold text-primary">{selectedPunchDetails.totalHours}</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Side: Monthly Summary */}
