@@ -18,6 +18,56 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
     fetchMonthlyData();
   }, [currentDate]);
 
+  const summary = React.useMemo(() => {
+    let present = 0, absent = 0, halfDays = 0, onLeave = 0, sundays = 0, officialHolidays = 0;
+    const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
+    const joiningDateObj = employee?.joiningDate ? new Date(employee.joiningDate) : null;
+    if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+
+    days.forEach(date => {
+      if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) return;
+      if (date.getDay() === 0) {
+        sundays++;
+        return;
+      }
+      
+      const isOnLeave = monthlyData.leaves.some(leave => {
+        if (leave.dates && leave.dates.length > 0) {
+          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+        }
+        const start = new Date(leave.fromDate).setHours(0,0,0,0);
+        const end = new Date(leave.toDate).setHours(23,59,59,999);
+        const d = date.getTime();
+        return d >= start && d <= end;
+      });
+
+      if (isOnLeave) {
+        onLeave++;
+        return;
+      }
+
+      const record = monthlyData.attendances.find(a => {
+        const aDate = new Date(a.date);
+        return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+      });
+
+      if (record && record.adminStatus === 'Approved') {
+        if (record.status === 'Present') present++;
+        else if (record.status === 'Half Day') halfDays++;
+        else if (record.status === 'Absent') absent++;
+        else if (record.status === 'Holiday') officialHolidays++;
+        else if (record.status === 'Leave Approved') onLeave++;
+      } else {
+        const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
+        if (date < realToday && !isToday) {
+          absent++;
+        }
+      }
+    });
+
+    return { present, absent, halfDays, onLeave, sundays, officialHolidays };
+  }, [monthlyData, currentDate, employee]);
+
   const fetchMonthlyData = async () => {
     setLoading(true);
     try {
@@ -210,6 +260,55 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
               <button onClick={downloadPDF} className="btn py-2 px-4 text-sm bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 transition-colors shadow-sm">
                 <Download size={16} /> Download PDF
               </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 mb-6 w-full">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+              <div>
+                <div className="text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
+                <div className="text-sm text-gray-500 font-medium">Total paid days</div>
+              </div>
+              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto">
+                {`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}
+              </div>
+            </div>
+            
+            <hr className="border-gray-200 mb-4" />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.present}</span>
+                <span className="text-xs text-gray-500 mt-2">Present</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.onLeave}</span>
+                <span className="text-xs text-gray-500 mt-2">Paid leave</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.sundays}</span>
+                <span className="text-xs text-gray-500 mt-2">Weekly off</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.officialHolidays}</span>
+                <span className="text-xs text-gray-500 mt-2">Holidays</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.absent}</span>
+                <span className="text-xs text-gray-500 mt-2">Absent</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-xs text-gray-500 mt-2">Unpaid leave</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">{summary.halfDays}</span>
+                <span className="text-xs text-gray-500 mt-2">Half Days</span>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3 flex flex-col justify-between">
+                <span className="text-xl font-bold text-gray-800 leading-none">0</span>
+                <span className="text-xs text-gray-500 mt-2">Arrears</span>
+              </div>
             </div>
           </div>
 
