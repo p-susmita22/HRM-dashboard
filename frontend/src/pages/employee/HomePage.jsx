@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, Info, FileText, CalendarDays, UploadCloud, MapPin, RefreshCw, X } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Info, FileText, CalendarDays, UploadCloud, MapPin, RefreshCw, X, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import logo from '../../assets/multimaart-logo.png';
 
@@ -624,8 +624,9 @@ const HomePage = () => {
                 <div className="text-2xl sm:text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
                 <div className="text-xs sm:text-sm text-gray-500 font-medium">Total paid days</div>
               </div>
-              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto flex items-center gap-2 relative">
-                {`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}
+              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto flex items-center gap-1.5 relative hover:bg-gray-50 transition-colors cursor-pointer group">
+                <span className="group-hover:text-[#0f3d2d] transition-colors">{`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}</span>
+                <ChevronDown size={14} className="text-[#185d45] group-hover:text-[#0f3d2d] transition-colors" />
                 <input 
                   type="month" 
                   className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"

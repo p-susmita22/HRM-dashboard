@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { X, CalendarDays, Download } from 'lucide-react';
+import { X, CalendarDays, Download, ChevronDown } from 'lucide-react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 
@@ -269,8 +269,21 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 <div className="text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
                 <div className="text-sm text-gray-500 font-medium">Total paid days</div>
               </div>
-              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto">
-                {`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}
+              <div className="text-xs font-semibold text-[#185d45] border-2 border-[#185d45] rounded-md px-3 py-1.5 bg-white self-start sm:self-auto flex items-center gap-1.5 relative hover:bg-gray-50 transition-colors cursor-pointer group">
+                <span className="group-hover:text-[#0f3d2d] transition-colors">{`01 ${format(currentDate, 'MMM')} - ${endOfMonth(currentDate).getDate()} ${format(currentDate, 'MMM')} | ${format(currentDate, 'MMM, yyyy')}`}</span>
+                <ChevronDown size={14} className="text-[#185d45] group-hover:text-[#0f3d2d] transition-colors" />
+                <input 
+                  type="month" 
+                  className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
+                  value={format(currentDate, 'yyyy-MM')}
+                  min={employee?.joiningDate ? format(new Date(employee.joiningDate), 'yyyy-MM') : undefined}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [y, m] = e.target.value.split('-');
+                      setCurrentDate(new Date(y, m - 1, 1));
+                    }
+                  }}
+                />
               </div>
             </div>
             
