@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { X, CalendarDays, Download, ChevronDown } from 'lucide-react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import html2pdf from 'html2pdf.js';
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 
 const AttendanceCalendarModal = ({ employee, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -216,13 +216,18 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
   const downloadPDF = () => {
     if (!calendarRef.current) return;
     const opt = {
-      margin: 10,
-      filename: `${employee.fullName}_Attendance_${format(currentDate, 'MMM_yyyy')}.pdf`,
+      margin: [10, 10, 10, 10],
+      filename: `${employee.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Attendance_${format(currentDate, 'MMM_yyyy')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(calendarRef.current).save();
+    try {
+      html2pdf().set(opt).from(calendarRef.current).save();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
   return createPortal(
@@ -267,7 +272,8 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 mb-6 w-full">
+          <div ref={calendarRef} className="pb-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 mb-6 w-full">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <div>
                 <div className="text-3xl font-bold text-gray-800 leading-tight">{summary.present + summary.sundays + summary.officialHolidays + summary.onLeave + (summary.halfDays * 0.5)}</div>
@@ -329,7 +335,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
             </div>
           </div>
 
-          <div ref={calendarRef} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative">
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative">
             {loading && (
               <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center rounded-xl">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -413,6 +419,7 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
