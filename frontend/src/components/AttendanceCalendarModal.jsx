@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { X, CalendarDays, Download, ChevronDown } from 'lucide-react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
+import * as XLSX from 'xlsx';
 
 const AttendanceCalendarModal = ({ employee, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -213,20 +213,82 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
     });
   };
 
-  const downloadPDF = () => {
-    if (!calendarRef.current) return;
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `${employee.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Attendance_${format(currentDate, 'MMM_yyyy')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+  const downloadExcel = () => {
     try {
-      html2pdf().set(opt).from(calendarRef.current).save();
+      const data = [];
+      const formatT = (t) => t ? format(new Date(t), 'hh:mm a') : '--:--';
+      
+      daysInMonth.forEach(date => {
+        const dateStr = format(date, 'MMM dd, yyyy');
+        const dayStr = format(date, 'EEEE');
+        
+        let punchIn = '--:--';
+        let punchOut = '--:--';
+        let totalHours = '--';
+        let status = 'Pending';
+        
+        const record = monthlyData.attendances.find(a => {
+            const aDate = new Date(a.date);
+            return aDate.getDate() === date.getDate() && aDate.getMonth() === date.getMonth();
+        });
+        
+        if (record) {
+           if (record.punchIn) punchIn = formatT(record.punchIn);
+           if (record.punchOut) punchOut = formatT(record.punchOut);
+           if (record.punchIn && record.punchOut) {
+             const diffMs = new Date(record.punchOut) - new Date(record.punchIn);
+             const hours = Math.floor(diffMs / (1000 * 60 * 60));
+             const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+             totalHours = `${hours}h ${minutes}m`;
+           }
+        }
+        
+        const isToday = date.getDate() === realToday.getDate() && date.getMonth() === realToday.getMonth() && date.getFullYear() === realToday.getFullYear();
+        const joiningDateObj = employee?.joiningDate ? new Date(employee.joiningDate) : null;
+        if (joiningDateObj) joiningDateObj.setHours(0,0,0,0);
+        
+        if (joiningDateObj && date.getTime() < joiningDateObj.getTime()) {
+           status = 'Not Joined Yet';
+        } else if (date > realToday) {
+           status = 'Future Date';
+        } else if (record && record.adminStatus === 'Approved') {
+           status = record.status;
+        } else if (isToday && record && record.punchIn) {
+           status = 'Working';
+        } else {
+           const isOnLeave = monthlyData.leaves.some(leave => {
+               if (leave.dates && leave.dates.length > 0) {
+                 return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+               }
+               const start = new Date(leave.fromDate).setHours(0,0,0,0);
+               const end = new Date(leave.toDate).setHours(23,59,59,999);
+               const d = date.getTime();
+               return d >= start && d <= end;
+           });
+           if (isOnLeave) status = 'On Leave';
+           else if (date.getDay() === 0) status = 'Sunday (Holiday)';
+           else if (date < realToday && !isToday) status = 'Absent';
+        }
+        
+        data.push({
+           'Date': dateStr,
+           'Day': dayStr,
+           'Status': status,
+           'Punch In': punchIn,
+           'Punch Out': punchOut,
+           'Total Hours': totalHours
+        });
+      });
+      
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+      
+      const fileName = `${employee.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Attendance_${format(currentDate, 'MMM_yyyy')}.xlsx`;
+      XLSX.writeFile(wb, fileName);
     } catch (e) {
       console.error(e);
-      alert('Failed to generate PDF. Please try again.');
+      alert('Failed to generate Excel file.');
     }
   };
 
@@ -266,8 +328,8 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
             </div>
             
             <div className="flex gap-2">
-              <button onClick={downloadPDF} className="btn py-2 px-4 text-sm bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 transition-colors shadow-sm">
-                <Download size={16} /> Download PDF
+              <button onClick={downloadExcel} className="btn py-2 px-4 text-sm bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 transition-colors shadow-sm">
+                <Download size={16} /> Download Excel
               </button>
             </div>
           </div>
