@@ -197,9 +197,9 @@ const HomePage = () => {
   }, [monthlyData, currentDate, punchedIn, employeeData]);
 
   // ---- Office Geofencing ----
-  const OFFICE_LAT = 20.28567438118417;
-  const OFFICE_LNG = 85.90030307523656;
-  const OFFICE_RADIUS_METERS = 500;
+  const OFFICE_LAT = 20.320256;
+  const OFFICE_LNG = 85.875746;
+  const OFFICE_RADIUS_METERS = 50;
 
   const getDistanceMeters = (lat1, lng1, lat2, lng2) => {
     const R = 6371000;
@@ -222,7 +222,8 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const isRemote = true; 
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
+        const isRemote = distance > OFFICE_RADIUS_METERS;
         let address = 'Unknown location';
 
         try {
@@ -284,7 +285,8 @@ const HomePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
-        const isRemoteOut = true;
+        const distance = getDistanceMeters(latitude, longitude, OFFICE_LAT, OFFICE_LNG);
+        const isRemoteOut = distance > OFFICE_RADIUS_METERS;
         let address = 'Unknown location';
 
         try {
