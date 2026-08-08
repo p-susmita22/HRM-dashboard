@@ -18,6 +18,11 @@ const AdminRequests = () => {
   const [compOffLoading, setCompOffLoading] = useState(false);
   const [compOffSuccess, setCompOffSuccess] = useState('');
 
+  const [showRegModal, setShowRegModal] = useState(false);
+  const [selectedReg, setSelectedReg] = useState(null);
+  const [regDayType, setRegDayType] = useState('Present');
+  const [regHalfDayType, setRegHalfDayType] = useState('First Half Absent');
+
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDate, setFilterDate] = useState('');
@@ -47,12 +52,29 @@ const AdminRequests = () => {
     axios.get('/api/admin/employees').then(r => setEmployees(r.data)).catch(() => {});
   }, [activeTab]);
 
-  const updateStatus = async (type, id, status) => {
+  const updateStatus = async (type, id, status, extraData = {}) => {
     try {
-      await axios.put(`/api/admin/${type}/${id}/status`, { status });
+      await axios.put(`/api/admin/${type}/${id}/status`, { status, ...extraData });
       fetchRequests();
     } catch (error) {
       alert('Failed to update status');
+    }
+  };
+
+  const handleApproveRegularization = (req) => {
+    setSelectedReg(req);
+    setShowRegModal(true);
+  };
+
+  const confirmRegularization = async () => {
+    try {
+      await updateStatus('regularizations', selectedReg._id, 'Approved', {
+        dayType: regDayType,
+        halfDayType: regDayType === 'Half Day' ? regHalfDayType : null
+      });
+      setShowRegModal(false);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -343,7 +365,7 @@ const AdminRequests = () => {
                     <td className="p-4">
                       {req.status === 'Pending' ? (
                         <div className="flex gap-2">
-                          <button onClick={() => updateStatus('regularizations', req._id, 'Approved')} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
+                          <button onClick={() => handleApproveRegularization(req)} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
                           <button onClick={() => updateStatus('regularizations', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
                         </div>
                       ) : (
@@ -565,6 +587,57 @@ const AdminRequests = () => {
         document.body
       )}
 
+      {showRegModal && selectedReg && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowRegModal(false)}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-[10000] p-6 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-text-dark mb-4">Approve Regularization</h3>
+            <p className="text-sm text-text-light mb-4">Select the attendance status for this regularization request.</p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-text-dark mb-1">Day Type</label>
+              <select 
+                className="form-control w-full"
+                value={regDayType}
+                onChange={(e) => setRegDayType(e.target.value)}
+              >
+                <option value="Present">Present (Full Day)</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </div>
+
+            {regDayType === 'Half Day' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-text-dark mb-1">Half Day Type</label>
+                <select 
+                  className="form-control w-full"
+                  value={regHalfDayType}
+                  onChange={(e) => setRegHalfDayType(e.target.value)}
+                >
+                  <option value="First Half Absent">First Half Absent</option>
+                  <option value="Second Half Absent">Second Half Absent</option>
+                </select>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button 
+                onClick={() => setShowRegModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmRegularization}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded"
+              >
+                Confirm Approval
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

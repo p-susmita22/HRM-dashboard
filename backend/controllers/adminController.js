@@ -766,9 +766,10 @@ export const getRegularizationRequests = async (req, res) => {
 
 export const updateRegularizationStatus = async (req, res) => {
   try {
-    const reg = await Regularization.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('employee', 'fullName employeeId');
+    const { status, dayType, halfDayType } = req.body;
+    const reg = await Regularization.findByIdAndUpdate(req.params.id, { status: status }, { new: true }).populate('employee', 'fullName employeeId');
     
-    if (req.body.status === 'Approved') {
+    if (status === 'Approved') {
       const datesToProcess = reg.dates && reg.dates.length > 0 ? reg.dates : [reg.fromDate];
       for (const d of datesToProcess) {
         if (!d) continue;
@@ -784,15 +785,16 @@ export const updateRegularizationStatus = async (req, res) => {
         });
 
         if (existing) {
-          existing.status = 'Present';
-          existing.halfDayType = null;
+          existing.status = dayType || 'Present';
+          existing.halfDayType = dayType === 'Half Day' ? halfDayType : null;
           existing.adminStatus = 'Approved';
           await existing.save();
         } else {
           await Attendance.create({
             employee: reg.employee._id,
             date: currentDate,
-            status: 'Present',
+            status: dayType || 'Present',
+            halfDayType: dayType === 'Half Day' ? halfDayType : null,
             adminStatus: 'Approved'
           });
         }
