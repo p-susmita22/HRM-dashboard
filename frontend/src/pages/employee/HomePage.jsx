@@ -154,7 +154,10 @@ const HomePage = () => {
       
       const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
-          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+          return leave.dates.some(dStr => {
+            const d1 = new Date(dStr);
+            return d1.getDate() === date.getDate() && d1.getMonth() === date.getMonth() && d1.getFullYear() === date.getFullYear();
+          });
         }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
@@ -367,7 +370,10 @@ const HomePage = () => {
 
     const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
-          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+          return leave.dates.some(dStr => {
+            const d1 = new Date(dStr);
+            return d1.getDate() === date.getDate() && d1.getMonth() === date.getMonth() && d1.getFullYear() === date.getFullYear();
+          });
         }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
@@ -441,7 +447,10 @@ const HomePage = () => {
 
     const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
-          return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
+          return leave.dates.some(dStr => {
+            const d1 = new Date(dStr);
+            return d1.getDate() === date.getDate() && d1.getMonth() === date.getMonth() && d1.getFullYear() === date.getFullYear();
+          });
         }
         const start = new Date(leave.fromDate).setHours(0,0,0,0);
         const end = new Date(leave.toDate).setHours(23,59,59,999);
