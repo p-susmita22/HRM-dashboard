@@ -365,7 +365,7 @@ const HomePage = () => {
     // Color Sundays as Holiday (Blue) FIRST
     if (date.getDay() === 0) return 'bg-status-holiday text-white border-2 border-status-holiday';
 
-    const isOnLeave = monthlyData.leaves.some(leave => {
+    const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
           return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
         }
@@ -374,7 +374,10 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (isOnLeave) return 'bg-yellow-400 text-white shadow-md font-bold';
+    if (matchingLeave) {
+        if (matchingLeave.leaveType === 'Comp Off') return 'bg-[#d8a474] text-white shadow-md font-bold';
+        return 'bg-yellow-400 text-white shadow-md font-bold';
+    }
 
     const record = monthlyData.attendances.find(a => {
         const aDate = new Date(a.date);
@@ -436,7 +439,7 @@ const HomePage = () => {
 
     if (isToday && punchedIn) return `Working (In: ${format(punchTime, 'hh:mm a')})`;
 
-    const isOnLeave = monthlyData.leaves.some(leave => {
+    const matchingLeave = monthlyData.leaves.find(leave => {
         if (leave.dates && leave.dates.length > 0) {
           return leave.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === date.getTime());
         }
@@ -445,7 +448,10 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (isOnLeave) return 'On Leave';
+    if (matchingLeave) {
+        if (matchingLeave.leaveType === 'Comp Off') return 'Comp Off';
+        return 'On Leave';
+    }
 
     if (date.getDay() === 0) return 'Sunday (Holiday)';
 
@@ -752,6 +758,9 @@ const HomePage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div> Leave
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#d8a474] shadow-sm"></div> Comp Off
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-status-holiday shadow-sm"></div> Sundays
