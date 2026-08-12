@@ -281,7 +281,8 @@ export const getMonthlyAttendance = async (req, res) => {
       $or: [
         { fromDate: { $gte: startDate, $lte: endDate } },
         { toDate: { $gte: startDate, $lte: endDate } },
-        { fromDate: { $lte: startDate }, toDate: { $gte: endDate } }
+        { fromDate: { $lte: startDate }, toDate: { $gte: endDate } },
+        { dates: { $elemMatch: { $gte: startDate, $lte: endDate } } }
       ]
     });
 

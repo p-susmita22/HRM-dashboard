@@ -370,7 +370,13 @@ export const getEmployeeMonthlyAttendance = async (req, res) => {
 
     const leaves = await Leave.find({
       employee: employeeId,
-      status: 'Approved'
+      status: 'Approved',
+      $or: [
+        { fromDate: { $gte: startDate, $lte: endDate } },
+        { toDate: { $gte: startDate, $lte: endDate } },
+        { fromDate: { $lte: startDate }, toDate: { $gte: endDate } },
+        { dates: { $elemMatch: { $gte: startDate, $lte: endDate } } }
+      ]
     });
 
     res.json({ attendances, leaves });
