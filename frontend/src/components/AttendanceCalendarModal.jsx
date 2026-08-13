@@ -45,7 +45,10 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
       });
 
       if (matchingLeave) {
-        if (matchingLeave.leaveType === 'Comp Off') {
+        const isCompOff = (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase().includes('comp off')) || 
+                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+        
+        if (isCompOff) {
           onLeave++;
         } else {
           unpaidLeave++;
@@ -119,7 +122,11 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         return d >= start && d <= end;
     });
     if (matchingLeave) {
-        if (matchingLeave.leaveType === 'Comp Off') return 'bg-[#d8a474] text-white shadow-md font-bold';
+        const isCompOff = matchingLeave.leaveType === 'Comp Off' || 
+                          (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase() === 'comp off') || 
+                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+                          
+        if (isCompOff) return 'bg-[#d8a474] text-white shadow-md font-bold';
         return 'bg-yellow-400 text-white shadow-md font-bold';
     }
 
@@ -195,7 +202,11 @@ const AttendanceCalendarModal = ({ employee, onClose }) => {
         return d >= start && d <= end;
     });
     if (matchingLeave) {
-        if (matchingLeave.leaveType === 'Comp Off') return 'Comp Off';
+        const isCompOff = matchingLeave.leaveType === 'Comp Off' || 
+                          (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase() === 'comp off') || 
+                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+                          
+        if (isCompOff) return 'Comp Off';
         return 'On Leave';
     }
 
