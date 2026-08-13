@@ -277,13 +277,7 @@ export const getMonthlyAttendance = async (req, res) => {
     // Also get approved leaves that fall within this month
     const leaves = await Leave.find({
       employee: req.user._id,
-      status: 'Approved',
-      $or: [
-        { fromDate: { $gte: startDate, $lte: endDate } },
-        { toDate: { $gte: startDate, $lte: endDate } },
-        { fromDate: { $lte: startDate }, toDate: { $gte: endDate } },
-        { dates: { $elemMatch: { $gte: startDate, $lte: endDate } } }
-      ]
+      status: 'Approved'
     });
 
     res.json({ attendances, leaves });
