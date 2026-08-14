@@ -15,6 +15,7 @@ const AdminRequests = () => {
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [compOffForm, setCompOffForm] = useState({ employeeId: '', days: 1, reason: '', workDate: '' });
+  const [compOffAction, setCompOffAction] = useState('credit');
   const [compOffLoading, setCompOffLoading] = useState(false);
   const [compOffSuccess, setCompOffSuccess] = useState('');
 
@@ -150,16 +151,18 @@ const AdminRequests = () => {
   const pendingRegularizations = regularizations.filter(req => req.status === 'Pending').length;
   const pendingResignations = resignations.filter(req => req.status === 'Pending').length;
 
-  const handleCreditCompOff = async (e) => {
+  const handleCompOffSubmit = async (e) => {
     e.preventDefault();
     setCompOffLoading(true);
     setCompOffSuccess('');
     try {
-      const res = await axios.post('/api/admin/comp-off/credit', compOffForm);
+      const endpoint = compOffAction === 'credit' ? '/api/admin/comp-off/credit' : '/api/admin/comp-off/deduct';
+      const res = await axios.post(endpoint, compOffForm);
       setCompOffSuccess(res.data.message);
       setCompOffForm({ employeeId: '', days: 1, reason: '', workDate: '' });
+      fetchRequests(); // refresh employee balances
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to credit Comp Off');
+      alert(err.response?.data?.message || `Failed to ${compOffAction} Comp Off`);
     } finally {
       setCompOffLoading(false);
     }
@@ -430,18 +433,35 @@ const AdminRequests = () => {
               <Gift size={20} className="text-purple-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-text-dark">Credit Comp Off to Employee</h3>
-              <p className="text-xs text-text-light">Reward an employee with Comp Off days for working on holidays/Sundays or overtime.</p>
+              <h3 className="text-lg font-bold text-text-dark">Manage Comp Off Balance</h3>
+              <p className="text-xs text-text-light">Credit or deduct Comp Off days for an employee.</p>
             </div>
           </div>
 
+          <div className="flex gap-4 border-b border-gray-100 mb-6 pb-2">
+            <button 
+              type="button" 
+              onClick={() => setCompOffAction('credit')} 
+              className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'credit' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Credit Comp Off
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setCompOffAction('deduct')} 
+              className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'deduct' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Deduct Comp Off
+            </button>
+          </div>
+
           {compOffSuccess && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 font-medium flex items-center gap-2">
+            <div className={`mb-4 p-3 border rounded-lg text-sm font-medium flex items-center gap-2 ${compOffAction === 'credit' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
               <CheckCircle size={16} /> {compOffSuccess}
             </div>
           )}
 
-          <form onSubmit={handleCreditCompOff} className="space-y-4">
+          <form onSubmit={handleCompOffSubmit} className="space-y-4">
             <div>
               <label className="block mb-1.5 font-medium text-sm text-text-dark">Select Employee</label>
               <select
@@ -461,7 +481,7 @@ const AdminRequests = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1.5 font-medium text-sm text-text-dark">Days to Credit</label>
+                <label className="block mb-1.5 font-medium text-sm text-text-dark">Days to {compOffAction === 'credit' ? 'Credit' : 'Deduct'}</label>
                 <input
                   type="number"
                   min="0.5"
@@ -488,7 +508,7 @@ const AdminRequests = () => {
               <textarea
                 className="form-control"
                 rows="3"
-                placeholder="e.g. Worked on Sunday 14 July 2026 for project deadline..."
+                placeholder={compOffAction === 'credit' ? "e.g. Worked on Sunday 14 July 2026 for project deadline..." : "e.g. Deducted by mistake or unused balance expired..."}
                 value={compOffForm.reason}
                 onChange={e => setCompOffForm({ ...compOffForm, reason: e.target.value })}
               />
@@ -497,14 +517,14 @@ const AdminRequests = () => {
             <button
               type="submit"
               disabled={compOffLoading}
-              className="btn bg-purple-600 hover:bg-purple-700 text-white w-full flex items-center justify-center gap-2 disabled:opacity-60"
+              className={`btn text-white w-full flex items-center justify-center gap-2 disabled:opacity-60 ${compOffAction === 'credit' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-500 hover:bg-red-600'}`}
             >
               {compOffLoading ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Gift size={16} />
+                compOffAction === 'credit' ? <Gift size={16} /> : <Trash2 size={16} />
               )}
-              {compOffLoading ? 'Crediting...' : 'Credit Comp Off'}
+              {compOffLoading ? 'Processing...' : compOffAction === 'credit' ? 'Credit Comp Off' : 'Deduct Comp Off'}
             </button>
           </form>
         </div>
