@@ -52,10 +52,12 @@ export const getTodayAttendance = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const attendance = await Attendance.findOne({
       employee: req.user._id,
-      date: { $gte: today }
+      date: { $gte: today, $lt: tomorrow }
     });
     
     res.json(attendance || null);
@@ -69,14 +71,26 @@ export const punchIn = async (req, res) => {
     const { location, isRemote } = req.body;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     let attendance = await Attendance.findOne({
       employee: req.user._id,
-      date: { $gte: today }
+      date: { $gte: today, $lt: tomorrow }
     });
     
     if (attendance) {
-      return res.status(400).json({ message: 'Already punched in today' });
+      if (attendance.punchIn) {
+        return res.status(400).json({ message: 'Already punched in today' });
+      }
+      // If there is an existing record without punchIn (e.g., Holiday or Leave), update it
+      attendance.punchIn = new Date();
+      attendance.punchInLocation = location || null;
+      attendance.status = 'Present';
+      attendance.isRemote = isRemote || false;
+      attendance.remoteStatus = isRemote ? 'Pending' : 'None';
+      await attendance.save();
+      return res.json(attendance);
     }
     
     attendance = new Attendance({
@@ -101,10 +115,12 @@ export const punchOut = async (req, res) => {
     const { location, isRemoteOut } = req.body;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const attendance = await Attendance.findOne({
       employee: req.user._id,
-      date: { $gte: today }
+      date: { $gte: today, $lt: tomorrow }
     });
     
     if (!attendance || !attendance.punchIn) {
@@ -331,10 +347,12 @@ export const submitDailyReport = async (req, res) => {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     let attendance = await Attendance.findOne({
       employee: req.user._id,
-      date: { $gte: today }
+      date: { $gte: today, $lt: tomorrow }
     });
 
     if (!attendance || !attendance.punchIn) {
@@ -355,10 +373,12 @@ export const deleteDailyReport = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     let attendance = await Attendance.findOne({
       employee: req.user._id,
-      date: { $gte: today }
+      date: { $gte: today, $lt: tomorrow }
     });
 
     if (!attendance) {
