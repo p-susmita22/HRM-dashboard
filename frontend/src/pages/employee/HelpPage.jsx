@@ -1210,12 +1210,19 @@ const HelpPage = () => {
                 const pIn = record.punchIn ? new Date(record.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
                 const pOut = record.punchOut ? new Date(record.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
                 const hrs = record.totalHours ? record.totalHours.toFixed(1) : '0';
+                
+                // Assuming Comp Off expires after 60 days
+                const isExpired = (new Date() - d) / (1000 * 60 * 60 * 24) > 60;
+
                 return (
-                  <div key={idx} className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-purple-50 hover:border-purple-200 transition-colors">
+                  <div key={idx} className={`flex items-center justify-between p-3.5 border rounded-xl transition-colors ${isExpired ? 'bg-gray-50/50 border-gray-200 opacity-75' : 'bg-gray-50 border-gray-100 hover:bg-purple-50 hover:border-purple-200'}`}>
                     <div>
-                      <p className="font-bold text-sm text-text-dark">
-                        {d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className={`font-bold text-sm ${isExpired ? 'text-gray-500' : 'text-text-dark'}`}>
+                          {d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                        {isExpired && <span className="text-[9px] uppercase font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 tracking-wider">Expired</span>}
+                      </div>
                       <p className="text-xs text-text-light mt-0.5">
                         {pIn} – {pOut} &nbsp;·&nbsp; {hrs} hrs &nbsp;·&nbsp;
                         <span className={`font-semibold ${record.status === 'Half Day' ? 'text-orange-500' : 'text-green-600'}`}>
@@ -1223,7 +1230,7 @@ const HelpPage = () => {
                         </span>
                       </p>
                     </div>
-                    <div className="bg-purple-100 text-purple-700 font-black text-sm px-2.5 py-1 rounded-lg shrink-0">
+                    <div className={`${isExpired ? 'bg-gray-200 text-gray-500 line-through' : 'bg-purple-100 text-purple-700'} font-black text-sm px-2.5 py-1 rounded-lg shrink-0`}>
                       +{record.compOffEarned} day
                     </div>
                   </div>
