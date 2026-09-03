@@ -165,10 +165,10 @@ const HomePage = () => {
         return d >= start && d <= end;
       });
 
-      if (matchingLeave) {
+      if (matchingLeave && matchingLeave.status === 'Approved') {
         const isCompOff = matchingLeave.leaveType === 'Comp Off' || 
                           (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase() === 'comp off') || 
-                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+                          matchingLeave.compOffRequestStatus === 'Approved';
         
         if (isCompOff) {
           onLeave++;
@@ -384,10 +384,10 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (matchingLeave) {
+    if (matchingLeave && matchingLeave.status === 'Approved') {
         const isCompOff = matchingLeave.leaveType === 'Comp Off' || 
                           (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase() === 'comp off') || 
-                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+                          matchingLeave.compOffRequestStatus === 'Approved';
                           
         if (isCompOff) return 'bg-[#d8a474] text-white shadow-md font-bold';
         return 'bg-yellow-400 text-white shadow-md font-bold';
@@ -465,10 +465,10 @@ const HomePage = () => {
         const d = date.getTime();
         return d >= start && d <= end;
     });
-    if (matchingLeave) {
+    if (matchingLeave && matchingLeave.status === 'Approved') {
         const isCompOff = matchingLeave.leaveType === 'Comp Off' || 
                           (matchingLeave.leaveType && matchingLeave.leaveType.toLowerCase() === 'comp off') || 
-                          (matchingLeave.reason && matchingLeave.reason.toLowerCase().includes('comp off'));
+                          matchingLeave.compOffRequestStatus === 'Approved';
                           
         if (isCompOff) return 'Comp Off';
         return 'On Leave';
