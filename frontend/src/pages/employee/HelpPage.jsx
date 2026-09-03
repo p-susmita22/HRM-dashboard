@@ -22,7 +22,9 @@ const HelpPage = () => {
   // Comp Off Cancel Request (regularization-like flow)
   const [myCompOffRequests, setMyCompOffRequests] = useState([]);
   const [compOffCancelLoading, setCompOffCancelLoading] = useState(null);
-  const [compOffCancelReason, setCompOffCancelReason] = useState({});
+  const [compOffCancelDates, setCompOffCancelDates] = useState([]);
+  const [compOffCancelCurrentDate, setCompOffCancelCurrentDate] = useState(new Date());
+  const [compOffCancelReasonText, setCompOffCancelReasonText] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -113,19 +115,55 @@ const HelpPage = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleRequestCompOffCancel = async (leave) => {
-    const reason = compOffCancelReason[leave._id] || '';
-    if (!reason.trim()) {
-      alert('Please write a reason before submitting.');
+  const handleApplyCompOffCancelTab = async (e) => {
+    e.preventDefault();
+    if (!compOffCancelReasonText.trim()) {
+      alert('Reason likhna zaroori hai.');
       return;
     }
-    setCompOffCancelLoading(leave._id);
+
+    // Find leaves that contain the selected dates
+    const leavesToCancel = [];
+    myLeaves.forEach(l => {
+      if (l.leaveType === 'Comp Off' || l.status === 'Rejected' || l.compOffRequestStatus === 'Approved' || l.compOffRequestStatus === 'Pending') return;
+      
+      let hasMatch = false;
+      if (l.dates && l.dates.length > 0) {
+        hasMatch = l.dates.some(d => compOffCancelDates.includes(format(new Date(d), 'yyyy-MM-dd')));
+      } else {
+        const start = new Date(l.fromDate).setHours(0,0,0,0);
+        const end = new Date(l.toDate).setHours(23,59,59,999);
+        hasMatch = compOffCancelDates.some(dStr => {
+          const dTime = new Date(dStr).setHours(0,0,0,0);
+          return dTime >= start && dTime <= end;
+        });
+      }
+      if (hasMatch) {
+        leavesToCancel.push(l);
+      }
+    });
+
+    if (leavesToCancel.length === 0) {
+      alert('Selected dates kisi valid leave se match nahi karte.');
+      return;
+    }
+
+    const totalDaysNeeded = leavesToCancel.reduce((sum, l) => sum + (l.dates?.length || 1), 0);
+    if (compOffBalance < totalDaysNeeded) {
+      alert(`Balance kam hai! Aapko ${totalDaysNeeded} days chahiye, par ${compOffBalance} days available hain.`);
+      return;
+    }
+
+    setCompOffCancelLoading('submitting');
     try {
-      await axios.post(`/api/employee/leaves/${leave._id}/request-comp-off`, { reason });
+      for (const leave of leavesToCancel) {
+        await axios.post(`/api/employee/leaves/${leave._id}/request-comp-off`, { reason: compOffCancelReasonText });
+      }
+      setCompOffCancelDates([]);
+      setCompOffCancelReasonText('');
       await fetchMyLeaves();
       await fetchMyCompOffRequests();
-      setCompOffCancelReason(prev => ({ ...prev, [leave._id]: '' }));
-      alert('✅ Request submitted! Admin will review it.');
+      alert('✅ Comp Off Cancel requests successfully submitted!');
     } catch (err) {
       alert(err.response?.data?.message || 'Request submit karne mein error aaya.');
     } finally {
@@ -339,6 +377,31 @@ const HelpPage = () => {
       setRegDates(regDates.filter(d => d !== dateStr));
     } else {
       setRegDates([...regDates, dateStr].sort());
+    }
+  };
+
+  const isCompOffCancellableDate = (date) => {
+    const dTime = date.getTime();
+    return myLeaves.some(l => {
+      if (l.leaveType === 'Comp Off' || l.status === 'Rejected' || l.compOffRequestStatus === 'Approved' || l.compOffRequestStatus === 'Pending') return false;
+      
+      if (l.dates && l.dates.length > 0) {
+        return l.dates.some(dStr => new Date(dStr).setHours(0,0,0,0) === dTime);
+      } else {
+        const start = new Date(l.fromDate).setHours(0,0,0,0);
+        const end = new Date(l.toDate).setHours(23,59,59,999);
+        return dTime >= start && dTime <= end;
+      }
+    });
+  };
+
+  const toggleCompOffCancelDate = (date) => {
+    if (!isCompOffCancellableDate(date)) return;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (compOffCancelDates.includes(dateStr)) {
+      setCompOffCancelDates(compOffCancelDates.filter(d => d !== dateStr));
+    } else {
+      setCompOffCancelDates([...compOffCancelDates, dateStr].sort());
     }
   };
 
@@ -937,180 +1000,159 @@ const HelpPage = () => {
         {/* ===== COMP OFF CANCEL TAB ===== */}
         {activeTab === 'compoff-cancel' && (
           <div className="flex flex-col gap-8">
-            {/* Info Banner */}
-            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl p-4">
-              <span className="text-2xl">🔄</span>
-              <div>
-                <p className="font-bold text-purple-800 text-sm">Comp Off se Leave Cancel kaise kare?</p>
-                <p className="text-xs text-purple-600 mt-1">Neeche apni existing leave select karo, reason likho aur request bhejo. Admin approve karne par leave cancel hogi aur aapka Comp Off balance use hoga.</p>
-                <p className="text-xs font-bold text-purple-700 mt-1">Current Balance: {compOffBalance} day{compOffBalance !== 1 ? 's' : ''}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <form onSubmit={handleApplyCompOffCancelTab} className="flex flex-col">
+                <h3 className="mb-4 text-lg font-semibold text-purple-800">Comp Off Cancel Request</h3>
+                
+                <div className="mb-4">
+                  <label className="block mb-1.5 font-medium text-sm text-text-dark">Selected Leave Dates</label>
+                  {compOffCancelDates.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {compOffCancelDates.map(d => (
+                        <span key={d} className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-bold border border-purple-200">
+                          {format(new Date(d), 'dd MMM yyyy')}
+                          <button 
+                            type="button" 
+                            onClick={() => setCompOffCancelDates(compOffCancelDates.filter(date => date !== d))}
+                            className="ml-1 text-purple-600 hover:text-red-500 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center transition-colors text-[10px]"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg text-sm text-purple-600 mb-2">
+                      Calendar se apni apply ki hui leave date select karein &#8594;
+                    </div>
+                  )}
+                  <p className="text-[11px] text-purple-700 font-semibold mb-2">Current Comp Off Balance: {compOffBalance} day{compOffBalance !== 1 ? 's' : ''}</p>
+                </div>
+
+                <div className="mb-4 flex-1">
+                  <label className="block mb-1.5 font-medium text-sm">Reason for Cancellation</label>
+                  <textarea 
+                    name="reason" 
+                    className="form-control h-32 focus:border-purple-400 focus:ring-purple-200" 
+                    placeholder="Enter reason for converting this leave to Comp Off..." 
+                    required
+                    value={compOffCancelReasonText}
+                    onChange={(e) => setCompOffCancelReasonText(e.target.value)}
+                  ></textarea>
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className={`btn w-full mt-auto text-white flex justify-center items-center gap-2 ${compOffCancelDates.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 shadow-sm'}`}
+                  disabled={compOffCancelDates.length === 0 || compOffCancelLoading}
+                >
+                  {compOffCancelLoading ? 'Submitting...' : 'Submit Cancel Request'}
+                </button>
+              </form>
+
+              <div className="border border-purple-100 rounded-xl p-5 bg-purple-50/30 shadow-sm flex flex-col justify-center">
+                 <h4 className="font-semibold text-center mb-4 text-purple-800">Select Existing Leave Dates</h4>
+                 <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+                   <div className="flex items-center justify-between mb-4">
+                     <button 
+                       type="button" 
+                       onClick={() => setCompOffCancelCurrentDate(subMonths(compOffCancelCurrentDate, 1))} 
+                       className="p-1.5 hover:bg-purple-50 text-purple-600 rounded-full transition-colors"
+                     >&#8592;</button>
+                     <span className="font-bold text-sm text-purple-800">{format(compOffCancelCurrentDate, 'MMMM yyyy')}</span>
+                     <button type="button" onClick={() => setCompOffCancelCurrentDate(addMonths(compOffCancelCurrentDate, 1))} className="p-1.5 hover:bg-purple-50 text-purple-600 rounded-full transition-colors">&#8594;</button>
+                   </div>
+                   
+                   <div className="grid grid-cols-7 gap-1 text-center text-[10px] mb-2 font-bold text-purple-400 uppercase">
+                     {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => <div key={i}>{d}</div>)}
+                   </div>
+                   
+                   <div className="grid grid-cols-7 gap-1 text-sm">
+                     {Array.from({ length: startOfMonth(compOffCancelCurrentDate).getDay() }).map((_, i) => <div key={`co-${i}`} />)}
+                     {eachDayOfInterval({ start: startOfMonth(compOffCancelCurrentDate), end: endOfMonth(compOffCancelCurrentDate) }).map(date => {
+                       const dateStr = format(date, 'yyyy-MM-dd');
+                       const isSelected = compOffCancelDates.includes(dateStr);
+                       const isCancellable = isCompOffCancellableDate(date);
+                       
+                       return (
+                         <button
+                           key={dateStr}
+                           type="button"
+                           disabled={!isCancellable}
+                           onClick={() => toggleCompOffCancelDate(date)}
+                           className={`w-9 h-9 rounded-full flex items-center justify-center transition-all mx-auto font-medium text-sm border border-transparent
+                             ${!isCancellable ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50' : 
+                               isSelected ? 'bg-purple-600 text-white shadow-md scale-110 ring-2 ring-purple-300 ring-offset-1' : 
+                               'bg-purple-50 text-purple-700 hover:bg-purple-100 hover:ring-2 hover:ring-purple-200'}`}
+                         >
+                           {date.getDate()}
+                         </button>
+                       );
+                     })}
+                   </div>
+                   
+                   <div className="mt-4 flex gap-3 text-[10px] justify-center text-gray-500 font-medium uppercase">
+                     <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Selected</div>
+                     <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-purple-50"></span> Eligible Leave</div>
+                   </div>
+                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* LEFT: Cancellable Leaves */}
-              <div>
-                <h3 className="text-base font-bold text-text-dark mb-4">Select a Leave to Cancel via Comp Off</h3>
-                {myLeaves.filter(l => l.leaveType !== 'Comp Off' && l.status !== 'Rejected' && l.compOffRequestStatus !== 'Approved').length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <span className="text-4xl block mb-2">📋</span>
-                    <p className="text-sm text-text-light">No cancellable leaves found.</p>
-                    <p className="text-xs text-text-light mt-1">Pehle koi Casual/Sick/Emergency leave apply karo.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {myLeaves
-                      .filter(l => l.leaveType !== 'Comp Off' && l.status !== 'Rejected' && l.compOffRequestStatus !== 'Approved')
-                      .map(leave => {
-                        const daysNeeded = leave.dates?.length || 1;
-                        const hasPendingRequest = leave.compOffRequestStatus === 'Pending';
-                        const canRequest = compOffBalance >= daysNeeded && !hasPendingRequest;
-                        const isProcessing = compOffCancelLoading === leave._id;
-
-                        return (
-                          <div key={leave._id} className={`bg-white border rounded-xl overflow-hidden transition-all ${hasPendingRequest ? 'border-purple-300 shadow-purple-100 shadow-md' : 'border-gray-100 shadow-sm hover:shadow-md'}`}>
-                            {/* Leave Info */}
-                            <div className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <h4 className="font-bold text-sm text-text-dark flex items-center gap-2">
-                                    {leave.leaveType === 'Sick Leave' ? '🏥' : leave.leaveType === 'Emergency Leave' ? '🚨' : '📅'}
-                                    {leave.leaveType}
-                                    <span className="text-[10px] font-semibold text-gray-400">({daysNeeded}d)</span>
-                                  </h4>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {leave.dates?.map((d, i) => (
-                                      <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
-                                        {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-1">
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${leave.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                    {leave.status}
-                                  </span>
-                                  {hasPendingRequest && (
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700">
-                                      Request Pending
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Comp Off balance check */}
-                              {!hasPendingRequest && compOffBalance < daysNeeded && (
-                                <p className="text-[11px] text-red-500 font-medium mt-1">
-                                  ⚠️ Balance kam hai: {compOffBalance}d available, {daysNeeded}d chahiye
-                                </p>
-                              )}
-
-                              {/* Request form */}
-                              {!hasPendingRequest && canRequest && (
-                                <div className="mt-3 pt-3 border-t border-gray-50">
-                                  <textarea
-                                    rows={2}
-                                    placeholder="Reason likho (required)..."
-                                    value={compOffCancelReason[leave._id] || ''}
-                                    onChange={e => setCompOffCancelReason(prev => ({ ...prev, [leave._id]: e.target.value }))}
-                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-200 transition-all"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRequestCompOffCancel(leave)}
-                                    disabled={isProcessing || !compOffCancelReason[leave._id]?.trim()}
-                                    className={`mt-2 w-full text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-2
-                                      ${isProcessing ? 'bg-purple-100 text-purple-400 cursor-wait' :
-                                        !compOffCancelReason[leave._id]?.trim() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
-                                        'bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md active:scale-95'}`}
-                                  >
-                                    {isProcessing ? (
-                                      <><svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Submitting...</>
-                                    ) : (
-                                      <>🔄 Comp Off Cancel Request Bhejo ({daysNeeded}d use hoga)</>
-                                    )}
-                                  </button>
-                                </div>
-                              )}
-
-                              {/* Withdraw pending request */}
-                              {hasPendingRequest && (
-                                <div className="mt-3 pt-3 border-t border-purple-100">
-                                  <div className="flex items-center justify-between">
-                                    <p className="text-xs text-purple-700 font-medium">⏳ Admin review kar raha hai...</p>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleWithdrawCompOffRequest(leave._id)}
-                                      className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors"
-                                    >
-                                      Withdraw Request
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
+            {/* My Requests History Section */}
+            <div className="border-t border-gray-100 pt-6">
+              <h3 className="text-lg font-bold text-text-dark mb-4">My Cancel Requests History</h3>
+              {myCompOffRequests.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <span className="text-4xl block mb-2">🔄</span>
+                  <p className="text-sm text-text-light">Koi request submit nahi ki gayi.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {myCompOffRequests.map(leave => {
+                    const daysNeeded = leave.dates?.length || 1;
+                    return (
+                      <div key={leave._id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-bold text-sm text-text-dark">{leave.leaveType}</h4>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {leave.dates?.map((d, i) => (
+                                <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                  {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                </span>
+                              ))}
+                              <span className="text-[10px] text-gray-400 font-semibold">({daysNeeded}d)</span>
                             </div>
                           </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* RIGHT: My Request History */}
-              <div>
-                <h3 className="text-base font-bold text-text-dark mb-4">My Comp Off Cancel Requests</h3>
-                {myCompOffRequests.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <span className="text-4xl block mb-2">🔄</span>
-                    <p className="text-sm text-text-light">Koi request submit nahi ki gayi.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {myCompOffRequests.map(leave => {
-                      const daysNeeded = leave.dates?.length || 1;
-                      return (
-                        <div key={leave._id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h4 className="font-bold text-sm text-text-dark">{leave.leaveType}</h4>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {leave.dates?.map((d, i) => (
-                                  <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
-                                    {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                  </span>
-                                ))}
-                                <span className="text-[10px] text-gray-400 font-semibold">({daysNeeded}d)</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
-                                ${leave.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
-                                  leave.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                  'bg-yellow-100 text-yellow-700'}`}>
-                                Comp Off: {leave.compOffRequestStatus}
-                              </span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${leave.status === 'Approved' ? 'bg-green-50 text-green-600' : leave.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
-                                Leave: {leave.status}
-                              </span>
-                            </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
+                              ${leave.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                                leave.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'}`}>
+                              {leave.compOffRequestStatus}
+                            </span>
                           </div>
-                          {leave.compOffRequestReason && (
-                            <p className="text-xs text-text-light bg-gray-50 rounded p-2 mt-2">
-                              "{leave.compOffRequestReason}"
-                            </p>
-                          )}
-                          {leave.compOffRequestStatus === 'Approved' && (
-                            <p className="text-[11px] text-green-600 font-semibold mt-2">✅ {daysNeeded} Comp Off day(s) deduct hue. Leave cancelled.</p>
-                          )}
-                          {leave.compOffRequestStatus === 'Rejected' && (
-                            <p className="text-[11px] text-red-500 font-semibold mt-2">❌ Admin ne reject kiya. Leave unchanged.</p>
-                          )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                        {leave.compOffRequestReason && (
+                          <p className="text-xs text-text-light bg-gray-50 rounded p-2 mt-2">
+                            "{leave.compOffRequestReason}"
+                          </p>
+                        )}
+                        {leave.compOffRequestStatus === 'Pending' && (
+                          <button
+                            type="button"
+                            onClick={() => handleWithdrawCompOffRequest(leave._id)}
+                            className="mt-3 w-full text-[11px] text-red-500 hover:text-red-700 font-semibold py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                          >
+                            Withdraw Request
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
