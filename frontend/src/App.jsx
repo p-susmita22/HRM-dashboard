@@ -182,7 +182,7 @@ const AdminLogin = ({ onLogin }) => {
     try {
       // Regular Login Flow
       const response = await axios.post('/api/auth/login', {
-        email, password
+        email, password, loginSource: 'admin-panel'
       });
       
       if (response.data.role !== 'admin') {
@@ -197,7 +197,8 @@ const AdminLogin = ({ onLogin }) => {
       onLogin(response.data.role); // should be 'admin'   
     } catch (err) {
       setIsLoading(false);
-      setError(err.response?.data?.message || 'Login failed. Please check your details.');
+      // Always show a generic mismatch message — never reveal lock status to admin panel visitors
+      setError(err.response?.data?.message || 'Credentials does not match. Please check your details.');
     }
   };
 

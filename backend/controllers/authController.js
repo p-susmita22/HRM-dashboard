@@ -25,7 +25,8 @@ const generateToken = (id, role) => {
 
 export const loginEmployee = async (req, res) => {
   try {
-    const { email, password, deviceId, deviceType } = req.body;
+    const { email, password, deviceId, deviceType, loginSource } = req.body;
+    const isAdminPanelRequest = loginSource === 'admin-panel';
 
     const employee = await Employee.findOne({ email: new RegExp(`^${email.trim()}$`, 'i') });
 
@@ -117,6 +118,12 @@ export const loginEmployee = async (req, res) => {
     }
 
     if (await employee.matchPassword(password)) {
+      // If the request came from the admin login panel, do NOT allow employee login
+      // and do NOT trigger any device locking — just reject with a role mismatch error.
+      if (isAdminPanelRequest && employee.role !== 'admin') {
+        return res.status(401).json({ message: 'Credentials does not match. Please use Employee Login.' });
+      }
+
       if (employee.role === 'employee') {
         if (deviceType === 'mobile') {
           if (employee.activeMobileId && employee.activeMobileId !== deviceId) {
