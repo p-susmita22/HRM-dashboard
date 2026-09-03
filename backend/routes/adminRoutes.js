@@ -99,6 +99,10 @@ router.put('/profile', updateAdminProfile);
 router.put('/password', changeAdminPassword);
 router.post('/logout-devices', logoutOtherDevices);
 
+import { getLockedAccounts, unlockAccount } from '../controllers/adminController.js';
+router.get('/locked-accounts', getLockedAccounts);
+router.put('/locked-accounts/:id/unlock', unlockAccount);
+
 // Comp Off Routes
 import { creditCompOff, deductCompOff, getCompOffCancelRequests, approveCompOffCancelRequest, rejectCompOffCancelRequest } from '../controllers/adminController.js';
 router.post('/comp-off/credit', creditCompOff);

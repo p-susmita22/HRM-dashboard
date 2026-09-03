@@ -1124,3 +1124,40 @@ export const rejectCompOffCancelRequest = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+export const getLockedAccounts = async (req, res) => {
+  try {
+    const lockedEmployees = await Employee.find({ 
+      $or: [{ isLocked: true }, { isActive: false }],
+      lockReason: { $ne: '' }
+    }).select('fullName employeeId email lockReason isLocked isActive updatedAt');
+    res.json(lockedEmployees);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching locked accounts' });
+  }
+};
+
+export const unlockAccount = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    
+    employee.isLocked = false;
+    employee.isActive = true;
+    employee.lockReason = '';
+    
+    // Clear device bindings so they can log in freely again
+    employee.activeMobileId = null;
+    employee.activeMobileToken = null;
+    employee.activeMobileDeviceName = null;
+    
+    employee.activeDesktopId = null;
+    employee.activeDesktopToken = null;
+    employee.activeDesktopDeviceName = null;
+
+    await employee.save();
+    res.json({ message: 'Account unlocked successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error unlocking account' });
+  }
+};

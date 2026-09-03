@@ -13,6 +13,7 @@ const AdminRequests = () => {
   const [regularizations, setRegularizations] = useState([]);
   const [resignations, setResignations] = useState([]);
   const [compOffCancelRequests, setCompOffCancelRequests] = useState([]);
+  const [lockedAccounts, setLockedAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [compOffForm, setCompOffForm] = useState({ employeeId: '', days: 1, reason: '', workDate: '' });
@@ -46,6 +47,9 @@ const AdminRequests = () => {
         setLeaves(res.data);
         const cr = await axios.get('/api/admin/comp-off/cancel-requests');
         setCompOffCancelRequests(cr.data);
+      } else if (activeTab === 'locked') {
+        const res = await axios.get('/api/admin/locked-accounts');
+        setLockedAccounts(res.data);
       }
     } catch (error) {
       console.error(`Error fetching ${activeTab} requests:`, error);
@@ -114,6 +118,17 @@ const AdminRequests = () => {
       fetchRequests();
     } catch (err) {
       alert(err.response?.data?.message || 'Reject karne mein error aaya.');
+    }
+  };
+
+  const handleUnlockAccount = async (id) => {
+    if (!window.confirm('Are you sure you want to unlock this account? This will clear all device restrictions and restore the active status.')) return;
+    try {
+      await axios.put(`/api/admin/locked-accounts/${id}/unlock`);
+      alert('Account unlocked successfully');
+      fetchRequests();
+    } catch (err) {
+      alert('Failed to unlock account');
     }
   };
 
@@ -244,6 +259,17 @@ const AdminRequests = () => {
           {pendingCompOffs > 0 && (
             <span className="bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
               {pendingCompOffs}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'locked' ? 'border-red-500 text-red-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
+          onClick={() => setActiveTab('locked')}
+        >
+          <AlertCircle size={16} /> Locked Accounts
+          {lockedAccounts.length > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+              {lockedAccounts.length}
             </span>
           )}
         </button>
@@ -635,6 +661,57 @@ const AdminRequests = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'locked' && (
+        <div className="card">
+          <h3 className="font-bold text-lg text-text-dark mb-4">Locked / Inactive Accounts</h3>
+          {loading ? (
+            <div className="text-center py-10"><div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto"></div></div>
+          ) : lockedAccounts.length === 0 ? (
+            <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-4xl block mb-2">✅</span>
+              <p className="text-text-light text-sm">No locked accounts found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-red-50 border-y border-red-100">
+                    <th className="p-3 font-semibold text-sm text-red-800">Employee</th>
+                    <th className="p-3 font-semibold text-sm text-red-800">Lock Reason</th>
+                    <th className="p-3 font-semibold text-sm text-red-800">Status</th>
+                    <th className="p-3 font-semibold text-sm text-red-800 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lockedAccounts.map(account => (
+                    <tr key={account._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
+                        <p className="font-bold text-sm text-text-dark">{account.fullName}</p>
+                        <p className="text-xs text-text-light">{account.employeeId}</p>
+                      </td>
+                      <td className="p-3 text-sm text-gray-700 max-w-md">{account.lockReason || 'No reason specified'}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${account.isLocked ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {account.isLocked ? 'Locked' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <button 
+                          onClick={() => handleUnlockAccount(account._id)}
+                          className="btn btn-primary !py-1.5 !px-3 text-xs flex items-center justify-center gap-1 mx-auto bg-red-600 hover:bg-red-700 border-none shadow-md"
+                        >
+                          <CheckCircle size={14} /> Unlock
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

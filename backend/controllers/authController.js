@@ -112,6 +112,7 @@ export const loginEmployee = async (req, res) => {
 
       if (hasUnauthorizedAbsence) {
         employee.isActive = false;
+        employee.lockReason = 'Account inactive: Employee absent for multiple days without applying for leave or punching in.';
         await employee.save();
         return res.status(403).json({ message: 'Account has been automatically deactivated due to unauthorized absence. Please contact Admin.' });
       }
@@ -128,6 +129,7 @@ export const loginEmployee = async (req, res) => {
         if (deviceType === 'mobile') {
           if (employee.activeMobileId && employee.activeMobileId !== deviceId) {
             employee.isLocked = true;
+            employee.lockReason = 'Account locked: Attempted to log in from a second mobile device without authorization.';
             employee.lockedCount = (employee.lockedCount || 0) + 1;
             employee.activeMobileToken = null;
             await employee.save();
@@ -136,6 +138,7 @@ export const loginEmployee = async (req, res) => {
         } else {
           if (employee.activeDesktopId && employee.activeDesktopId !== deviceId) {
             employee.isLocked = true;
+            employee.lockReason = 'Account locked: Attempted to log in from a second system/desktop without authorization.';
             employee.lockedCount = (employee.lockedCount || 0) + 1;
             employee.activeDesktopToken = null;
             await employee.save();
