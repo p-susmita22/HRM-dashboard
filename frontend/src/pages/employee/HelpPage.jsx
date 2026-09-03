@@ -8,6 +8,7 @@ const HelpPage = () => {
   const [myLeaves, setMyLeaves] = useState([]);
   const [myRegularizations, setMyRegularizations] = useState([]);
   const [regDates, setRegDates] = useState([]);
+  const [regReason, setRegReason] = useState('');
   const [regCurrentDate, setRegCurrentDate] = useState(new Date());
   const [leaveDates, setLeaveDates] = useState([]);
   const [leaveCurrentDate, setLeaveCurrentDate] = useState(new Date());
@@ -155,19 +156,45 @@ const HelpPage = () => {
 
   const handleApplyRegularization = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
     const data = {
       dates: regDates.join(','),
-      reason: formData.get('reason')
+      reason: regReason
     };
     
     try {
       await axios.post('/api/employee/regularizations', data);
-      e.target.reset();
+      setRegReason('');
       setRegDates([]);
       fetchMyRegularizations();
     } catch (err) {
       alert('Failed to submit regularization');
+    }
+  };
+
+  const handleApplyCompOffFromReg = async () => {
+    if (!regReason.trim()) {
+      alert('Please provide a reason first.');
+      return;
+    }
+    if (regDates.length > compOffBalance) {
+      alert(`Comp Off balance kam hai! Aapke paas ${compOffBalance} day(s) available hain, par ${regDates.length} date(s) select kiye hain.`);
+      return;
+    }
+    const data = {
+      leaveType: 'Comp Off',
+      dates: regDates.join(','),
+      reason: regReason
+    };
+    
+    try {
+      await axios.post('/api/employee/leaves', data);
+      setRegReason('');
+      setRegDates([]);
+      fetchMyLeaves();
+      fetchProfile();
+      alert('Comp Off successfully applied for selected dates! Balance deducted.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to apply Comp Off');
     }
   };
 
@@ -517,7 +544,6 @@ const HelpPage = () => {
                  </div>
                </div>
             </div>
-
             </div>
             {/* ===== MY LEAVE REQUESTS — Full Width Below ===== */}
             <div className="border-t border-gray-100 pt-6">
@@ -588,36 +614,29 @@ const HelpPage = () => {
                         {leave.status !== 'Rejected' && (
                           <div className="border-t border-gray-50 bg-gray-50/60 p-3 flex flex-col gap-2">
 
-                            {/* COMP OFF CANCEL BUTTON — Most prominent */}
+                            {/* COMP OFF CANCEL — redirects to Comp Off Cancel tab */}
                             {leave.leaveType !== 'Comp Off' && (
                               <button
                                 type="button"
-                                onClick={() => handleUseCompOff(leave)}
-                                disabled={isProcessing || compOffBalance < daysNeeded}
+                                onClick={() => setActiveTab('compoff-cancel')}
                                 className={`w-full text-xs font-bold py-2.5 px-3 rounded-lg transition-all flex items-center justify-center gap-2
-                                  ${isProcessing
-                                    ? 'bg-purple-100 text-purple-500 cursor-wait'
-                                    : canUseCompOff
-                                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md active:scale-95'
-                                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  ${leave.compOffRequestStatus === 'Approved'
+                                    ? 'bg-green-50 text-green-600 cursor-default'
+                                    : leave.compOffRequestStatus === 'Pending'
+                                      ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                                      : compOffBalance >= daysNeeded
+                                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md active:scale-95'
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                   }`}
-                                title={!canUseCompOff ? `Balance kam hai: aapke paas ${compOffBalance}d hai, ${daysNeeded}d chahiye` : `${daysNeeded} Comp Off day use karke yeh leave cancel/convert karo`}
+                                title="Comp Off Cancel tab mein jaao"
                               >
-                                {isProcessing ? (
-                                  <>
-                                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                                    </svg>
-                                    Processing...
-                                  </>
-                                ) : (
-                                  <>
-                                    🔄 {canUseCompOff
-                                      ? `Comp Off se Cancel (${daysNeeded}d use hoga)`
-                                      : `Comp Off se Cancel (Balance kam: ${compOffBalance}/${daysNeeded}d)`}
-                                  </>
-                                )}
+                                {leave.compOffRequestStatus === 'Approved'
+                                  ? '✅ Comp Off Applied'
+                                  : leave.compOffRequestStatus === 'Pending'
+                                    ? '⏳ Comp Off Request Pending'
+                                    : compOffBalance >= daysNeeded
+                                      ? `🔄 Comp Off se Cancel (${daysNeeded}d)`
+                                      : `🔄 Comp Off se Cancel (Balance: ${compOffBalance}/${daysNeeded}d)`}
                               </button>
                             )}
 
@@ -679,16 +698,38 @@ const HelpPage = () => {
 
               <div className="mb-4 flex-1">
                 <label className="block mb-1.5 font-medium text-sm">Reason</label>
-                <textarea name="reason" className="form-control h-32" placeholder="Explain why these dates should be regularized..." required></textarea>
+                <textarea 
+                  name="reason" 
+                  className="form-control h-32" 
+                  placeholder="Explain why these dates should be regularized or converted to Comp Off..." 
+                  required
+                  value={regReason}
+                  onChange={(e) => setRegReason(e.target.value)}
+                ></textarea>
               </div>
               
-              <button 
-                type="submit" 
-                className={`btn w-full mt-auto ${regDates.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'btn-primary'}`}
-                disabled={regDates.length === 0}
-              >
-                Submit Request
-              </button>
+              <div className="flex flex-col gap-3 mt-auto">
+                <button 
+                  type="submit" 
+                  className={`btn w-full ${regDates.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'btn-primary'}`}
+                  disabled={regDates.length === 0}
+                >
+                  Submit Regularization Request
+                </button>
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-text-light text-xs font-semibold">OR</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={handleApplyCompOffFromReg}
+                  className={`btn w-full ${regDates.length === 0 || regDates.length > compOffBalance ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md'}`}
+                  disabled={regDates.length === 0 || regDates.length > compOffBalance}
+                >
+                  🔄 Use Comp Off ({regDates.length}d needed, {compOffBalance}d available)
+                </button>
+              </div>
             </form>
 
             <div className="border border-gray-100 rounded-xl p-5 bg-bg-gray shadow-sm flex flex-col justify-center">
@@ -882,8 +923,15 @@ const HelpPage = () => {
                   <input type="checkbox" id="notice" name="notice" required className="w-5 h-5 accent-status-absent mt-0.5 cursor-pointer" />
                   <label htmlFor="notice" className="font-medium text-sm text-text-dark cursor-pointer leading-relaxed">
                     I acknowledge and agree to serve the mandatory 45 days notice period. I understand that my last working day will be calculated automatically.
-          )}
-        </div>
+                  </label>
+                </div>
+                
+                <button type="submit" className="btn btn-danger w-full py-2.5 text-base font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                  Submit Resignation
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
         {/* ===== COMP OFF CANCEL TAB ===== */}
