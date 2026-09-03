@@ -275,7 +275,60 @@ const AdminRequests = () => {
         </button>
       </div>
 
-      <div className="flex gap-4 mb-6 px-2 flex-wrap">
+      {activeTab === 'locked' && (
+        <div className="card">
+          <h3 className="font-bold text-lg text-text-dark mb-4">Locked / Inactive Accounts</h3>
+          {loading ? (
+            <div className="text-center py-10"><div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto"></div></div>
+          ) : lockedAccounts.length === 0 ? (
+            <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-4xl block mb-2">✅</span>
+              <p className="text-text-light text-sm">No locked accounts found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-red-50 border-y border-red-100">
+                    <th className="p-3 font-semibold text-sm text-red-800">Employee</th>
+                    <th className="p-3 font-semibold text-sm text-red-800">Lock Reason</th>
+                    <th className="p-3 font-semibold text-sm text-red-800">Status</th>
+                    <th className="p-3 font-semibold text-sm text-red-800 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lockedAccounts.map(account => (
+                    <tr key={account._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
+                        <p className="font-bold text-sm text-text-dark">{account.fullName}</p>
+                        <p className="text-xs text-text-light">{account.employeeId}</p>
+                      </td>
+                      <td className="p-3 text-sm text-gray-700 max-w-md">{account.lockReason || 'No reason specified'}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${account.isLocked ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {account.isLocked ? 'Locked' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <button 
+                          onClick={() => handleUnlockAccount(account._id)}
+                          className="btn btn-primary !py-1.5 !px-3 text-xs flex items-center justify-center gap-1 mx-auto bg-red-600 hover:bg-red-700 border-none shadow-md"
+                        >
+                          <CheckCircle size={14} /> Unlock
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab !== 'locked' && (
+        <>
+          <div className="flex gap-4 mb-6 px-2 flex-wrap">
         <div className="flex-1 min-w-[200px]">
           <input 
             type="text" 
@@ -663,56 +716,7 @@ const AdminRequests = () => {
           </div>
         </div>
       )}
-
-      {activeTab === 'locked' && (
-        <div className="card">
-          <h3 className="font-bold text-lg text-text-dark mb-4">Locked / Inactive Accounts</h3>
-          {loading ? (
-            <div className="text-center py-10"><div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto"></div></div>
-          ) : lockedAccounts.length === 0 ? (
-            <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
-              <span className="text-4xl block mb-2">✅</span>
-              <p className="text-text-light text-sm">No locked accounts found.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-red-50 border-y border-red-100">
-                    <th className="p-3 font-semibold text-sm text-red-800">Employee</th>
-                    <th className="p-3 font-semibold text-sm text-red-800">Lock Reason</th>
-                    <th className="p-3 font-semibold text-sm text-red-800">Status</th>
-                    <th className="p-3 font-semibold text-sm text-red-800 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lockedAccounts.map(account => (
-                    <tr key={account._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="p-3">
-                        <p className="font-bold text-sm text-text-dark">{account.fullName}</p>
-                        <p className="text-xs text-text-light">{account.employeeId}</p>
-                      </td>
-                      <td className="p-3 text-sm text-gray-700 max-w-md">{account.lockReason || 'No reason specified'}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${account.isLocked ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                          {account.isLocked ? 'Locked' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <button 
-                          onClick={() => handleUnlockAccount(account._id)}
-                          className="btn btn-primary !py-1.5 !px-3 text-xs flex items-center justify-center gap-1 mx-auto bg-red-600 hover:bg-red-700 border-none shadow-md"
-                        >
-                          <CheckCircle size={14} /> Unlock
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      </>
       )}
 
       {isModalOpen && selectedRequest && createPortal(
