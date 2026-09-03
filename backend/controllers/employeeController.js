@@ -227,11 +227,64 @@ export const deleteLeave = async (req, res) => {
     if (!leave) return res.status(404).json({ message: 'Leave not found' });
     if (leave.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
     if (leave.status !== 'Pending') return res.status(400).json({ message: 'Cannot delete processed leave' });
+
+    // If this was a Comp Off leave, refund the balance on deletion
+    if (leave.leaveType === 'Comp Off') {
+      const daysCount = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
+      const employee = await Employee.findById(req.user._id);
+      if (employee) {
+        employee.compOffBalance = parseFloat(((employee.compOffBalance || 0) + daysCount).toFixed(1));
+        await employee.save();
+      }
+    }
     
     await leave.deleteOne();
     res.json({ message: 'Leave deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Convert an existing leave to Comp Off — deducts comp off balance and updates leave type
+export const useCompOffForLeave = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    if (leave.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
+
+    // Only allow if leave is Pending or Approved (not Rejected)
+    if (leave.status === 'Rejected') {
+      return res.status(400).json({ message: 'Cannot use Comp Off on a rejected leave.' });
+    }
+
+    // Already a Comp Off leave
+    if (leave.leaveType === 'Comp Off') {
+      return res.status(400).json({ message: 'This leave is already a Comp Off leave.' });
+    }
+
+    const daysNeeded = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
+
+    const employee = await Employee.findById(req.user._id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    if ((employee.compOffBalance || 0) < daysNeeded) {
+      return res.status(400).json({
+        message: `Insufficient Comp Off balance. Available: ${employee.compOffBalance || 0} day(s), Required: ${daysNeeded} day(s).`
+      });
+    }
+
+    // Deduct balance and convert leave type
+    employee.compOffBalance = parseFloat(((employee.compOffBalance || 0) - daysNeeded).toFixed(1));
+    await employee.save();
+
+    leave.leaveType = 'Comp Off';
+    leave.compOffUsed = true;
+    leave.status = 'Pending'; // Reset to pending so admin re-approves
+    await leave.save();
+
+    res.json({ message: 'Comp Off applied successfully. Leave converted to Comp Off type.', leave, newBalance: employee.compOffBalance });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 

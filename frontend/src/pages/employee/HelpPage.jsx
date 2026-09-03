@@ -94,8 +94,28 @@ const HelpPage = () => {
     try {
       await axios.delete(`/api/employee/leaves/${id}`);
       fetchMyLeaves();
+      fetchProfile(); // Refresh balance in case it was a Comp Off leave
     } catch (err) {
       alert('Failed to delete leave');
+    }
+  };
+
+  const handleUseCompOff = async (leave) => {
+    const daysNeeded = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
+    if (compOffBalance < daysNeeded) {
+      alert(`Insufficient Comp Off balance.\nAvailable: ${compOffBalance} day(s)\nRequired: ${daysNeeded} day(s)`);
+      return;
+    }
+    if (!window.confirm(
+      `Use ${daysNeeded} Comp Off credit(s) for this "${leave.leaveType}" leave?\n\nThis will:\n• Deduct ${daysNeeded} day(s) from your Comp Off balance (${compOffBalance} → ${compOffBalance - daysNeeded})\n• Convert this leave to Comp Off type\n• Reset status to Pending for admin approval`
+    )) return;
+    try {
+      const res = await axios.post(`/api/employee/leaves/${leave._id}/use-comp-off`);
+      alert(`✅ Comp Off applied!\nNew Balance: ${res.data.newBalance} day(s)`);
+      fetchMyLeaves();
+      fetchProfile();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to apply Comp Off');
     }
   };
 
@@ -495,17 +515,45 @@ const HelpPage = () => {
                         {leave.status}
                       </span>
                     </div>
-                    {leave.status === 'Pending' && (
+                    {(leave.status === 'Pending' || leave.status === 'Approved') && leave.leaveType !== 'Comp Off' && (
+                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50 gap-2">
+                        {/* Delete — only for Pending */}
+                        {leave.status === 'Pending' && (
+                          <button 
+                            type="button" 
+                            onClick={() => handleDeleteLeave(leave._id)} 
+                            className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors flex items-center gap-1"
+                          >
+                            🗑 Delete
+                          </button>
+                        )}
+                        {/* Use Comp Off — for Pending & Approved, if balance is enough */}
+                        <button
+                          type="button"
+                          onClick={() => handleUseCompOff(leave)}
+                          disabled={compOffBalance < (leave.dates?.length || 1)}
+                          className={`ml-auto text-[11px] font-semibold px-2.5 py-1.5 rounded transition-colors flex items-center gap-1
+                            ${compOffBalance >= (leave.dates?.length || 1)
+                              ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 hover:text-purple-900 border border-purple-200'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'}`}
+                          title={compOffBalance < (leave.dates?.length || 1) ? `Need ${leave.dates?.length || 1} Comp Off day(s), you have ${compOffBalance}` : 'Use Comp Off credits for this leave'}
+                        >
+                          🔄 Use Comp Off {compOffBalance >= (leave.dates?.length || 1) ? `(${leave.dates?.length || 1}d)` : '(Low Balance)'}
+                        </button>
+                      </div>
+                    )}
+                    {leave.status === 'Pending' && leave.leaveType === 'Comp Off' && (
                       <div className="flex justify-end mt-2 pt-2 border-t border-gray-50">
                         <button 
                           type="button" 
                           onClick={() => handleDeleteLeave(leave._id)} 
                           className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors flex items-center gap-1"
                         >
-                          Delete Request
+                          🗑 Delete Request
                         </button>
                       </div>
                     )}
+
                   </div>
                 ))}
               </div>
