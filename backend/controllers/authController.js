@@ -126,23 +126,36 @@ export const loginEmployee = async (req, res) => {
       }
 
       if (employee.role === 'employee') {
+        const userAgent = req.headers['user-agent'] || '';
+        const isAndroid = /android/i.test(userAgent);
+        const isWindows = /windows/i.test(userAgent);
+
+        // Strict OS Rule: Only Android and Windows PC are allowed
+        if (!isAndroid && !isWindows) {
+          employee.isLocked = true;
+          employee.lockReason = 'Account locked: Attempted to log in from an unauthorized OS (Not Android or Windows PC).';
+          employee.lockedCount = (employee.lockedCount || 0) + 1;
+          await employee.save();
+          return res.status(403).json({ message: 'Account locked! You can only log in from 1 Android and 1 Windows PC. Other systems are not allowed.' });
+        }
+
         if (deviceType === 'mobile') {
           if (employee.activeMobileId && employee.activeMobileId !== deviceId) {
             employee.isLocked = true;
-            employee.lockReason = 'Account locked: Attempted to log in from a second mobile device without authorization.';
+            employee.lockReason = 'Account locked: Attempted to log in from a 2nd Android mobile (3rd system attempt).';
             employee.lockedCount = (employee.lockedCount || 0) + 1;
             employee.activeMobileToken = null;
             await employee.save();
-            return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second mobile phone. Please contact Admin.' });
+            return res.status(403).json({ message: 'Account locked! You can only log in from 1 Android and 1 Windows PC. 3rd system login is not allowed.' });
           }
         } else {
           if (employee.activeDesktopId && employee.activeDesktopId !== deviceId) {
             employee.isLocked = true;
-            employee.lockReason = 'Account locked: Attempted to log in from a second system/desktop without authorization.';
+            employee.lockReason = 'Account locked: Attempted to log in from a 2nd Windows PC (3rd system attempt).';
             employee.lockedCount = (employee.lockedCount || 0) + 1;
             employee.activeDesktopToken = null;
             await employee.save();
-            return res.status(403).json({ message: 'Your ID has been locked because you attempted to log in on a second system. Please contact Admin.' });
+            return res.status(403).json({ message: 'Account locked! You can only log in from 1 Android and 1 Windows PC. 3rd system login is not allowed.' });
           }
         }
       }
