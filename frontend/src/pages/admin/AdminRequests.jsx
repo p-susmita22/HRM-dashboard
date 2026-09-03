@@ -12,6 +12,7 @@ const AdminRequests = () => {
   const [leaves, setLeaves] = useState([]);
   const [regularizations, setRegularizations] = useState([]);
   const [resignations, setResignations] = useState([]);
+  const [compOffCancelRequests, setCompOffCancelRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [compOffForm, setCompOffForm] = useState({ employeeId: '', days: 1, reason: '', workDate: '' });
@@ -40,6 +41,11 @@ const AdminRequests = () => {
       } else if (activeTab === 'resignation') {
         const res = await axios.get('/api/admin/resignations');
         setResignations(res.data);
+      } else if (activeTab === 'compoff') {
+        const res = await axios.get('/api/admin/leaves');
+        setLeaves(res.data);
+        const cr = await axios.get('/api/admin/comp-off/cancel-requests');
+        setCompOffCancelRequests(cr.data);
       }
     } catch (error) {
       console.error(`Error fetching ${activeTab} requests:`, error);
@@ -87,6 +93,27 @@ const AdminRequests = () => {
       } catch (error) {
         alert('Failed to delete request');
       }
+    }
+  };
+
+  const handleApproveCompOffCancel = async (id) => {
+    if (!window.confirm('Approve karne par employee ka Comp Off balance deduct hoga aur leave cancel ho jaayegi. Confirm?')) return;
+    try {
+      const res = await axios.put(`/api/admin/comp-off/cancel-requests/${id}/approve`);
+      alert(`✅ ${res.data.message}`);
+      fetchRequests();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Approve karne mein error aaya.');
+    }
+  };
+
+  const handleRejectCompOffCancel = async (id) => {
+    if (!window.confirm('Reject karne par leave unchanged rahegi. Confirm?')) return;
+    try {
+      await axios.put(`/api/admin/comp-off/cancel-requests/${id}/reject`);
+      fetchRequests();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Reject karne mein error aaya.');
     }
   };
 
@@ -147,7 +174,7 @@ const AdminRequests = () => {
   const filteredResignations = resignations.filter(filterRequest);
 
   const pendingLeaves = normalLeaves.filter(req => req.status === 'Pending').length;
-  const pendingCompOffs = compOffLeaves.filter(req => req.status === 'Pending').length;
+  const pendingCompOffs = compOffLeaves.filter(req => req.status === 'Pending').length + compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length;
   const pendingRegularizations = regularizations.filter(req => req.status === 'Pending').length;
   const pendingResignations = resignations.filter(req => req.status === 'Pending').length;
 
@@ -527,6 +554,87 @@ const AdminRequests = () => {
               {compOffLoading ? 'Processing...' : compOffAction === 'credit' ? 'Credit Comp Off' : 'Deduct Comp Off'}
             </button>
           </form>
+
+          {/* ===== Employee-Initiated Comp Off Cancel Requests ===== */}
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <span className="text-base">🔄</span>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-text-dark">Employee Comp Off Cancel Requests</h3>
+                <p className="text-xs text-text-light">Employees ne apni leave ko Comp Off se cancel karne ki request bheji hai.</p>
+              </div>
+              {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length > 0 && (
+                <span className="ml-auto bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length} Pending
+                </span>
+              )}
+            </div>
+
+            {compOffCancelRequests.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <p className="text-sm text-text-light">Koi Comp Off cancel request nahi aayi.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {compOffCancelRequests.map(req => {
+                  const daysNeeded = req.dates?.length || 1;
+                  return (
+                    <div key={req._id} className={`rounded-xl border p-4 ${req.compOffRequestStatus === 'Pending' ? 'border-purple-200 bg-purple-50/30' : 'border-gray-100 bg-white'}`}>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-sm text-text-dark">{req.employee?.fullName}</p>
+                          <p className="text-xs text-text-light">{req.employee?.employeeId} • {req.employee?.department}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Leave: <span className="font-semibold">{req.leaveType}</span> ({daysNeeded}d) •
+                            Balance: <span className="font-semibold text-purple-700">{req.employee?.compOffBalance || 0}d</span>
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {req.dates?.map((d, i) => (
+                              <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                              </span>
+                            ))}
+                          </div>
+                          {req.compOffRequestReason && (
+                            <p className="text-xs text-text-light mt-1 italic">"{req.compOffRequestReason}"</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
+                            ${req.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                              req.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'}`}>
+                            {req.compOffRequestStatus}
+                          </span>
+                          {req.compOffRequestStatus === 'Pending' && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleApproveCompOffCancel(req._id)}
+                                className="px-2.5 py-1 text-xs bg-green-600 text-white hover:bg-green-700 rounded font-bold transition-colors"
+                              >
+                                ✅ Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectCompOffCancel(req._id)}
+                                className="px-2.5 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded font-bold transition-colors"
+                              >
+                                ❌ Reject
+                              </button>
+                            </div>
+                          )}
+                          {req.compOffRequestStatus === 'Approved' && (
+                            <p className="text-[11px] text-green-600 font-semibold">✅ {daysNeeded}d deducted. Leave cancelled.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

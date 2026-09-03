@@ -1036,8 +1036,91 @@ export const deductCompOff = async (req, res) => {
     await employee.save();
 
     res.json({ message: 'Comp Off deducted', compOffBalance: employee.compOffBalance });
+} catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// --- Comp Off Cancel Requests (employee-initiated) ---
+
+export const getCompOffCancelRequests = async (req, res) => {
+  try {
+    const requests = await Leave.find({ compOffRequested: true })
+      .populate('employee', 'fullName employeeId department compOffBalance')
+      .sort({ updatedAt: -1 });
+    res.json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
+export const approveCompOffCancelRequest = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id).populate('employee');
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    if (leave.compOffRequestStatus !== 'Pending') {
+      return res.status(400).json({ message: 'No pending Comp Off request for this leave.' });
+    }
+
+    const daysNeeded = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
+    const employee = await Employee.findById(leave.employee._id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+    if ((employee.compOffBalance || 0) < daysNeeded) {
+      return res.status(400).json({
+        message: `Employee's Comp Off balance is insufficient. Available: ${employee.compOffBalance || 0} day(s), Required: ${daysNeeded} day(s).`
+      });
+    }
+
+    // Deduct balance
+    employee.compOffBalance = parseFloat(((employee.compOffBalance || 0) - daysNeeded).toFixed(1));
+    await employee.save();
+
+    // Mark leave as cancelled (Rejected = cancelled by comp off use)
+    leave.status = 'Rejected';
+    leave.compOffRequestStatus = 'Approved';
+    await leave.save();
+
+    // Also revert any attendance records that were marked as "Leave Approved" for those dates
+    const datesToRevert = leave.dates && leave.dates.length > 0 ? leave.dates : [];
+    for (const d of datesToRevert) {
+      const dateObj = new Date(d);
+      dateObj.setHours(0, 0, 0, 0);
+      const nextDay = new Date(dateObj);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const att = await Attendance.findOne({
+        employee: leave.employee._id,
+        date: { $gte: dateObj, $lt: nextDay }
+      });
+      if (att && (att.status === 'Leave Approved' || att.status === 'Leave')) {
+        // Revert to Absent so admin can regularize later if needed
+        att.status = 'Absent';
+        att.adminStatus = 'Pending';
+        await att.save();
+      }
+    }
+
+    res.json({ message: `Comp Off request approved. ${daysNeeded} day(s) deducted. Leave cancelled.`, newBalance: employee.compOffBalance });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const rejectCompOffCancelRequest = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    if (leave.compOffRequestStatus !== 'Pending') {
+      return res.status(400).json({ message: 'No pending Comp Off request to reject.' });
+    }
+
+    leave.compOffRequested = false;
+    leave.compOffRequestStatus = 'Rejected';
+    await leave.save();
+
+    res.json({ message: 'Comp Off cancel request rejected. Leave remains unchanged.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

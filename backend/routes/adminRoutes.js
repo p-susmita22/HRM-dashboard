@@ -100,8 +100,11 @@ router.put('/password', changeAdminPassword);
 router.post('/logout-devices', logoutOtherDevices);
 
 // Comp Off Routes
-import { creditCompOff, deductCompOff } from '../controllers/adminController.js';
+import { creditCompOff, deductCompOff, getCompOffCancelRequests, approveCompOffCancelRequest, rejectCompOffCancelRequest } from '../controllers/adminController.js';
 router.post('/comp-off/credit', creditCompOff);
 router.post('/comp-off/deduct', deductCompOff);
+router.get('/comp-off/cancel-requests', getCompOffCancelRequests);
+router.put('/comp-off/cancel-requests/:id/approve', approveCompOffCancelRequest);
+router.put('/comp-off/cancel-requests/:id/reject', rejectCompOffCancelRequest);
 
 export default router;

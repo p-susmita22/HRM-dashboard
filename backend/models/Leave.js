@@ -15,8 +15,17 @@ const leaveSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
-  }
+  },
+  // Comp Off Cancel Request fields
+  compOffRequested: { type: Boolean, default: false },
+  compOffRequestStatus: {
+    type: String,
+    enum: ['None', 'Pending', 'Approved', 'Rejected'],
+    default: 'None'
+  },
+  compOffRequestReason: { type: String }
 }, { timestamps: true });
 
 const Leave = mongoose.model('Leave', leaveSchema);
 export default Leave;
+

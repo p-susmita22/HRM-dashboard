@@ -18,15 +18,17 @@ const HelpPage = () => {
   const [selectedLeaveType, setSelectedLeaveType] = useState('');
   const [showCompOffHistory, setShowCompOffHistory] = useState(false);
   const [compOffHistory, setCompOffHistory] = useState([]);
-  // Comp Off Cancel Modal
-  const [showCompOffCancel, setShowCompOffCancel] = useState(false);
-  const [compOffCancelLoading, setCompOffCancelLoading] = useState(null); // stores leave._id being processed
+  // Comp Off Cancel Request (regularization-like flow)
+  const [myCompOffRequests, setMyCompOffRequests] = useState([]);
+  const [compOffCancelLoading, setCompOffCancelLoading] = useState(null);
+  const [compOffCancelReason, setCompOffCancelReason] = useState({});
 
   useEffect(() => {
     fetchProfile();
     fetchMyLeaves();
     fetchMyRegularizations();
     fetchMyResignation();
+    fetchMyCompOffRequests();
   }, []);
 
   useEffect(() => {
@@ -103,22 +105,42 @@ const HelpPage = () => {
     }
   };
 
-  const handleUseCompOff = async (leave) => {
-    const daysNeeded = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
-    if (compOffBalance < daysNeeded) {
-      alert(`Comp Off balance kam hai!\nAvailable: ${compOffBalance} day(s)\nRequired: ${daysNeeded} day(s)`);
+  const fetchMyCompOffRequests = async () => {
+    try {
+      const res = await axios.get('/api/employee/comp-off-cancel-requests');
+      setMyCompOffRequests(res.data);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleRequestCompOffCancel = async (leave) => {
+    const reason = compOffCancelReason[leave._id] || '';
+    if (!reason.trim()) {
+      alert('Please write a reason before submitting.');
       return;
     }
     setCompOffCancelLoading(leave._id);
     try {
-      const res = await axios.post(`/api/employee/leaves/${leave._id}/use-comp-off`);
+      await axios.post(`/api/employee/leaves/${leave._id}/request-comp-off`, { reason });
       await fetchMyLeaves();
-      await fetchProfile();
-      alert(`✅ Comp Off use ho gaya!\nLeave cancel/convert ho gayi.\nNaya Balance: ${res.data.newBalance} day(s)`);
+      await fetchMyCompOffRequests();
+      setCompOffCancelReason(prev => ({ ...prev, [leave._id]: '' }));
+      alert('✅ Request submitted! Admin will review it.');
     } catch (err) {
-      alert(err.response?.data?.message || 'Comp Off apply karne mein error aaya.');
+      alert(err.response?.data?.message || 'Request submit karne mein error aaya.');
     } finally {
       setCompOffCancelLoading(null);
+    }
+  };
+
+  const handleWithdrawCompOffRequest = async (leaveId) => {
+    if (!window.confirm('Kya aap yeh request wapas lena chahte hain?')) return;
+    try {
+      await axios.delete(`/api/employee/leaves/${leaveId}/request-comp-off`);
+      await fetchMyLeaves();
+      await fetchMyCompOffRequests();
+      alert('Request withdrawn successfully.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Request withdraw karne mein error aaya.');
     }
   };
 
@@ -337,6 +359,17 @@ const HelpPage = () => {
           onClick={() => setActiveTab('resign')}
         >
           Resignation
+        </button>
+        <button 
+          className={`btn relative ${activeTab === 'compoff-cancel' ? 'bg-purple-600 text-white' : 'bg-white text-purple-700 border border-purple-200'}`}
+          onClick={() => setActiveTab('compoff-cancel')}
+        >
+          🔄 Comp Off Cancel
+          {myCompOffRequests.filter(r => r.compOffRequestStatus === 'Pending').length > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              {myCompOffRequests.filter(r => r.compOffRequestStatus === 'Pending').length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -849,16 +882,191 @@ const HelpPage = () => {
                   <input type="checkbox" id="notice" name="notice" required className="w-5 h-5 accent-status-absent mt-0.5 cursor-pointer" />
                   <label htmlFor="notice" className="font-medium text-sm text-text-dark cursor-pointer leading-relaxed">
                     I acknowledge and agree to serve the mandatory 45 days notice period. I understand that my last working day will be calculated automatically.
-                  </label>
-                </div>
-                
-                <button type="submit" className="btn btn-danger w-full py-2.5 text-base font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-                  Submit Resignation
-                </button>
-              </form>
-            )}
+          )}
+        </div>
+        )}
+
+        {/* ===== COMP OFF CANCEL TAB ===== */}
+        {activeTab === 'compoff-cancel' && (
+          <div className="flex flex-col gap-8">
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <span className="text-2xl">🔄</span>
+              <div>
+                <p className="font-bold text-purple-800 text-sm">Comp Off se Leave Cancel kaise kare?</p>
+                <p className="text-xs text-purple-600 mt-1">Neeche apni existing leave select karo, reason likho aur request bhejo. Admin approve karne par leave cancel hogi aur aapka Comp Off balance use hoga.</p>
+                <p className="text-xs font-bold text-purple-700 mt-1">Current Balance: {compOffBalance} day{compOffBalance !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* LEFT: Cancellable Leaves */}
+              <div>
+                <h3 className="text-base font-bold text-text-dark mb-4">Select a Leave to Cancel via Comp Off</h3>
+                {myLeaves.filter(l => l.leaveType !== 'Comp Off' && l.status !== 'Rejected' && l.compOffRequestStatus !== 'Approved').length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <span className="text-4xl block mb-2">📋</span>
+                    <p className="text-sm text-text-light">No cancellable leaves found.</p>
+                    <p className="text-xs text-text-light mt-1">Pehle koi Casual/Sick/Emergency leave apply karo.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myLeaves
+                      .filter(l => l.leaveType !== 'Comp Off' && l.status !== 'Rejected' && l.compOffRequestStatus !== 'Approved')
+                      .map(leave => {
+                        const daysNeeded = leave.dates?.length || 1;
+                        const hasPendingRequest = leave.compOffRequestStatus === 'Pending';
+                        const canRequest = compOffBalance >= daysNeeded && !hasPendingRequest;
+                        const isProcessing = compOffCancelLoading === leave._id;
+
+                        return (
+                          <div key={leave._id} className={`bg-white border rounded-xl overflow-hidden transition-all ${hasPendingRequest ? 'border-purple-300 shadow-purple-100 shadow-md' : 'border-gray-100 shadow-sm hover:shadow-md'}`}>
+                            {/* Leave Info */}
+                            <div className="p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-bold text-sm text-text-dark flex items-center gap-2">
+                                    {leave.leaveType === 'Sick Leave' ? '🏥' : leave.leaveType === 'Emergency Leave' ? '🚨' : '📅'}
+                                    {leave.leaveType}
+                                    <span className="text-[10px] font-semibold text-gray-400">({daysNeeded}d)</span>
+                                  </h4>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {leave.dates?.map((d, i) => (
+                                      <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                        {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${leave.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {leave.status}
+                                  </span>
+                                  {hasPendingRequest && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700">
+                                      Request Pending
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Comp Off balance check */}
+                              {!hasPendingRequest && compOffBalance < daysNeeded && (
+                                <p className="text-[11px] text-red-500 font-medium mt-1">
+                                  ⚠️ Balance kam hai: {compOffBalance}d available, {daysNeeded}d chahiye
+                                </p>
+                              )}
+
+                              {/* Request form */}
+                              {!hasPendingRequest && canRequest && (
+                                <div className="mt-3 pt-3 border-t border-gray-50">
+                                  <textarea
+                                    rows={2}
+                                    placeholder="Reason likho (required)..."
+                                    value={compOffCancelReason[leave._id] || ''}
+                                    onChange={e => setCompOffCancelReason(prev => ({ ...prev, [leave._id]: e.target.value }))}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-200 transition-all"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRequestCompOffCancel(leave)}
+                                    disabled={isProcessing || !compOffCancelReason[leave._id]?.trim()}
+                                    className={`mt-2 w-full text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-2
+                                      ${isProcessing ? 'bg-purple-100 text-purple-400 cursor-wait' :
+                                        !compOffCancelReason[leave._id]?.trim() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+                                        'bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md active:scale-95'}`}
+                                  >
+                                    {isProcessing ? (
+                                      <><svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Submitting...</>
+                                    ) : (
+                                      <>🔄 Comp Off Cancel Request Bhejo ({daysNeeded}d use hoga)</>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Withdraw pending request */}
+                              {hasPendingRequest && (
+                                <div className="mt-3 pt-3 border-t border-purple-100">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-xs text-purple-700 font-medium">⏳ Admin review kar raha hai...</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleWithdrawCompOffRequest(leave._id)}
+                                      className="text-[11px] text-red-500 hover:text-red-700 font-semibold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                                    >
+                                      Withdraw Request
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT: My Request History */}
+              <div>
+                <h3 className="text-base font-bold text-text-dark mb-4">My Comp Off Cancel Requests</h3>
+                {myCompOffRequests.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <span className="text-4xl block mb-2">🔄</span>
+                    <p className="text-sm text-text-light">Koi request submit nahi ki gayi.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {myCompOffRequests.map(leave => {
+                      const daysNeeded = leave.dates?.length || 1;
+                      return (
+                        <div key={leave._id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-bold text-sm text-text-dark">{leave.leaveType}</h4>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {leave.dates?.map((d, i) => (
+                                  <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                    {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                  </span>
+                                ))}
+                                <span className="text-[10px] text-gray-400 font-semibold">({daysNeeded}d)</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
+                                ${leave.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                                  leave.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                  'bg-yellow-100 text-yellow-700'}`}>
+                                Comp Off: {leave.compOffRequestStatus}
+                              </span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${leave.status === 'Approved' ? 'bg-green-50 text-green-600' : leave.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                                Leave: {leave.status}
+                              </span>
+                            </div>
+                          </div>
+                          {leave.compOffRequestReason && (
+                            <p className="text-xs text-text-light bg-gray-50 rounded p-2 mt-2">
+                              "{leave.compOffRequestReason}"
+                            </p>
+                          )}
+                          {leave.compOffRequestStatus === 'Approved' && (
+                            <p className="text-[11px] text-green-600 font-semibold mt-2">✅ {daysNeeded} Comp Off day(s) deduct hue. Leave cancelled.</p>
+                          )}
+                          {leave.compOffRequestStatus === 'Rejected' && (
+                            <p className="text-[11px] text-red-500 font-semibold mt-2">❌ Admin ne reject kiya. Leave unchanged.</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
+
       </div>
     </div>
 

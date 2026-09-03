@@ -245,46 +245,69 @@ export const deleteLeave = async (req, res) => {
   }
 };
 
-// Convert an existing leave to Comp Off — deducts comp off balance and updates leave type
-export const useCompOffForLeave = async (req, res) => {
+// Employee requests to cancel a leave using Comp Off (like regularization — admin approves)
+export const requestCompOffCancel = async (req, res) => {
   try {
+    const { reason } = req.body;
     const leave = await Leave.findById(req.params.id);
     if (!leave) return res.status(404).json({ message: 'Leave not found' });
     if (leave.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
 
-    // Only allow if leave is Pending or Approved (not Rejected)
-    if (leave.status === 'Rejected') {
-      return res.status(400).json({ message: 'Cannot use Comp Off on a rejected leave.' });
-    }
+    if (leave.status === 'Rejected') return res.status(400).json({ message: 'Cannot request Comp Off on a rejected leave.' });
+    if (leave.leaveType === 'Comp Off') return res.status(400).json({ message: 'This leave is already a Comp Off leave.' });
+    if (leave.compOffRequestStatus === 'Pending') return res.status(400).json({ message: 'A Comp Off cancel request is already pending for this leave.' });
+    if (leave.compOffRequestStatus === 'Approved') return res.status(400).json({ message: 'Comp Off has already been applied for this leave.' });
 
-    // Already a Comp Off leave
-    if (leave.leaveType === 'Comp Off') {
-      return res.status(400).json({ message: 'This leave is already a Comp Off leave.' });
-    }
-
+    // Check balance upfront so employee knows immediately
     const daysNeeded = leave.dates && leave.dates.length > 0 ? leave.dates.length : 1;
-
     const employee = await Employee.findById(req.user._id);
     if (!employee) return res.status(404).json({ message: 'Employee not found' });
-
     if ((employee.compOffBalance || 0) < daysNeeded) {
       return res.status(400).json({
         message: `Insufficient Comp Off balance. Available: ${employee.compOffBalance || 0} day(s), Required: ${daysNeeded} day(s).`
       });
     }
 
-    // Deduct balance and convert leave type
-    employee.compOffBalance = parseFloat(((employee.compOffBalance || 0) - daysNeeded).toFixed(1));
-    await employee.save();
-
-    leave.leaveType = 'Comp Off';
-    leave.compOffUsed = true;
-    leave.status = 'Pending'; // Reset to pending so admin re-approves
+    leave.compOffRequested = true;
+    leave.compOffRequestStatus = 'Pending';
+    leave.compOffRequestReason = reason || 'Requesting to cancel leave using Comp Off credit.';
     await leave.save();
 
-    res.json({ message: 'Comp Off applied successfully. Leave converted to Comp Off type.', leave, newBalance: employee.compOffBalance });
+    res.json({ message: 'Comp Off cancel request submitted successfully. Admin will review it.', leave });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Employee withdraws their pending Comp Off cancel request
+export const cancelCompOffRequest = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+    if (!leave) return res.status(404).json({ message: 'Leave not found' });
+    if (leave.employee.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
+    if (leave.compOffRequestStatus !== 'Pending') return res.status(400).json({ message: 'No pending Comp Off request to withdraw.' });
+
+    leave.compOffRequested = false;
+    leave.compOffRequestStatus = 'None';
+    leave.compOffRequestReason = undefined;
+    await leave.save();
+
+    res.json({ message: 'Comp Off request withdrawn successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get all leaves of this employee that have comp off cancel requests
+export const getMyCompOffRequests = async (req, res) => {
+  try {
+    const leaves = await Leave.find({
+      employee: req.user._id,
+      compOffRequested: true
+    }).sort({ updatedAt: -1 });
+    res.json(leaves);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
