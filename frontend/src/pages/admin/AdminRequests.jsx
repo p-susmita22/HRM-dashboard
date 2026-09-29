@@ -6,10 +6,10 @@ import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Ey
 const AdminRequests = () => {
   const [activeTab, setActiveTab] = useState('leave');
   const [selectedRequests, setSelectedRequests] = useState([]);
-  
+
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const [leaves, setLeaves] = useState([]);
   const [regularizations, setRegularizations] = useState([]);
   const [resignations, setResignations] = useState([]);
@@ -61,7 +61,7 @@ const AdminRequests = () => {
 
   useEffect(() => {
     fetchRequests();
-    axios.get('/api/admin/employees').then(r => setEmployees(r.data)).catch(() => {});
+    axios.get('/api/admin/employees').then(r => setEmployees(r.data)).catch(() => { });
     setSelectedRequests([]);
   }, [activeTab]);
 
@@ -82,18 +82,18 @@ const AdminRequests = () => {
 
   const handleBulkApprove = async () => {
     if (!window.confirm(`Are you sure you want to approve ${selectedRequests.length} requests?`)) return;
-    
+
     setLoading(true);
     try {
       const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
-                   activeTab === 'regularization' ? 'regularizations' :
-                   activeTab === 'resignation' ? 'resignations' : '';
-      
+        activeTab === 'regularization' ? 'regularizations' :
+          activeTab === 'resignation' ? 'resignations' : '';
+
       const promises = selectedRequests.map(id => {
         const extraData = type === 'regularizations' ? { dayType: 'Present' } : {};
         return axios.put(`/api/admin/${type}/${id}/status`, { status: 'Approved', ...extraData });
       });
-      
+
       await Promise.all(promises);
       setSelectedRequests([]);
       fetchRequests();
@@ -107,17 +107,17 @@ const AdminRequests = () => {
 
   const handleBulkReject = async () => {
     if (!window.confirm(`Are you sure you want to reject ${selectedRequests.length} requests?`)) return;
-    
+
     setLoading(true);
     try {
       const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
-                   activeTab === 'regularization' ? 'regularizations' :
-                   activeTab === 'resignation' ? 'resignations' : '';
-      
+        activeTab === 'regularization' ? 'regularizations' :
+          activeTab === 'resignation' ? 'resignations' : '';
+
       const promises = selectedRequests.map(id => {
         return axios.put(`/api/admin/${type}/${id}/status`, { status: 'Rejected' });
       });
-      
+
       await Promise.all(promises);
       setSelectedRequests([]);
       fetchRequests();
@@ -131,17 +131,17 @@ const AdminRequests = () => {
 
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE ${selectedRequests.length} requests?`)) return;
-    
+
     setLoading(true);
     try {
       const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
-                   activeTab === 'regularization' ? 'regularizations' :
-                   activeTab === 'resignation' ? 'resignations' : '';
-      
+        activeTab === 'regularization' ? 'regularizations' :
+          activeTab === 'resignation' ? 'resignations' : '';
+
       const promises = selectedRequests.map(id => {
         return axios.delete(`/api/admin/${type}/${id}`);
       });
-      
+
       await Promise.all(promises);
       setSelectedRequests([]);
       fetchRequests();
@@ -250,7 +250,7 @@ const AdminRequests = () => {
   const filterRequest = (req) => {
     const matchName = filterEmployee === '' || req.employee?.fullName?.toLowerCase().includes(filterEmployee.toLowerCase());
     const matchDept = filterDepartment === '' || req.employee?.department === filterDepartment;
-    
+
     // For date matching, check if the request has dates array or fromDate/resignationDate
     let matchDate = true;
     if (filterDate) {
@@ -266,7 +266,7 @@ const AdminRequests = () => {
         matchDate = false;
       }
     }
-    
+
     return matchName && matchDept && matchDate;
   };
 
@@ -308,7 +308,7 @@ const AdminRequests = () => {
       </div>
 
       <div className="flex gap-4 border-b border-gray-200 mb-6">
-        <button 
+        <button
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'leave' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('leave')}
         >
@@ -319,7 +319,7 @@ const AdminRequests = () => {
             </span>
           )}
         </button>
-        <button 
+        <button
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'regularization' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('regularization')}
         >
@@ -330,7 +330,7 @@ const AdminRequests = () => {
             </span>
           )}
         </button>
-        <button 
+        <button
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'resignation' ? 'border-primary text-primary' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('resignation')}
         >
@@ -341,7 +341,7 @@ const AdminRequests = () => {
             </span>
           )}
         </button>
-        <button 
+        <button
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'compoff' ? 'border-purple-500 text-purple-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('compoff')}
         >
@@ -352,7 +352,7 @@ const AdminRequests = () => {
             </span>
           )}
         </button>
-        <button 
+        <button
           className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'locked' ? 'border-red-500 text-red-600' : 'border-transparent text-text-light hover:text-text-dark'}`}
           onClick={() => setActiveTab('locked')}
         >
@@ -400,7 +400,7 @@ const AdminRequests = () => {
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <button 
+                        <button
                           onClick={() => handleUnlockAccount(account._id)}
                           className="btn btn-primary !py-1.5 !px-3 text-xs flex items-center justify-center gap-1 mx-auto bg-red-600 hover:bg-red-700 border-none shadow-md"
                         >
@@ -419,456 +419,456 @@ const AdminRequests = () => {
       {activeTab !== 'locked' && (
         <>
           <div className="flex gap-4 mb-6 px-2 flex-wrap">
-        <div className="flex-1 min-w-[200px]">
-          <input 
-            type="text" 
-            placeholder="Filter by Employee Name..." 
-            className="form-control w-full"
-            value={filterEmployee}
-            onChange={(e) => setFilterEmployee(e.target.value)}
-          />
-        </div>
-        <div className="w-48">
-          <select 
-            className="form-control w-full"
-            value={filterDepartment}
-            onChange={(e) => setFilterDepartment(e.target.value)}
-          >
-            <option value="">All Departments</option>
-            {uniqueDepartments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-        </div>
-        <div className="w-48">
-          <input 
-            type="date" 
-            className="form-control w-full"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            title="Filter by Date"
-          />
-        </div>
-      </div>
-
-      {selectedRequests.length > 0 && activeTab !== 'locked' && (
-        <div className="mb-4 flex gap-3 flex-wrap items-center">
-          <button onClick={handleBulkApprove} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-            <CheckCircle size={16} /> Bulk Approve
-          </button>
-          <button onClick={handleBulkReject} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-            <XCircle size={16} /> Bulk Reject
-          </button>
-          <button onClick={handleBulkDelete} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-            <Trash2 size={16} /> Bulk Delete
-          </button>
-          <span className="text-sm font-semibold text-text-light">
-            ({selectedRequests.length} selected)
-          </span>
-        </div>
-      )}
-
-      <div className="card shadow-md border-none overflow-hidden">
-        <div className="overflow-x-auto min-h-[300px]">
-          {loading ? (
-            <div className="p-10 text-center text-text-light">Loading requests...</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 w-12 text-center">
-                    <input 
-                      type="checkbox" 
-                      onChange={handleSelectAll} 
-                      checked={
-                        selectedRequests.length > 0 && (
-                          (activeTab === 'leave' && selectedRequests.length === filteredLeaves.filter(r => r.status === 'Pending').length) ||
-                          (activeTab === 'compoff' && selectedRequests.length === filteredCompOffLeaves.filter(r => r.status === 'Pending').length) ||
-                          (activeTab === 'regularization' && selectedRequests.length === filteredRegularizations.filter(r => r.status === 'Pending').length) ||
-                          (activeTab === 'resignation' && selectedRequests.length === filteredResignations.filter(r => r.status === 'Pending').length)
-                        )
-                      }
-                      className="w-4 h-4 rounded text-primary focus:ring-primary"
-                    />
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
-                  
-                  {(activeTab === 'leave' || activeTab === 'compoff') && (
-                    <>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Leave Type</th>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Duration</th>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
-                    </>
-                  )}
-
-                  {activeTab === 'regularization' && (
-                    <>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Date Range</th>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
-                    </>
-                  )}
-
-                  {activeTab === 'resignation' && (
-                    <>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Resignation Date</th>
-                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
-                    </>
-                  )}
-
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
-                  <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(activeTab === 'leave' || activeTab === 'compoff') && (activeTab === 'leave' ? filteredLeaves : filteredCompOffLeaves).map(req => (
-                  <tr key={req._id} className="hover:bg-gray-50">
-                    <td className="p-4 text-center">
-                      {req.status === 'Pending' && (
-                        <input 
-                          type="checkbox" 
-                          checked={selectedRequests.includes(req._id)} 
-                          onChange={() => handleSelectRequest(req._id)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                        />
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
-                      <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
-                    </td>
-                    <td className="p-4 text-sm text-text-dark font-medium">{req.leaveType}</td>
-                    <td className="p-4 text-sm text-text-dark">
-                      {req.dates && req.dates.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {req.dates.map((d, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold inline-flex items-center gap-1 border border-primary/20">
-                              {formatDate(d)}
-                              <button onClick={() => removeDate('leaves', req._id, d)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
-                                <XCircle size={10} />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span>{formatDate(req.fromDate)} - {formatDate(req.toDate)}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
-                    <td className="p-4">
-                      {req.status === 'Pending' ? (
-                        <div className="flex gap-2">
-                          <button onClick={() => updateStatus('leaves', req._id, 'Approved')} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
-                          <button onClick={() => updateStatus('leaves', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
-                        </div>
-                      ) : (
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => viewDetails(req, 'Leave')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
-                        <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
-                        <button onClick={() => deleteRequest('leaves', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {activeTab === 'regularization' && filteredRegularizations.map(req => (
-                  <tr key={req._id} className="hover:bg-gray-50">
-                    <td className="p-4 text-center">
-                      {req.status === 'Pending' && (
-                        <input 
-                          type="checkbox" 
-                          checked={selectedRequests.includes(req._id)} 
-                          onChange={() => handleSelectRequest(req._id)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                        />
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
-                      <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap gap-1.5 max-w-[250px]">
-                        {req.dates && req.dates.length > 0 ? (
-                          req.dates.map((dateStr, idx) => {
-                            const d = new Date(dateStr);
-                            const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
-                            return (
-                              <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap inline-flex items-center gap-1">
-                                {formatted}
-                                <button onClick={() => removeDate('regularizations', req._id, dateStr)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
-                                  <XCircle size={12} />
-                                </button>
-                              </span>
-                            );
-                          })
-                        ) : (
-                          <span className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
-                            {formatDate(req.fromDate)}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
-                    <td className="p-4">
-                      {req.status === 'Pending' ? (
-                        <div className="flex gap-2">
-                          <button onClick={() => handleApproveRegularization(req)} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
-                          <button onClick={() => updateStatus('regularizations', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
-                        </div>
-                      ) : (
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => viewDetails(req, 'Regularization')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
-                        <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
-                        <button onClick={() => deleteRequest('regularizations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {activeTab === 'resignation' && filteredResignations.map(req => (
-                  <tr key={req._id} className="hover:bg-gray-50">
-                    <td className="p-4 text-center">
-                      {req.status === 'Pending' && (
-                        <input 
-                          type="checkbox" 
-                          checked={selectedRequests.includes(req._id)} 
-                          onChange={() => handleSelectRequest(req._id)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                        />
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
-                      <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
-                    </td>
-                    <td className="p-4 text-sm text-text-dark">{formatDate(req.resignationDate)}</td>
-                    <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
-                    <td className="p-4">
-                      {req.status === 'Pending' ? (
-                        <div className="flex gap-2">
-                          <button onClick={() => updateStatus('resignations', req._id, 'Approved')} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
-                          <button onClick={() => updateStatus('resignations', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
-                        </div>
-                      ) : (
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => viewDetails(req, 'Resignation')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
-                        <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
-                        <button onClick={() => deleteRequest('resignations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {((activeTab === 'leave' && filteredLeaves.length === 0) || 
-                  (activeTab === 'compoff' && filteredCompOffLeaves.length === 0) || 
-                  (activeTab === 'regularization' && filteredRegularizations.length === 0) || 
-                  (activeTab === 'resignation' && filteredResignations.length === 0)) && (
-                  <tr><td colSpan="7" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-
-      {/* Comp Off Credit Section */}
-      {activeTab === 'compoff' && (
-        <div className="card shadow-md border-none mt-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-              <Gift size={20} className="text-purple-600" />
+            <div className="flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Filter by Employee Name..."
+                className="form-control w-full"
+                value={filterEmployee}
+                onChange={(e) => setFilterEmployee(e.target.value)}
+              />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-text-dark">Manage Comp Off Balance</h3>
-              <p className="text-xs text-text-light">Credit or deduct Comp Off days for an employee.</p>
-            </div>
-          </div>
-
-          <div className="flex gap-4 border-b border-gray-100 mb-6 pb-2">
-            <button 
-              type="button" 
-              onClick={() => setCompOffAction('credit')} 
-              className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'credit' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-            >
-              Credit Comp Off
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setCompOffAction('deduct')} 
-              className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'deduct' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-            >
-              Deduct Comp Off
-            </button>
-          </div>
-
-          {compOffSuccess && (
-            <div className={`mb-4 p-3 border rounded-lg text-sm font-medium flex items-center gap-2 ${compOffAction === 'credit' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
-              <CheckCircle size={16} /> {compOffSuccess}
-            </div>
-          )}
-
-          <form onSubmit={handleCompOffSubmit} className="space-y-4">
-            <div>
-              <label className="block mb-1.5 font-medium text-sm text-text-dark">Select Employee</label>
+            <div className="w-48">
               <select
-                className="form-control"
-                required
-                value={compOffForm.employeeId}
-                onChange={e => setCompOffForm({ ...compOffForm, employeeId: e.target.value })}
+                className="form-control w-full"
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
               >
-                <option value="">-- Select Employee --</option>
-                {employees.filter(e => e.role === 'employee' && e.isActive).map(emp => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.fullName} ({emp.employeeId}) — Current Balance: {emp.compOffBalance || 0} day(s)
-                  </option>
+                <option value="">All Departments</option>
+                {uniqueDepartments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
                 ))}
               </select>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1.5 font-medium text-sm text-text-dark">Days to {compOffAction === 'credit' ? 'Credit' : 'Deduct'}</label>
-                <input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  className="form-control"
-                  required
-                  value={compOffForm.days}
-                  onChange={e => setCompOffForm({ ...compOffForm, days: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block mb-1.5 font-medium text-sm text-text-dark">Work Date (Optional)</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={compOffForm.workDate}
-                  onChange={e => setCompOffForm({ ...compOffForm, workDate: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block mb-1.5 font-medium text-sm text-text-dark">Reason / Notes</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                placeholder={compOffAction === 'credit' ? "e.g. Worked on Sunday 14 July 2026 for project deadline..." : "e.g. Deducted by mistake or unused balance expired..."}
-                value={compOffForm.reason}
-                onChange={e => setCompOffForm({ ...compOffForm, reason: e.target.value })}
+            <div className="w-48">
+              <input
+                type="date"
+                className="form-control w-full"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                title="Filter by Date"
               />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={compOffLoading}
-              className={`btn text-white w-full flex items-center justify-center gap-2 disabled:opacity-60 ${compOffAction === 'credit' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-500 hover:bg-red-600'}`}
-            >
-              {compOffLoading ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          {selectedRequests.length > 0 && activeTab !== 'locked' && (
+            <div className="mb-4 flex gap-3 flex-wrap items-center">
+              <button onClick={handleBulkApprove} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                <CheckCircle size={16} /> Bulk Approve
+              </button>
+              <button onClick={handleBulkReject} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                <XCircle size={16} /> Bulk Reject
+              </button>
+              <button onClick={handleBulkDelete} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                <Trash2 size={16} /> Bulk Delete
+              </button>
+              <span className="text-sm font-semibold text-text-light">
+                ({selectedRequests.length} selected)
+              </span>
+            </div>
+          )}
+
+          <div className="card shadow-md border-none overflow-hidden">
+            <div className="overflow-x-auto min-h-[300px]">
+              {loading ? (
+                <div className="p-10 text-center text-text-light">Loading requests...</div>
               ) : (
-                compOffAction === 'credit' ? <Gift size={16} /> : <Trash2 size={16} />
-              )}
-              {compOffLoading ? 'Processing...' : compOffAction === 'credit' ? 'Credit Comp Off' : 'Deduct Comp Off'}
-            </button>
-          </form>
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-y border-gray-100">
+                      <th className="p-4 w-12 text-center">
+                        <input
+                          type="checkbox"
+                          onChange={handleSelectAll}
+                          checked={
+                            selectedRequests.length > 0 && (
+                              (activeTab === 'leave' && selectedRequests.length === filteredLeaves.filter(r => r.status === 'Pending').length) ||
+                              (activeTab === 'compoff' && selectedRequests.length === filteredCompOffLeaves.filter(r => r.status === 'Pending').length) ||
+                              (activeTab === 'regularization' && selectedRequests.length === filteredRegularizations.filter(r => r.status === 'Pending').length) ||
+                              (activeTab === 'resignation' && selectedRequests.length === filteredResignations.filter(r => r.status === 'Pending').length)
+                            )
+                          }
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      </th>
+                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
 
-          {/* ===== Employee-Initiated Comp Off Cancel Requests ===== */}
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-base">🔄</span>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-text-dark">Employee Comp Off Cancel Requests</h3>
-                <p className="text-xs text-text-light">Employees ne apni leave ko Comp Off se cancel karne ki request bheji hai.</p>
-              </div>
-              {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length > 0 && (
-                <span className="ml-auto bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length} Pending
-                </span>
+                      {(activeTab === 'leave' || activeTab === 'compoff') && (
+                        <>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Leave Type</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Duration</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
+                        </>
+                      )}
+
+                      {activeTab === 'regularization' && (
+                        <>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Date Range</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
+                        </>
+                      )}
+
+                      {activeTab === 'resignation' && (
+                        <>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Resignation Date</th>
+                          <th className="p-4 text-xs font-semibold text-text-light uppercase">Reason</th>
+                        </>
+                      )}
+
+                      <th className="p-4 text-xs font-semibold text-text-light uppercase">Status</th>
+                      <th className="p-4 text-xs font-semibold text-text-light uppercase text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(activeTab === 'leave' || activeTab === 'compoff') && (activeTab === 'leave' ? filteredLeaves : filteredCompOffLeaves).map(req => (
+                      <tr key={req._id} className="hover:bg-gray-50">
+                        <td className="p-4 text-center">
+                          {req.status === 'Pending' && (
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(req._id)}
+                              onChange={() => handleSelectRequest(req._id)}
+                              className="w-4 h-4 rounded text-primary focus:ring-primary"
+                            />
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
+                          <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
+                        </td>
+                        <td className="p-4 text-sm text-text-dark font-medium">{req.leaveType}</td>
+                        <td className="p-4 text-sm text-text-dark">
+                          {req.dates && req.dates.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {req.dates.map((d, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold inline-flex items-center gap-1 border border-primary/20">
+                                  {formatDate(d)}
+                                  <button onClick={() => removeDate('leaves', req._id, d)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
+                                    <XCircle size={10} />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>{formatDate(req.fromDate)} - {formatDate(req.toDate)}</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
+                        <td className="p-4">
+                          {req.status === 'Pending' ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => updateStatus('leaves', req._id, 'Approved')} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
+                              <button onClick={() => updateStatus('leaves', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
+                            </div>
+                          ) : (
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => viewDetails(req, 'Leave')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                            <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
+                            <button onClick={() => deleteRequest('leaves', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {activeTab === 'regularization' && filteredRegularizations.map(req => (
+                      <tr key={req._id} className="hover:bg-gray-50">
+                        <td className="p-4 text-center">
+                          {req.status === 'Pending' && (
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(req._id)}
+                              onChange={() => handleSelectRequest(req._id)}
+                              className="w-4 h-4 rounded text-primary focus:ring-primary"
+                            />
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
+                          <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-wrap gap-1.5 max-w-[250px]">
+                            {req.dates && req.dates.length > 0 ? (
+                              req.dates.map((dateStr, idx) => {
+                                const d = new Date(dateStr);
+                                const formatted = `${d.getDate().toString().padStart(2, '0')} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
+                                return (
+                                  <span key={idx} className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap inline-flex items-center gap-1">
+                                    {formatted}
+                                    <button onClick={() => removeDate('regularizations', req._id, dateStr)} className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5">
+                                      <XCircle size={12} />
+                                    </button>
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded font-bold text-xs whitespace-nowrap">
+                                {formatDate(req.fromDate)}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
+                        <td className="p-4">
+                          {req.status === 'Pending' ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleApproveRegularization(req)} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
+                              <button onClick={() => updateStatus('regularizations', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
+                            </div>
+                          ) : (
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => viewDetails(req, 'Regularization')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                            <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
+                            <button onClick={() => deleteRequest('regularizations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {activeTab === 'resignation' && filteredResignations.map(req => (
+                      <tr key={req._id} className="hover:bg-gray-50">
+                        <td className="p-4 text-center">
+                          {req.status === 'Pending' && (
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(req._id)}
+                              onChange={() => handleSelectRequest(req._id)}
+                              className="w-4 h-4 rounded text-primary focus:ring-primary"
+                            />
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
+                          <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
+                        </td>
+                        <td className="p-4 text-sm text-text-dark">{formatDate(req.resignationDate)}</td>
+                        <td className="p-4 text-sm text-text-dark max-w-xs truncate" title={req.reason}>{req.reason}</td>
+                        <td className="p-4">
+                          {req.status === 'Pending' ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => updateStatus('resignations', req._id, 'Approved')} className="p-1 px-2 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded font-semibold border border-green-200">Accept</button>
+                              <button onClick={() => updateStatus('resignations', req._id, 'Rejected')} className="p-1 px-2 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded font-semibold border border-red-200">Reject</button>
+                            </div>
+                          ) : (
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${req.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{req.status}</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => viewDetails(req, 'Resignation')} className="p-1.5 text-text-light hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View"><Eye size={16} /></button>
+                            <button onClick={sendPdf} className="p-1.5 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Send as PDF"><Send size={16} /></button>
+                            <button onClick={() => deleteRequest('resignations', req._id)} className="p-1.5 text-text-light hover:text-status-absent hover:bg-status-absent/10 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {((activeTab === 'leave' && filteredLeaves.length === 0) ||
+                      (activeTab === 'compoff' && filteredCompOffLeaves.length === 0) ||
+                      (activeTab === 'regularization' && filteredRegularizations.length === 0) ||
+                      (activeTab === 'resignation' && filteredResignations.length === 0)) && (
+                        <tr><td colSpan="7" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
+                      )}
+                  </tbody>
+                </table>
               )}
             </div>
-
-            {compOffCancelRequests.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                <p className="text-sm text-text-light">Koi Comp Off cancel request nahi aayi.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {compOffCancelRequests.map(req => {
-                  const daysNeeded = req.dates?.length || 1;
-                  return (
-                    <div key={req._id} className={`rounded-xl border p-4 ${req.compOffRequestStatus === 'Pending' ? 'border-purple-200 bg-purple-50/30' : 'border-gray-100 bg-white'}`}>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold text-sm text-text-dark">{req.employee?.fullName}</p>
-                          <p className="text-xs text-text-light">{req.employee?.employeeId} • {req.employee?.department}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Leave: <span className="font-semibold">{req.leaveType}</span> ({daysNeeded}d) •
-                            Balance: <span className="font-semibold text-purple-700">{req.employee?.compOffBalance || 0}d</span>
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {req.dates?.map((d, i) => (
-                              <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
-                                {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                              </span>
-                            ))}
-                          </div>
-                          {req.compOffRequestReason && (
-                            <p className="text-xs text-text-light mt-1 italic">"{req.compOffRequestReason}"</p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
-                            ${req.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
-                              req.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-yellow-100 text-yellow-700'}`}>
-                            {req.compOffRequestStatus}
-                          </span>
-                          {req.compOffRequestStatus === 'Pending' && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleApproveCompOffCancel(req._id)}
-                                className="px-2.5 py-1 text-xs bg-green-600 text-white hover:bg-green-700 rounded font-bold transition-colors"
-                              >
-                                ✅ Approve
-                              </button>
-                              <button
-                                onClick={() => handleRejectCompOffCancel(req._id)}
-                                className="px-2.5 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded font-bold transition-colors"
-                              >
-                                ❌ Reject
-                              </button>
-                            </div>
-                          )}
-                          {req.compOffRequestStatus === 'Approved' && (
-                            <p className="text-[11px] text-green-600 font-semibold">✅ {daysNeeded}d deducted. Leave cancelled.</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
-        </div>
-      )}
-      </>
+
+          {/* Comp Off Credit Section */}
+          {activeTab === 'compoff' && (
+            <div className="card shadow-md border-none mt-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <Gift size={20} className="text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-text-dark">Manage Comp Off Balance</h3>
+                  <p className="text-xs text-text-light">Credit or deduct Comp Off days for an employee.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 border-b border-gray-100 mb-6 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setCompOffAction('credit')}
+                  className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'credit' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                  Credit Comp Off
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompOffAction('deduct')}
+                  className={`pb-2 px-2 text-sm font-semibold transition-colors border-b-2 ${compOffAction === 'deduct' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                  Deduct Comp Off
+                </button>
+              </div>
+
+              {compOffSuccess && (
+                <div className={`mb-4 p-3 border rounded-lg text-sm font-medium flex items-center gap-2 ${compOffAction === 'credit' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                  <CheckCircle size={16} /> {compOffSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleCompOffSubmit} className="space-y-4">
+                <div>
+                  <label className="block mb-1.5 font-medium text-sm text-text-dark">Select Employee</label>
+                  <select
+                    className="form-control"
+                    required
+                    value={compOffForm.employeeId}
+                    onChange={e => setCompOffForm({ ...compOffForm, employeeId: e.target.value })}
+                  >
+                    <option value="">-- Select Employee --</option>
+                    {employees.filter(e => e.role === 'employee' && e.isActive).map(emp => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.fullName} ({emp.employeeId}) — Current Balance: {emp.compOffBalance || 0} day(s)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-1.5 font-medium text-sm text-text-dark">Days to {compOffAction === 'credit' ? 'Credit' : 'Deduct'}</label>
+                    <input
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      className="form-control"
+                      required
+                      value={compOffForm.days}
+                      onChange={e => setCompOffForm({ ...compOffForm, days: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 font-medium text-sm text-text-dark">Work Date (Optional)</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={compOffForm.workDate}
+                      onChange={e => setCompOffForm({ ...compOffForm, workDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1.5 font-medium text-sm text-text-dark">Reason / Notes</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder={compOffAction === 'credit' ? "e.g. Worked on Sunday 14 July 2026 for project deadline..." : "e.g. Deducted by mistake or unused balance expired..."}
+                    value={compOffForm.reason}
+                    onChange={e => setCompOffForm({ ...compOffForm, reason: e.target.value })}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={compOffLoading}
+                  className={`btn text-white w-full flex items-center justify-center gap-2 disabled:opacity-60 ${compOffAction === 'credit' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-500 hover:bg-red-600'}`}
+                >
+                  {compOffLoading ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    compOffAction === 'credit' ? <Gift size={16} /> : <Trash2 size={16} />
+                  )}
+                  {compOffLoading ? 'Processing...' : compOffAction === 'credit' ? 'Credit Comp Off' : 'Deduct Comp Off'}
+                </button>
+              </form>
+
+              {/* ===== Employee-Initiated Comp Off Cancel Requests ===== */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-base">🔄</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-text-dark">Employee Comp Off Cancel Requests</h3>
+                    <p className="text-xs text-text-light">Employees ne apni leave ko Comp Off se cancel karne ki request bheji hai.</p>
+                  </div>
+                  {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length > 0 && (
+                    <span className="ml-auto bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {compOffCancelRequests.filter(r => r.compOffRequestStatus === 'Pending').length} Pending
+                    </span>
+                  )}
+                </div>
+
+                {compOffCancelRequests.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-sm text-text-light">Koi Comp Off cancel request nahi aayi.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {compOffCancelRequests.map(req => {
+                      const daysNeeded = req.dates?.length || 1;
+                      return (
+                        <div key={req._id} className={`rounded-xl border p-4 ${req.compOffRequestStatus === 'Pending' ? 'border-purple-200 bg-purple-50/30' : 'border-gray-100 bg-white'}`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-bold text-sm text-text-dark">{req.employee?.fullName}</p>
+                              <p className="text-xs text-text-light">{req.employee?.employeeId} • {req.employee?.department}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Leave: <span className="font-semibold">{req.leaveType}</span> ({daysNeeded}d) •
+                                Balance: <span className="font-semibold text-purple-700">{req.employee?.compOffBalance || 0}d</span>
+                              </p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {req.dates?.map((d, i) => (
+                                  <span key={i} className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary-dark rounded text-[10px] font-bold">
+                                    {new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                  </span>
+                                ))}
+                              </div>
+                              {req.compOffRequestReason && (
+                                <p className="text-xs text-text-light mt-1 italic">"{req.compOffRequestReason}"</p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold
+                            ${req.compOffRequestStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                                  req.compOffRequestStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'}`}>
+                                {req.compOffRequestStatus}
+                              </span>
+                              {req.compOffRequestStatus === 'Pending' && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleApproveCompOffCancel(req._id)}
+                                    className="px-2.5 py-1 text-xs bg-green-600 text-white hover:bg-green-700 rounded font-bold transition-colors"
+                                  >
+                                    ✅ Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectCompOffCancel(req._id)}
+                                    className="px-2.5 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded font-bold transition-colors"
+                                  >
+                                    ❌ Reject
+                                  </button>
+                                </div>
+                              )}
+                              {req.compOffRequestStatus === 'Approved' && (
+                                <p className="text-[11px] text-green-600 font-semibold">✅ {daysNeeded}d deducted. Leave cancelled.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {isModalOpen && selectedRequest && createPortal(
@@ -882,20 +882,20 @@ const AdminRequests = () => {
                 <XCircle size={18} />
               </button>
             </div>
-            
+
             <div className="p-4 bg-white">
               <div className="mb-3">
                 <p className="text-sm font-bold text-text-dark">{selectedRequest.employee?.fullName}</p>
                 <p className="text-xs text-text-light">{selectedRequest.employee?.employeeId} &bull; {selectedRequest.employee?.department}</p>
               </div>
-              
+
               {selectedRequest.requestType === 'Leave' && (
                 <div className="mb-3">
                   <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Leave Type</p>
                   <p className="text-sm font-medium text-text-dark">{selectedRequest.leaveType}</p>
                 </div>
               )}
-              
+
               <div className="mb-3">
                 <p className="text-xs text-text-light uppercase tracking-wider mb-1">Dates</p>
                 <div className="flex flex-wrap gap-1">
@@ -916,14 +916,14 @@ const AdminRequests = () => {
                   )}
                 </div>
               </div>
-              
+
               <div className="mb-3">
                 <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Reason</p>
                 <p className="text-sm text-text-dark bg-gray-50 p-2 rounded border border-gray-100">
                   {selectedRequest.reason || <span className="text-gray-400 italic">No reason.</span>}
                 </p>
               </div>
-              
+
               <div className="mb-3">
                 <p className="text-xs text-text-light uppercase tracking-wider mb-0.5">Applied On</p>
                 <p className="text-sm font-medium text-text-dark">
@@ -933,12 +933,11 @@ const AdminRequests = () => {
                   }) : 'Not available'}
                 </p>
               </div>
-              
+
               <div className="flex justify-between items-center mt-4">
-                <span className={`px-2 py-1 rounded text-[10px] font-bold ${
-                  selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' : 
-                  selectedRequest.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                }`}>
+                <span className={`px-2 py-1 rounded text-[10px] font-bold ${selectedRequest.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                    selectedRequest.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                  }`}>
                   {selectedRequest.status}
                 </span>
               </div>
@@ -953,10 +952,10 @@ const AdminRequests = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-[10000] p-6 animate-fade-in" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-text-dark mb-4">Approve Regularization</h3>
             <p className="text-sm text-text-light mb-4">Select the attendance status for this regularization request.</p>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-text-dark mb-1">Day Type</label>
-              <select 
+              <select
                 className="form-control w-full"
                 value={regDayType}
                 onChange={(e) => setRegDayType(e.target.value)}
@@ -970,7 +969,7 @@ const AdminRequests = () => {
             {regDayType === 'Half Day' && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-text-dark mb-1">Half Day Type</label>
-                <select 
+                <select
                   className="form-control w-full"
                   value={regHalfDayType}
                   onChange={(e) => setRegHalfDayType(e.target.value)}
@@ -982,13 +981,13 @@ const AdminRequests = () => {
             )}
 
             <div className="flex justify-end gap-2 mt-6">
-              <button 
+              <button
                 onClick={() => setShowRegModal(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmRegularization}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded"
               >
