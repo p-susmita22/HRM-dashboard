@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut, User, FileText } from 'lucide-react';
+import { Users, CalendarCheck, ClipboardList, Settings, BellRing, PieChart, Menu, X, Calculator, Archive, Banknote, LogOut, User, FileText, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import logo from '../assets/multimaart-logo.png';
 
@@ -95,6 +95,8 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [counts, setCounts] = useState({ attendanceCount: 0, requestsCount: 0, notificationsCount: 0 });
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [showPendingLeaveModal, setShowPendingLeaveModal] = useState(false);
+  const [pendingLeaves, setPendingLeaves] = useState([]);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -119,20 +121,29 @@ const AdminLayout = () => {
       }
     };
     
-    const fetchCounts = async () => {
+    const fetchCountsAndLeaves = async () => {
       try {
         const res = await axios.get('/api/admin/sidebar-counts');
         setCounts(res.data);
+        
+        // Also fetch pending leaves for the global popup
+        const leavesRes = await axios.get('/api/admin/leaves');
+        const pending = leavesRes.data.filter(l => l.status === 'Pending');
+        setPendingLeaves(pending);
+        if (pending.length > 0 && !sessionStorage.getItem('pendingLeaveModalShown')) {
+          setShowPendingLeaveModal(true);
+          sessionStorage.setItem('pendingLeaveModalShown', 'true');
+        }
       } catch (error) {
-        console.error('Failed to fetch sidebar counts');
+        console.error('Failed to fetch sidebar counts or leaves');
       }
     };
 
     fetchProfile();
-    fetchCounts();
+    fetchCountsAndLeaves();
     
     // Set up polling for counts every 30 seconds
-    const countInterval = setInterval(fetchCounts, 30000);
+    const countInterval = setInterval(fetchCountsAndLeaves, 30000);
 
     const handleProfileUpdate = (e) => {
       if (e.detail && e.detail.fullName) {
@@ -146,6 +157,46 @@ const AdminLayout = () => {
       clearInterval(countInterval);
     };
   }, []);
+
+  const handleApproveLeave = async (id) => {
+    try {
+      await axios.put(`/api/admin/leaves/${id}/status`, { status: 'Approved' });
+      alert('Leave approved successfully!');
+      const updated = pendingLeaves.filter(l => l._id !== id);
+      setPendingLeaves(updated);
+      if (updated.length === 0) setShowPendingLeaveModal(false);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to approve leave');
+    }
+  };
+
+  const handleRejectLeave = async (id) => {
+    try {
+      await axios.put(`/api/admin/leaves/${id}/status`, { status: 'Rejected' });
+      alert('Leave rejected successfully!');
+      const updated = pendingLeaves.filter(l => l._id !== id);
+      setPendingLeaves(updated);
+      if (updated.length === 0) setShowPendingLeaveModal(false);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to reject leave');
+    }
+  };
+
+  const handleDeleteLeave = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this leave request?')) return;
+    try {
+      await axios.delete(`/api/admin/leaves/${id}`);
+      alert('Leave deleted successfully!');
+      const updated = pendingLeaves.filter(l => l._id !== id);
+      setPendingLeaves(updated);
+      if (updated.length === 0) setShowPendingLeaveModal(false);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete leave');
+    }
+  };
 
   const handleLogout = () => {
     sessionStorage.removeItem('token');
@@ -203,6 +254,81 @@ const AdminLayout = () => {
           <Outlet />
         </div>
       </div>
+
+      {/* Pending Leave Requests Modal */}
+      {showPendingLeaveModal && pendingLeaves.length > 0 && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col animate-fade-in">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50 rounded-t-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+                  <AlertCircle size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">New Leave Requests</h2>
+                  <p className="text-sm text-gray-500">You have {pendingLeaves.length} pending leave request(s).</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPendingLeaveModal(false)}
+                className="p-2 hover:bg-orange-200 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 bg-gray-50/50">
+              <div className="space-y-4">
+                {pendingLeaves.map(leave => (
+                  <div key={leave._id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4 justify-between">
+                    <div>
+                      <h4 className="font-bold text-gray-800">{leave.employee?.fullName} <span className="text-xs font-normal text-gray-500">({leave.employee?.employeeId})</span></h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        <span className="font-semibold text-primary">{leave.leaveType}</span> • 
+                        {leave.dates && leave.dates.length > 0 ? (
+                          <span className="ml-1">{leave.dates.length} day(s)</span>
+                        ) : (
+                          <span className="ml-1">{new Date(leave.fromDate).toLocaleDateString()} - {new Date(leave.toDate).toLocaleDateString()}</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded italic">"{leave.reason}"</p>
+                    </div>
+                    <div className="flex sm:flex-col gap-2 shrink-0">
+                      <button 
+                        onClick={() => handleApproveLeave(leave._id)}
+                        className="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded text-sm font-semibold transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        onClick={() => handleRejectLeave(leave._id)}
+                        className="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded text-sm font-semibold transition-colors"
+                      >
+                        Reject
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteLeave(leave._id)}
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded text-sm font-semibold transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-100 flex justify-end bg-white rounded-b-xl">
+              <button 
+                onClick={() => setShowPendingLeaveModal(false)}
+                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
