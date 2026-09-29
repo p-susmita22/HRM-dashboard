@@ -732,22 +732,33 @@ const AdminAttendance = () => {
               </h3>
               <p className="text-sm text-text-light">These records will not be marked on the employee's attendance until you approve them.</p>
             </div>
-            {selectedPending.length > 0 && (
-              <div className="flex gap-2 flex-wrap items-center">
-                <button onClick={handleBulkApprovePending} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-                  <CheckCircle size={16} /> Approve
-                </button>
-                <button onClick={handleBulkRejectPending} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-                  <XCircle size={16} /> Reject
-                </button>
-                <button onClick={handleBulkDeletePending} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-                  <Trash2 size={16} /> Delete
-                </button>
-                <span className="text-sm font-semibold text-text-light">
-                  ({selectedPending.length} selected)
-                </span>
-              </div>
-            )}
+            {selectedPending.length > 0 && (() => {
+              const canApproveSelectedPending = selectedPending.every(id => {
+                const record = filteredPending.find(r => r._id === id);
+                if (!record) return false;
+                const isToday = new Date(record.date).toDateString() === new Date().toDateString();
+                return record.punchOut || !isToday;
+              });
+
+              return (
+                <div className="flex gap-2 flex-wrap items-center">
+                  {canApproveSelectedPending && (
+                    <button onClick={handleBulkApprovePending} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                      <CheckCircle size={16} /> Approve
+                    </button>
+                  )}
+                  <button onClick={handleBulkRejectPending} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                    <XCircle size={16} /> Reject
+                  </button>
+                  <button onClick={handleBulkDeletePending} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                    <Trash2 size={16} /> Delete
+                  </button>
+                  <span className="text-sm font-semibold text-text-light">
+                    ({selectedPending.length} selected)
+                  </span>
+                </div>
+              );
+            })()}
           </div>
           
           <div className="overflow-x-auto">
