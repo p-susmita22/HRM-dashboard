@@ -9,6 +9,8 @@ const AdminAttendance = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('today');
+  const [selectedPending, setSelectedPending] = useState([]);
+  const [selectedRemote, setSelectedRemote] = useState([]);
   const [filterEmployee, setFilterEmployee] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDate, setFilterDate] = useState('');
@@ -46,6 +48,68 @@ const AdminAttendance = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setSelectedPending([]);
+    setSelectedRemote([]);
+  }, [activeTab]);
+
+  const handleSelectAllPending = (e, filteredPending) => {
+    if (e.target.checked) setSelectedPending(filteredPending.map(r => r._id));
+    else setSelectedPending([]);
+  };
+
+  const handleSelectPending = (id) => {
+    setSelectedPending(prev => prev.includes(id) ? prev.filter(reqId => reqId !== id) : [...prev, id]);
+  };
+
+  const handleSelectAllRemote = (e, filteredRemote) => {
+    if (e.target.checked) {
+       setSelectedRemote(filteredRemote.map(r => {
+           const isOutRequest = r.isRemoteOut && r.remoteOutStatus === 'Pending';
+           return r._id + (isOutRequest ? '-out' : '-in');
+       }));
+    } else {
+       setSelectedRemote([]);
+    }
+  };
+
+  const handleSelectRemote = (idWithSuffix) => {
+    setSelectedRemote(prev => prev.includes(idWithSuffix) ? prev.filter(reqId => reqId !== idWithSuffix) : [...prev, idWithSuffix]);
+  };
+
+  const handleBulkApprovePending = async () => {
+    if (!window.confirm(`Approve ${selectedPending.length} attendance records?`)) return;
+    try {
+      await Promise.all(selectedPending.map(id => axios.put(`/api/admin/attendance/${id}/approve`)));
+      setSelectedPending([]);
+      fetchData();
+      alert('Bulk approval successful!');
+    } catch (error) {
+      alert('Some approvals failed.');
+      fetchData();
+    }
+  };
+
+  const handleBulkApproveRemote = async () => {
+    if (!window.confirm(`Approve ${selectedRemote.length} remote requests?`)) return;
+    try {
+      const promises = selectedRemote.map(idWithSuffix => {
+         if (idWithSuffix.endsWith('-out')) {
+             return axios.put(`/api/admin/attendance/${idWithSuffix.replace('-out', '')}/remote-out-approve`);
+         } else {
+             return axios.put(`/api/admin/attendance/${idWithSuffix.replace('-in', '')}/remote-approve`);
+         }
+      });
+      await Promise.all(promises);
+      setSelectedRemote([]);
+      fetchData();
+      alert('Bulk approval successful!');
+    } catch (error) {
+      alert('Some approvals failed.');
+      fetchData();
+    }
+  };
 
   // Lock scrolling on main container when any modal is open
   useEffect(() => {
@@ -615,15 +679,32 @@ const AdminAttendance = () => {
 
       {activeTab === 'pending' && (
         <div className="card shadow-md border-none overflow-hidden">
-          <h3 className="text-lg font-bold text-text-dark mb-4 flex items-center gap-2">
-            <Clock size={20} className="text-orange-500" /> Pending Punches
-          </h3>
-          <p className="text-sm text-text-light mb-4">These records will not be marked on the employee's attendance until you approve them.</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-text-dark flex items-center gap-2">
+                <Clock size={20} className="text-orange-500" /> Pending Punches
+              </h3>
+              <p className="text-sm text-text-light">These records will not be marked on the employee's attendance until you approve them.</p>
+            </div>
+            {selectedPending.length > 0 && (
+              <button onClick={handleBulkApprovePending} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                <CheckCircle size={16} /> Bulk Approve ({selectedPending.length})
+              </button>
+            )}
+          </div>
           
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      onChange={(e) => handleSelectAllPending(e, filteredPending)} 
+                      checked={selectedPending.length > 0 && selectedPending.length === filteredPending.length}
+                      className="w-4 h-4 rounded text-primary focus:ring-primary"
+                    />
+                  </th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Date</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Punch In</th>
@@ -637,6 +718,14 @@ const AdminAttendance = () => {
                 ) : (
                   filteredPending.map(record => (
                     <tr key={record._id} className="hover:bg-gray-50">
+                      <td className="p-4 text-center">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedPending.includes(record._id)} 
+                          onChange={() => handleSelectPending(record._id)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      </td>
                       <td className="p-4 text-sm text-text-dark font-medium">{formatDate(record.date)}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -712,17 +801,32 @@ const AdminAttendance = () => {
 
       {activeTab === 'remote' && (
         <div className="card shadow-md border-none overflow-hidden">
-          <div className="p-5 border-b border-orange-100 bg-orange-50/40 flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
-            <div>
-              <h3 className="text-lg font-bold text-orange-800">Remote Punch Requests</h3>
-              <p className="text-sm text-orange-600 mt-0.5">Employees outside office premises — approve to mark their attendance.</p>
+          <div className="p-5 border-b border-orange-100 bg-orange-50/40 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
+              <div>
+                <h3 className="text-lg font-bold text-orange-800">Remote Punch Requests</h3>
+                <p className="text-sm text-orange-600 mt-0.5">Employees outside office premises — approve to mark their attendance.</p>
+              </div>
             </div>
+            {selectedRemote.length > 0 && (
+              <button onClick={handleBulkApproveRemote} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                <CheckCircle size={16} /> Bulk Approve ({selectedRemote.length})
+              </button>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      onChange={(e) => handleSelectAllRemote(e, filteredRemote)} 
+                      checked={selectedRemote.length > 0 && selectedRemote.length === filteredRemote.length}
+                      className="w-4 h-4 rounded text-primary focus:ring-primary"
+                    />
+                  </th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Type</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Date & Time</th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
@@ -738,8 +842,17 @@ const AdminAttendance = () => {
                     const isOutRequest = record.isRemoteOut && record.remoteOutStatus === 'Pending';
                     const punchTime = isOutRequest ? record.punchOut : record.punchIn;
                     const punchLoc = isOutRequest ? record.punchOutLocation : record.punchInLocation;
+                    const idWithSuffix = record._id + (isOutRequest ? '-out' : '-in');
                     return (
-                    <tr key={record._id + (isOutRequest ? '-out' : '-in')} className="hover:bg-orange-50/30">
+                    <tr key={idWithSuffix} className="hover:bg-orange-50/30">
+                      <td className="p-4 text-center">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRemote.includes(idWithSuffix)} 
+                          onChange={() => handleSelectRemote(idWithSuffix)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      </td>
                       <td className="p-4">
                         <span className={`px-2 py-1 text-xs font-bold rounded ${isOutRequest ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                           {isOutRequest ? 'PUNCH OUT' : 'PUNCH IN'}

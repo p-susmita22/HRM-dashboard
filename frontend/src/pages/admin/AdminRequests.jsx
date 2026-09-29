@@ -5,6 +5,7 @@ import { FileText, Calendar, AlertCircle, CheckCircle, XCircle, Trash2, Send, Ey
 
 const AdminRequests = () => {
   const [activeTab, setActiveTab] = useState('leave');
+  const [selectedRequests, setSelectedRequests] = useState([]);
   
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +62,48 @@ const AdminRequests = () => {
   useEffect(() => {
     fetchRequests();
     axios.get('/api/admin/employees').then(r => setEmployees(r.data)).catch(() => {});
+    setSelectedRequests([]);
   }, [activeTab]);
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      if (activeTab === 'leave') setSelectedRequests(filteredLeaves.filter(r => r.status === 'Pending').map(r => r._id));
+      else if (activeTab === 'compoff') setSelectedRequests(filteredCompOffLeaves.filter(r => r.status === 'Pending').map(r => r._id));
+      else if (activeTab === 'regularization') setSelectedRequests(filteredRegularizations.filter(r => r.status === 'Pending').map(r => r._id));
+      else if (activeTab === 'resignation') setSelectedRequests(filteredResignations.filter(r => r.status === 'Pending').map(r => r._id));
+    } else {
+      setSelectedRequests([]);
+    }
+  };
+
+  const handleSelectRequest = (id) => {
+    setSelectedRequests(prev => prev.includes(id) ? prev.filter(reqId => reqId !== id) : [...prev, id]);
+  };
+
+  const handleBulkApprove = async () => {
+    if (!window.confirm(`Are you sure you want to approve ${selectedRequests.length} requests?`)) return;
+    
+    setLoading(true);
+    try {
+      const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
+                   activeTab === 'regularization' ? 'regularizations' :
+                   activeTab === 'resignation' ? 'resignations' : '';
+      
+      const promises = selectedRequests.map(id => {
+        const extraData = type === 'regularizations' ? { dayType: 'Present' } : {};
+        return axios.put(`/api/admin/${type}/${id}/status`, { status: 'Approved', ...extraData });
+      });
+      
+      await Promise.all(promises);
+      setSelectedRequests([]);
+      fetchRequests();
+      alert('Bulk approval successful');
+    } catch (error) {
+      console.error(error);
+      alert('Some approvals failed');
+      fetchRequests();
+    }
+  };
 
   const updateStatus = async (type, id, status, extraData = {}) => {
     try {
@@ -361,6 +403,14 @@ const AdminRequests = () => {
         </div>
       </div>
 
+      {selectedRequests.length > 0 && activeTab !== 'locked' && (
+        <div className="mb-4">
+          <button onClick={handleBulkApprove} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+            <CheckCircle size={16} /> Bulk Approve ({selectedRequests.length})
+          </button>
+        </div>
+      )}
+
       <div className="card shadow-md border-none overflow-hidden">
         <div className="overflow-x-auto min-h-[300px]">
           {loading ? (
@@ -369,6 +419,21 @@ const AdminRequests = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      onChange={handleSelectAll} 
+                      checked={
+                        selectedRequests.length > 0 && (
+                          (activeTab === 'leave' && selectedRequests.length === filteredLeaves.filter(r => r.status === 'Pending').length) ||
+                          (activeTab === 'compoff' && selectedRequests.length === filteredCompOffLeaves.filter(r => r.status === 'Pending').length) ||
+                          (activeTab === 'regularization' && selectedRequests.length === filteredRegularizations.filter(r => r.status === 'Pending').length) ||
+                          (activeTab === 'resignation' && selectedRequests.length === filteredResignations.filter(r => r.status === 'Pending').length)
+                        )
+                      }
+                      className="w-4 h-4 rounded text-primary focus:ring-primary"
+                    />
+                  </th>
                   <th className="p-4 text-xs font-semibold text-text-light uppercase">Employee</th>
                   
                   {(activeTab === 'leave' || activeTab === 'compoff') && (
@@ -400,6 +465,16 @@ const AdminRequests = () => {
               <tbody className="divide-y divide-gray-100">
                 {(activeTab === 'leave' || activeTab === 'compoff') && (activeTab === 'leave' ? filteredLeaves : filteredCompOffLeaves).map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
+                    <td className="p-4 text-center">
+                      {req.status === 'Pending' && (
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRequests.includes(req._id)} 
+                          onChange={() => handleSelectRequest(req._id)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      )}
+                    </td>
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
@@ -444,6 +519,16 @@ const AdminRequests = () => {
 
                 {activeTab === 'regularization' && filteredRegularizations.map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
+                    <td className="p-4 text-center">
+                      {req.status === 'Pending' && (
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRequests.includes(req._id)} 
+                          onChange={() => handleSelectRequest(req._id)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      )}
+                    </td>
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
@@ -493,6 +578,16 @@ const AdminRequests = () => {
 
                 {activeTab === 'resignation' && filteredResignations.map(req => (
                   <tr key={req._id} className="hover:bg-gray-50">
+                    <td className="p-4 text-center">
+                      {req.status === 'Pending' && (
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRequests.includes(req._id)} 
+                          onChange={() => handleSelectRequest(req._id)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary"
+                        />
+                      )}
+                    </td>
                     <td className="p-4">
                       <p className="text-sm font-semibold text-text-dark">{req.employee?.fullName}</p>
                       <p className="text-xs text-text-light">{req.employee?.employeeId}</p>
@@ -523,7 +618,7 @@ const AdminRequests = () => {
                   (activeTab === 'compoff' && filteredCompOffLeaves.length === 0) || 
                   (activeTab === 'regularization' && filteredRegularizations.length === 0) || 
                   (activeTab === 'resignation' && filteredResignations.length === 0)) && (
-                  <tr><td colSpan="6" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
+                  <tr><td colSpan="7" className="p-8 text-center text-text-light">No {activeTab} requests match your filters.</td></tr>
                 )}
               </tbody>
             </table>
