@@ -61,9 +61,8 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (pendingLeaves.length > 0 && !sessionStorage.getItem('pendingLeaveModalShown')) {
+    if (pendingLeaves.length > 0) {
       setShowPendingLeaveModal(true);
-      sessionStorage.setItem('pendingLeaveModalShown', 'true');
     }
   }, [leaves]);
 
