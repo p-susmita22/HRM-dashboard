@@ -105,6 +105,54 @@ const AdminRequests = () => {
     }
   };
 
+  const handleBulkReject = async () => {
+    if (!window.confirm(`Are you sure you want to reject ${selectedRequests.length} requests?`)) return;
+    
+    setLoading(true);
+    try {
+      const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
+                   activeTab === 'regularization' ? 'regularizations' :
+                   activeTab === 'resignation' ? 'resignations' : '';
+      
+      const promises = selectedRequests.map(id => {
+        return axios.put(`/api/admin/${type}/${id}/status`, { status: 'Rejected' });
+      });
+      
+      await Promise.all(promises);
+      setSelectedRequests([]);
+      fetchRequests();
+      alert('Bulk rejection successful');
+    } catch (error) {
+      console.error(error);
+      alert('Some rejections failed');
+      fetchRequests();
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE ${selectedRequests.length} requests?`)) return;
+    
+    setLoading(true);
+    try {
+      const type = activeTab === 'leave' || activeTab === 'compoff' ? 'leaves' :
+                   activeTab === 'regularization' ? 'regularizations' :
+                   activeTab === 'resignation' ? 'resignations' : '';
+      
+      const promises = selectedRequests.map(id => {
+        return axios.delete(`/api/admin/${type}/${id}`);
+      });
+      
+      await Promise.all(promises);
+      setSelectedRequests([]);
+      fetchRequests();
+      alert('Bulk deletion successful');
+    } catch (error) {
+      console.error(error);
+      alert('Some deletions failed');
+      fetchRequests();
+    }
+  };
+
   const updateStatus = async (type, id, status, extraData = {}) => {
     try {
       await axios.put(`/api/admin/${type}/${id}/status`, { status, ...extraData });
@@ -404,10 +452,19 @@ const AdminRequests = () => {
       </div>
 
       {selectedRequests.length > 0 && activeTab !== 'locked' && (
-        <div className="mb-4">
+        <div className="mb-4 flex gap-3 flex-wrap items-center">
           <button onClick={handleBulkApprove} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-            <CheckCircle size={16} /> Bulk Approve ({selectedRequests.length})
+            <CheckCircle size={16} /> Bulk Approve
           </button>
+          <button onClick={handleBulkReject} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+            <XCircle size={16} /> Bulk Reject
+          </button>
+          <button onClick={handleBulkDelete} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+            <Trash2 size={16} /> Bulk Delete
+          </button>
+          <span className="text-sm font-semibold text-text-light">
+            ({selectedRequests.length} selected)
+          </span>
         </div>
       )}
 

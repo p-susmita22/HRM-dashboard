@@ -111,6 +111,52 @@ const AdminAttendance = () => {
     }
   };
 
+  const handleBulkRejectPending = async () => {
+    if (!window.confirm(`Reject ${selectedPending.length} attendance records?`)) return;
+    try {
+      await Promise.all(selectedPending.map(id => axios.put(`/api/admin/attendance/${id}/reject`)));
+      setSelectedPending([]);
+      fetchData();
+      alert('Bulk rejection successful!');
+    } catch (error) {
+      alert('Some rejections failed.');
+      fetchData();
+    }
+  };
+
+  const handleBulkDeletePending = async () => {
+    if (!window.confirm(`PERMANENTLY DELETE ${selectedPending.length} pending attendance records?`)) return;
+    try {
+      await Promise.all(selectedPending.map(id => axios.delete(`/api/admin/attendance/${id}`)));
+      setSelectedPending([]);
+      fetchData();
+      alert('Bulk deletion successful!');
+    } catch (error) {
+      alert('Some deletions failed.');
+      fetchData();
+    }
+  };
+
+  const handleBulkRejectRemote = async () => {
+    if (!window.confirm(`Reject ${selectedRemote.length} remote requests?`)) return;
+    try {
+      const promises = selectedRemote.map(idWithSuffix => {
+         if (idWithSuffix.endsWith('-out')) {
+             return axios.put(`/api/admin/attendance/${idWithSuffix.replace('-out', '')}/remote-out-reject`);
+         } else {
+             return axios.put(`/api/admin/attendance/${idWithSuffix.replace('-in', '')}/remote-reject`);
+         }
+      });
+      await Promise.all(promises);
+      setSelectedRemote([]);
+      fetchData();
+      alert('Bulk rejection successful!');
+    } catch (error) {
+      alert('Some rejections failed.');
+      fetchData();
+    }
+  };
+
   // Lock scrolling on main container when any modal is open
   useEffect(() => {
     const scrollContainer = document.getElementById('main-scroll-container');
@@ -687,9 +733,20 @@ const AdminAttendance = () => {
               <p className="text-sm text-text-light">These records will not be marked on the employee's attendance until you approve them.</p>
             </div>
             {selectedPending.length > 0 && (
-              <button onClick={handleBulkApprovePending} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-                <CheckCircle size={16} /> Bulk Approve ({selectedPending.length})
-              </button>
+              <div className="flex gap-2 flex-wrap items-center">
+                <button onClick={handleBulkApprovePending} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                  <CheckCircle size={16} /> Approve
+                </button>
+                <button onClick={handleBulkRejectPending} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                  <XCircle size={16} /> Reject
+                </button>
+                <button onClick={handleBulkDeletePending} className="btn py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                  <Trash2 size={16} /> Delete
+                </button>
+                <span className="text-sm font-semibold text-text-light">
+                  ({selectedPending.length} selected)
+                </span>
+              </div>
             )}
           </div>
           
@@ -810,9 +867,17 @@ const AdminAttendance = () => {
               </div>
             </div>
             {selectedRemote.length > 0 && (
-              <button onClick={handleBulkApproveRemote} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
-                <CheckCircle size={16} /> Bulk Approve ({selectedRemote.length})
-              </button>
+              <div className="flex gap-2 flex-wrap items-center">
+                <button onClick={handleBulkApproveRemote} className="btn py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                  <CheckCircle size={16} /> Approve
+                </button>
+                <button onClick={handleBulkRejectRemote} className="btn py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded flex items-center gap-2 transition-colors">
+                  <XCircle size={16} /> Reject
+                </button>
+                <span className="text-sm font-semibold text-text-light">
+                  ({selectedRemote.length} selected)
+                </span>
+              </div>
             )}
           </div>
           <div className="overflow-x-auto">
